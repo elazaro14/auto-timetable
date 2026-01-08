@@ -1,7 +1,32 @@
-const teachers = ["Mr. Smith", "Ms. Jones", "Dr. Brown", "Mrs. White"];
-const rooms = ["Room 101", "Room 102", "Lab A"];
-const subjects = ["Math", "Physics", "Art", "History", "Biology", "Chemistry"];
-const timeslots = [1, 2, 3, 4, 5]; 
+let teachers = [];
+let rooms = [];
+let subjects = [];
+const timeslots = [1, 2, 3, 4, 5, 6, 7, 8]; // Extended for a full day
+
+function handleUpload() {
+    const file = document.getElementById('csvFile').files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split('\n');
+        
+        // Assume CSV format: Subject,Teacher,Room
+        lines.forEach((line, index) => {
+            if (index === 0 || line.trim() === "") return; // Skip header
+            const [subject, teacher, room] = line.split(',');
+            
+            if (subject) subjects.push(subject.trim());
+            if (teacher && !teachers.includes(teacher.trim())) teachers.push(teacher.trim());
+            if (room && !rooms.includes(room.trim())) rooms.push(room.trim());
+        });
+
+        alert("Data Loaded! You can now generate the timetable.");
+        document.getElementById('genBtn').disabled = false;
+    };
+
+    reader.readAsText(file);
+}
 
 function calculateFitness(timetable) {
     let clashes = 0;
@@ -71,4 +96,5 @@ function startEvolution() {
         }
         population = nextGen;
     }, 100);
+
 }

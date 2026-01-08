@@ -10,25 +10,30 @@
     <div class="no-print">
         <div class="header-section">
             <h1>School Timetable AI Generator</h1>
-            <p>Download the template, fill it in, and generate a clash-free schedule.</p>
+            <button onclick="toggleSettings()" class="btn-secondary">⚙️ Advanced Settings</button>
+        </div>
+
+        <div id="settings-panel" style="display:none; background:#f9f9f9; padding:15px; border:1px solid #ddd; margin-top:10px;">
+            <h3>School Configuration</h3>
+            <label>Break Label:</label> <input type="text" id="cfg-break-label" value="TEA BREAK"><br><br>
+            <label>Forms (Comma separated):</label><br>
+            <textarea id="cfg-forms" style="width:100%"></textarea><br><br>
+            <p><small>Click "Save & Close" to apply changes before generating.</small></p>
+            <button onclick="saveSettings()" class="btn-primary">Save & Close</button>
         </div>
         
         <div class="controls">
             <div class="control-group">
-                <label>Step 1:</label>
                 <button onclick="downloadCSVTemplate()" class="btn-secondary">Download CSV Template</button>
             </div>
             <div class="control-group">
-                <label>Step 2:</label>
                 <input type="file" id="csvFile" accept=".csv">
                 <button onclick="handleUpload()" class="btn-primary">Load Data</button>
             </div>
             <div class="control-group">
-                <label>Step 3:</label>
                 <button onclick="startEvolution()" id="genBtn" class="btn-success" disabled>Generate Weekly Table</button>
             </div>
             <div class="control-group">
-                <label>Step 4:</label>
                 <button onclick="window.print()" class="btn-print">Print / Save PDF</button>
             </div>
         </div>
@@ -36,12 +41,11 @@
         <div class="status-bar">
             <strong>Evolution Status:</strong> 
             Generation: <span id="gen-count">0</span> | 
-            Clash Score (Fitness): <span id="best-fit">0</span>
+            Clash Score: <span id="best-fit">0</span>
         </div>
     </div>
 
     <div id="timetable-display"></div>
-
     <script src="app.js"></script>
 </body>
 </html>

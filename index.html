@@ -13,36 +13,40 @@
             <button onclick="toggleSettings()" class="btn-secondary">⚙️ Settings & Forms</button>
         </div>
 
-        <div id="settings-panel" class="settings-box" style="display:none;">
-            <h3>Configuration</h3>
+        <div id="overlay" onclick="toggleSettings()"></div>
+
+        <div id="settings-panel" class="settings-box">
+            <h3>School Configuration</h3>
             <div class="config-grid">
-                <div>
-                    <label>Break Label:</label><br>
+                <div class="field">
+                    <label>Break Label:</label>
                     <input type="text" id="cfg-break-label" value="TEA BREAK">
                 </div>
-                <div>
-                    <label>Form Groups (Separated by commas):</label><br>
-                    <textarea id="cfg-forms" rows="4">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea>
+                <div class="field">
+                    <label>Forms (Separated by commas):</label>
+                    <textarea id="cfg-forms" rows="5">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea>
                 </div>
             </div>
-            <button onclick="saveSettings()" class="btn-primary" style="margin-top:10px;">Save & Apply</button>
+            <div style="margin-top:15px; text-align:right;">
+                <button onclick="saveSettings()" class="btn-success">Save & Apply Changes</button>
+            </div>
         </div>
         
         <div class="controls">
-            <button onclick="downloadCSVTemplate()" class="btn-secondary">1. Download CSV Template</button>
-            <input type="file" id="csvFile" accept=".csv" style="display:none;">
-            <button onclick="document.getElementById('csvFile').click()" class="btn-primary">2. Select CSV File</button>
-            <button onclick="handleUpload()" class="btn-primary">3. Load Data</button>
-            <button onclick="startEvolution()" id="genBtn" class="btn-success" disabled>4. Generate Weekly Table</button>
-            <button onclick="window.print()" class="btn-print">5. Print to PDF</button>
+            <button onclick="downloadCSVTemplate()" class="btn-secondary">1. Download Template</button>
+            <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="handleUpload()">
+            <button onclick="document.getElementById('csvFile').click()" class="btn-primary">2. Upload CSV Data</button>
+            <button onclick="startEvolution()" id="genBtn" class="btn-success" disabled>3. Generate Table</button>
+            <button onclick="window.print()" class="btn-print">4. Print to PDF</button>
         </div>
 
         <div class="status-bar">
-            <strong>AI Status:</strong> Generation: <span id="gen-count">0</span> | <span id="best-fit">Waiting...</span>
+            <strong>AI ENGINE:</strong> Gen: <span id="gen-count">0</span> | <span id="best-fit">Ready to start</span>
         </div>
     </div>
 
     <div id="timetable-display"></div>
+
     <script src="app.js"></script>
 </body>
 </html>

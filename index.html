@@ -3,90 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Master Timetable - Tanzania Pro</title>
+    <title>AI Master Timetable - Tanzania Pro (Full Edition)</title>
     <style>
-        /* CSS INTEGRATED */
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .no-print { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .no-print { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-        button { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
-        .btn-blue { background: #007bff; } .btn-green { background: #28a745; } .btn-gray { background: #6c757d; }
+        
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .btn-blue { background: #007bff; color: white; } .btn-green { background: #28a745; color: white; } .btn-gray { background: #6c757d; color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
         button:disabled { background: #ccc; cursor: not-allowed; }
+
+        #settings-panel { display: none; background: #fafafa; border: 1px solid #ddd; padding: 20px; margin-top: 15px; border-radius: 8px; }
+        .status-bar { margin-top: 15px; padding: 10px; border-radius: 6px; background: #e8f5e9; color: #2e7d32; font-weight: bold; }
+
+        /* Timetable Styling */
+        .day-section { background: white; padding: 20px; margin-bottom: 40px; border-radius: 8px; border: 1px solid #000; page-break-after: always; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; overflow: hidden; }
+        .header-row { background: #343a40; color: white; font-weight: bold; font-size: 11px; }
+        .stream-label { background: #f8f9fa; font-weight: bold; width: 60px; font-size: 10px; }
+        .separator { background: #ffd700 !important; height: 12px !important; }
+        .break-cell { background: #f1f3f4; font-style: italic; color: #666; font-size: 8px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-        td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 40px; }
-        .header-row { background: #eee; font-weight: bold; }
-        .day-section { background: white; padding: 15px; margin-bottom: 30px; border: 2px solid #333; }
-        .separator { background: #ffd700 !important; height: 10px !important; }
-        
-        #settings-panel { display: none; background: #fff; border: 1px solid #ccc; padding: 20px; margin-top: 10px; border-radius: 8px; }
-        .status-bar { margin-top: 10px; font-weight: bold; color: #d32f2f; }
-        @media print { .no-print { display: none; } }
+        @media print { .no-print { display: none; } body { padding: 0; } .day-section { border: none; margin-bottom: 0; } }
     </style>
 </head>
 <body>
 
     <div class="no-print">
-        <h1>AI Master Timetable Dashboard</h1>
+        <h1>🇹🇿 AI Master Timetable Generator</h1>
+        <p>Optimized for 18 Streams & Double Period Priority</p>
         
-        <button onclick="document.getElementById('settings-panel').style.display='block'" class="btn-gray">⚙️ School Settings</button>
+        <button onclick="toggleSettings()" class="btn-gray">⚙️ School Settings</button>
 
         <div id="settings-panel">
-            <h3>Configure School</h3>
+            <h3>School Configuration</h3>
             <label>School Name:</label><br>
-            <input type="text" id="schoolName" value="YOUR SCHOOL NAME" style="width:100%"><br><br>
-            <label>Forms/Streams (F1A, F1B...):</label><br>
-            <textarea id="formsList" rows="3" style="width:100%">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea><br><br>
+            <input type="text" id="schoolName" value="YOUR SCHOOL NAME" style="width:100%; padding:8px; margin:5px 0;"><br>
+            <label>Streams (F1A - F4C):</label><br>
+            <textarea id="formsList" rows="3" style="width:100%; padding:8px; margin:5px 0;">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea>
             <button onclick="saveSettings()" class="btn-green">Save & Apply</button>
-            <button onclick="document.getElementById('settings-panel').style.display='none'" class="btn-gray">Close</button>
+            <button onclick="toggleSettings()" class="btn-gray">Cancel</button>
         </div>
 
         <div class="controls">
-            <button onclick="downloadTemplate()" class="btn-gray">1. Download Template</button>
+            <button onclick="downloadCurriculumTemplate()" class="btn-gray">1. Download Template (Tanzania Rules)</button>
             <button onclick="document.getElementById('csvFile').click()" class="btn-blue">2. Upload Data</button>
             <input type="file" id="csvFile" style="display:none" onchange="handleUpload(event)">
-            <button id="genBtn" onclick="startEvolution()" class="btn-green" disabled>3. Generate Table</button>
-            <button onclick="window.print()" class="btn-gray">4. Print PDF</button>
+            <button id="genBtn" onclick="startEvolution()" class="btn-green" disabled>3. Generate Timetable</button>
+            <button onclick="window.print()" class="btn-gray">4. Print / Save PDF</button>
         </div>
-        <div class="status-bar" id="statusText">AI Status: Waiting for CSV upload...</div>
+        <div class="status-bar" id="statusText">Ready: Please upload your CSV data to begin.</div>
     </div>
 
     <div id="master-container">
-        <h1 id="displaySchool" style="text-align: center;">YOUR SCHOOL NAME</h1>
+        <div style="text-align: center;">
+            <h1 id="displaySchool">YOUR SCHOOL NAME</h1>
+            <h2 id="displayYear">ACADEMIC YEAR 2025/2026</h2>
+        </div>
         <div id="timetable-display"></div>
     </div>
 
     <script>
-        /* JAVASCRIPT INTEGRATED */
         let subjectsData = [];
         const days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
         const periods = ["P1", "P2", "P3", "P4", "BREAK", "P5", "P6", "P7", "P8", "P9"];
         let forms = ["F1A", "F1B", "F1C", "F1D", "F1E", "F1F", "F1G", "F2A", "F2B", "F2C", "F2D", "F3A", "F3B", "F3C", "F3D", "F4A", "F4B", "F4C"];
 
+        function toggleSettings() {
+            const p = document.getElementById('settings-panel');
+            p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        }
+
         function saveSettings() {
             document.getElementById('displaySchool').innerText = document.getElementById('schoolName').value;
             forms = document.getElementById('formsList').value.split(',').map(s => s.trim().toUpperCase());
-            alert("Settings Saved!");
-            document.getElementById('settings-panel').style.display='none';
+            toggleSettings();
+            alert("Settings updated!");
         }
 
-        function downloadTemplate() {
+        function downloadCurriculumTemplate() {
             let csv = "Subject,Teacher,Room,Form\n";
             forms.forEach(f => {
-                // Simplified default rows
-                csv += `MATHEMATICS,MR. ALI,RM1,${f}\n`;
-                csv += `ENGLISH,MS. JANE,RM1,${f}\n`;
+                const isLower = f.startsWith('F1') || f.startsWith('F2');
+                const subs = isLower ? 
+                    [{s:"MATH",p:5},{s:"ENG",p:5},{s:"KISW",p:4},{s:"PHYS",p:3},{s:"CHEM",p:3},{s:"BIO",p:3},{s:"HIST",p:3},{s:"GEO",p:2},{s:"CIVICS",p:2}] : 
+                    [{s:"ENG",p:6},{s:"MATH",p:5},{s:"KISW",p:4},{s:"PHYS",p:4},{s:"CHEM",p:4},{s:"BIO",p:4},{s:"HIST",p:4},{s:"GEO",p:4},{s:"CIVICS",p:3}];
+                
+                subs.forEach(sub => {
+                    for(let i=0; i<sub.p; i++) csv += `${sub.s},TEACHER_NAME,ROOM_X,${f}\n`;
+                });
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'timetable_template.csv';
+            a.download = 'tz_school_template.csv';
             a.click();
         }
 
         function handleUpload(event) {
-            const file = event.target.files[0];
             const reader = new FileReader();
             reader.onload = (e) => {
                 const lines = e.target.result.split('\n').slice(1);
@@ -95,26 +112,33 @@
                     return { subject: s, teacher: t, room: r, form: f };
                 });
                 document.getElementById('genBtn').disabled = false;
-                document.getElementById('statusText').innerText = "AI Status: Data Loaded (" + subjectsData.length + " lessons). Click Generate!";
+                document.getElementById('statusText').innerText = "Data Loaded: " + subjectsData.length + " periods across all streams. Ready!";
             };
-            reader.readAsText(file);
+            reader.readAsText(event.target.files[0]);
         }
 
-        // --- DOUBLE PERIOD LOGIC ---
         function isDouble(a, b) {
-            return a.subject === b.subject && a.teacher === b.teacher && a.form === b.form && a.day === b.day && 
-                   Math.abs(parseInt(a.period.replace('P','')) - parseInt(b.period.replace('P',''))) === 1;
+            if (a.subject !== b.subject || a.teacher !== b.teacher || a.form !== b.form || a.day !== b.day) return false;
+            const p1 = parseInt(a.period.replace('P','')), p2 = parseInt(b.period.replace('P',''));
+            return Math.abs(p1 - p2) === 1 && a.period !== "BREAK" && b.period !== "BREAK";
         }
 
         function calculateFitness(tt) {
             let clash = 0, doubles = 0;
+            const teacherMap = new Map();
+            
             tt.forEach((a, i) => {
+                // Check teacher/form clashes
+                const key = `${a.day}-${a.period}`;
+                if (!teacherMap.has(key)) teacherMap.set(key, []);
+                const currentSlot = teacherMap.get(key);
+                
+                if (currentSlot.some(b => b.teacher === a.teacher || b.form === a.form)) clash += 10;
+                currentSlot.push(a);
+
+                // Double period bonus
                 for (let j = i + 1; j < tt.length; j++) {
-                    const b = tt[j];
-                    if (a.day === b.day && a.period === b.period) {
-                        if (a.teacher === b.teacher || a.form === b.form) clash++;
-                    }
-                    if (isDouble(a, b)) doubles++;
+                    if (isDouble(a, tt[j])) doubles += 15;
                 }
             });
             return (1 + doubles) / (1 + clash);
@@ -122,7 +146,7 @@
 
         function startEvolution() {
             const vp = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
-            let pop = Array.from({length: 15}, () => subjectsData.map(it => ({
+            let pop = Array.from({length: 20}, () => subjectsData.map(it => ({
                 ...it, day: days[Math.floor(Math.random()*5)], period: vp[Math.floor(Math.random()*9)]
             })));
 
@@ -130,13 +154,13 @@
             const timer = setInterval(() => {
                 gen++;
                 pop.sort((a, b) => calculateFitness(b) - calculateFitness(a));
-                document.getElementById('statusText').innerText = "AI Generation: " + gen + " | Optimizing Doubles...";
+                document.getElementById('statusText').innerText = "AI Optimizing (Gen " + gen + ")... Goal: Maximize Double Periods & Zero Clashes";
                 
                 if(gen % 10 === 0) renderTable(pop[0]);
-                if(gen > 300) { clearInterval(timer); renderTable(pop[0]); alert("Timetable Generated!"); }
+                if(gen > 400) { clearInterval(timer); renderTable(pop[0]); document.getElementById('statusText').innerText = "Generation Complete!"; }
 
                 let next = pop.slice(0, 5);
-                while(next.length < 15) {
+                while(next.length < 20) {
                     let c = JSON.parse(JSON.stringify(next[Math.floor(Math.random()*5)]));
                     let t = c[Math.floor(Math.random()*c.length)];
                     t.day = days[Math.floor(Math.random()*5)];
@@ -144,7 +168,7 @@
                     next.push(c);
                 }
                 pop = next;
-            }, 50);
+            }, 40);
         }
 
         function renderTable(tt) {
@@ -153,14 +177,14 @@
                 html += `<div class="day-section"><h2>${day}</h2><table><tr class="header-row"><td>STREAM</td>${periods.map(p=>`<td>${p}</td>`).join('')}</tr>`;
                 let lastF = "";
                 forms.forEach(f => {
-                    if(lastF !== "" && f[1] !== lastF[1]) html += `<tr class="separator"><td colspan="11"></td></tr>`;
+                    if(lastF !== "" && f.substring(0,2) !== lastF.substring(0,2)) html += `<tr class="separator"><td colspan="11"></td></tr>`;
                     lastF = f;
-                    html += `<tr><td><b>${f}</b></td>`;
+                    html += `<tr><td class="stream-label">${f}</td>`;
                     periods.forEach(p => {
-                        if(p === "BREAK") html += `<td style="background:#eee">BREAK</td>`;
+                        if(p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
                         else {
                             const s = tt.find(x => x.day === day && x.form === f && x.period === p);
-                            html += `<td>${s ? s.subject + '<br><small>' + s.teacher + '</small>' : ''}</td>`;
+                            html += `<td>${s ? '<b>'+s.subject+'</b><br>'+s.teacher : ''}</td>`;
                         }
                     });
                     html += `</tr>`;

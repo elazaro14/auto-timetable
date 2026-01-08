@@ -10,10 +10,10 @@
     <div class="no-print">
         <div class="header-section">
             <h1>AI Timetable Dashboard</h1>
-            <button onclick="toggleSettings()" class="btn-secondary">⚙️ School Settings</button>
+            <button id="settingsBtn" class="btn-secondary">⚙️ School Settings</button>
         </div>
 
-        <div id="overlay" onclick="toggleSettings()"></div>
+        <div id="overlay"></div>
 
         <div id="settings-panel" class="settings-box">
             <h3>School Configuration</h3>
@@ -24,14 +24,14 @@
                 <div class="field"><label>Break Label:</label><input type="text" id="cfg-break-label" value="TEA BREAK"></div>
                 <div class="field"><label>Forms (CSV):</label><textarea id="cfg-forms" rows="4">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea></div>
             </div>
-            <button onclick="saveSettings()" class="btn-success">Save & Apply</button>
+            <button id="saveBtn" class="btn-success">Save & Apply</button>
         </div>
         
         <div class="controls">
-            <button onclick="downloadCSVTemplate()" class="btn-secondary">1. Download Template</button>
-            <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="handleUpload()">
-            <button onclick="document.getElementById('csvFile').click()" class="btn-primary">2. Upload Data</button>
-            <button onclick="startEvolution()" id="genBtn" class="btn-success" disabled>3. Generate Table</button>
+            <button id="dlBtn" class="btn-secondary">1. Download Template</button>
+            <input type="file" id="csvFile" accept=".csv" style="display:none;">
+            <button id="ulBtn" class="btn-primary">2. Upload Data</button>
+            <button id="genBtn" class="btn-success" disabled>3. Generate Table</button>
             <button onclick="window.print()" class="btn-print">4. Print / PDF</button>
         </div>
         <div class="status-bar">AI Status: Gen <span id="gen-count">0</span> | <span id="best-fit">Waiting for Data...</span></div>
@@ -49,11 +49,8 @@
             </div>
         </div>
         <div id="timetable-display"></div>
-        <div id="signature-section" class="print-only">
-            <div class="sig-box"><p>_______________________</p><strong>ACADEMICS OFFICER</strong></div>
-            <div class="sig-box"><p>_______________________</p><strong>SCHOOL PRINCIPAL</strong></div>
-        </div>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>

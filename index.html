@@ -3,43 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Master Timetable - Locked Curriculum</title>
+    <title>AI Master Timetable - Strict Period Limits</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .no-print { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-blue { background: #007bff; color: white; } .btn-green { background: #28a745; color: white; } .btn-gray { background: #6c757d; color: white; }
-        .status-bar { margin-top: 15px; padding: 10px; border-radius: 6px; background: #e8f5e9; color: #2e7d32; font-weight: bold; }
+        .status-bar { margin-top: 15px; padding: 10px; border-radius: 6px; background: #fff3cd; color: #856404; font-weight: bold; border: 1px solid #ffeeba; }
         .day-section { background: white; padding: 20px; margin-bottom: 40px; border: 1px solid #000; page-break-after: always; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
+        td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; overflow: hidden; }
         .header-row { background: #343a40; color: white; font-weight: bold; }
-        .stream-label { background: #f8f9fa; font-weight: bold; }
+        .stream-label { background: #f8f9fa; font-weight: bold; width: 50px; }
         .separator { background: #ffd700 !important; height: 12px !important; }
-        @media print { .no-print { display: none; } }
+        @media print { .no-print { display: none; } body { padding: 0; } }
     </style>
 </head>
 <body>
 
     <div class="no-print">
-        <h1>🇹🇿 AI Master Timetable (Locked User Data)</h1>
-        <p>Rule: Subjects occur once per day (Single or Double Period only). Your exact allocations applied.</p>
+        <h1>🇹🇿 AI Master Timetable (Double/Single Only)</h1>
+        <p>Rule: A subject can only be 1 or 2 consecutive periods per day. <b>No Triples allowed.</b></p>
         
         <div class="controls">
-            <button onclick="downloadLockedTemplate()" class="btn-gray">1. Download Template (Your List)</button>
-            <button onclick="document.getElementById('csvFile').click()" class="btn-blue">2. Upload Data</button>
+            <button onclick="downloadLockedTemplate()" class="btn-gray">1. Download Template</button>
+            <button onclick="document.getElementById('csvFile').click()" class="btn-blue">2. Upload CSV</button>
             <input type="file" id="csvFile" style="display:none" onchange="handleUpload(event)">
             <button id="genBtn" onclick="startEvolution()" class="btn-green" disabled>3. Generate Timetable</button>
-            <button onclick="window.print()" class="btn-gray">4. Print / PDF</button>
+            <button onclick="window.print()" class="btn-gray">4. Print PDF</button>
         </div>
-        <div class="status-bar" id="statusText">Ready. Download and fill the template to start.</div>
+        <div class="status-bar" id="statusText">Waiting for data...</div>
     </div>
 
-    <div id="master-container">
-        <h1 style="text-align: center;">MASTER TIME TABLE</h1>
-        <div id="timetable-display"></div>
-    </div>
+    <div id="timetable-display"></div>
 
     <script>
         let subjectsData = [];
@@ -50,29 +47,15 @@
         function downloadLockedTemplate() {
             let csv = "Subject,Teacher,Room,Form\n";
             forms.forEach(f => {
-                let alloc = [];
-                if (f.startsWith('F1') || f.startsWith('F2')) {
-                    alloc = [
-                        {s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:5},{s:"KISWAHILI",p:4},
-                        {s:"BUSINESS STUDIES",p:3},{s:"HISTORIA NA MAADILI",p:3},{s:"HISTORY",p:3},
-                        {s:"BOOK-KEEPING",p:3},{s:"PHYSICS",p:3},{s:"CHEMISTRY",p:3},
-                        {s:"BIOLOGY",p:3},{s:"GEOGRAPHY",p:2}
-                    ];
-                } else {
-                    alloc = [
-                        {s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:6},{s:"KISWAHILI",p:4},
-                        {s:"CIVICS",p:3},{s:"HISTORY",p:4},{s:"PHYSICS",p:4},
-                        {s:"CHEMISTRY",p:4},{s:"BIOLOGY",p:4},{s:"GEOGRAPHY",p:4}
-                    ];
-                }
-                alloc.forEach(item => {
-                    for(let i=0; i<item.p; i++) csv += `${item.s},TEACHER_NAME,ROOM_X,${f}\n`;
-                });
+                let alloc = f.startsWith('F1') || f.startsWith('F2') ? 
+                    [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:5},{s:"KISWAHILI",p:4},{s:"BUSINESS STUDIES",p:3},{s:"HISTORIA NA MAADILI",p:3},{s:"HISTORY",p:3},{s:"BOOK-KEEPING",p:3},{s:"PHYSICS",p:3},{s:"CHEMISTRY",p:3},{s:"BIOLOGY",p:3},{s:"GEOGRAPHY",p:2}] : 
+                    [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:6},{s:"KISWAHILI",p:4},{s:"CIVICS",p:3},{s:"HISTORY",p:4},{s:"PHYSICS",p:4},{s:"CHEMISTRY",p:4},{s:"BIOLOGY",p:4},{s:"GEOGRAPHY",p:4}];
+                alloc.forEach(item => { for(let i=0; i<item.p; i++) csv += `${item.s},TEACHER_${item.s},RM_${f},${f}\n`; });
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'My_Locked_Template.csv';
+            a.download = 'Timetable_Template.csv';
             a.click();
         }
 
@@ -85,13 +68,13 @@
                     return { subject: p[0].trim(), teacher: p[1].trim(), room: p[2].trim(), form: p[3].trim() };
                 });
                 document.getElementById('genBtn').disabled = false;
-                document.getElementById('statusText').innerText = "Data Loaded Successfully.";
+                document.getElementById('statusText').innerText = "Data Loaded. Ready to Generate.";
             };
             reader.readAsText(event.target.files[0]);
         }
 
         function calculateFitness(tt) {
-            let clash = 0, doubles = 0, splitPenalty = 0;
+            let clash = 0, doubles = 0, penalty = 0;
             const dayFormMap = {};
 
             tt.forEach((a, i) => {
@@ -101,12 +84,10 @@
 
                 for (let j = i + 1; j < tt.length; j++) {
                     const b = tt[j];
-                    if (a.day === b.day && a.period === b.period) {
-                        if (a.teacher === b.teacher || a.form === b.form) clash += 100;
-                    }
+                    if (a.day === b.day && a.period === b.period && (a.teacher === b.teacher || a.form === b.form)) clash += 200;
                     if (a.subject === b.subject && a.form === b.form && a.day === b.day) {
                         const p1 = parseInt(a.period.slice(1)), p2 = parseInt(b.period.slice(1));
-                        if (Math.abs(p1 - p2) === 1) doubles += 30;
+                        if (Math.abs(p1 - p2) === 1) doubles += 50;
                     }
                 }
             });
@@ -119,19 +100,20 @@
                 });
                 for(let s in subs) {
                     const p = subs[s].sort((x,y)=>x-y);
-                    if(p.length > 1) {
-                        for(let k=0; k<p.length-1; k++) {
-                            if(p[k+1]-p[k] !== 1) splitPenalty += 150;
-                        }
+                    // 1. Block Splits (Biology P1 and Biology P4)
+                    for(let k=0; k<p.length-1; k++) {
+                        if(p[k+1]-p[k] !== 1) penalty += 500;
                     }
+                    // 2. Block Triples/Quads (More than 2 in a row)
+                    if(p.length > 2) penalty += 1000;
                 }
             });
-            return (1 + doubles) / (1 + clash + splitPenalty);
+            return (1 + doubles) / (1 + clash + penalty);
         }
 
         function startEvolution() {
             const vp = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
-            let pop = Array.from({length: 25}, () => subjectsData.map(it => ({
+            let pop = Array.from({length: 20}, () => subjectsData.map(it => ({
                 ...it, day: days[Math.floor(Math.random()*5)], period: vp[Math.floor(Math.random()*9)]
             })));
 
@@ -139,13 +121,13 @@
             const timer = setInterval(() => {
                 gen++;
                 pop.sort((a, b) => calculateFitness(b) - calculateFitness(a));
-                document.getElementById('statusText').innerText = `Optimizing (Gen ${gen})... Enforcing Subject-Per-Day Rule.`;
-                if(gen % 20 === 0) renderTable(pop[0]);
-                if(gen > 600) { clearInterval(timer); renderTable(pop[0]); document.getElementById('statusText').innerText = "Complete!"; }
+                document.getElementById('statusText').innerText = `Gen ${gen}: Eliminating Triples & Splits...`;
+                if(gen % 25 === 0) renderTable(pop[0]);
+                if(gen > 800) { clearInterval(timer); renderTable(pop[0]); document.getElementById('statusText').innerText = "Finished!"; }
                 
-                let next = pop.slice(0, 8);
-                while(next.length < 25) {
-                    let c = JSON.parse(JSON.stringify(next[Math.floor(Math.random()*8)]));
+                let next = pop.slice(0, 6);
+                while(next.length < 20) {
+                    let c = JSON.parse(JSON.stringify(next[Math.floor(Math.random()*6)]));
                     let t = c[Math.floor(Math.random()*c.length)];
                     t.day = days[Math.floor(Math.random()*5)];
                     t.period = vp[Math.floor(Math.random()*9)];
@@ -165,7 +147,7 @@
                     lastF = f;
                     html += `<tr><td class="stream-label">${f}</td>`;
                     periods.forEach(p => {
-                        if(p === "BREAK") html += `<td style="background:#eee">BREAK</td>`;
+                        if(p === "BREAK") html += `<td style="background:#eee">TEA</td>`;
                         else {
                             const s = tt.find(x => x.day === day && x.form === f && x.period === p);
                             html += `<td>${s ? '<b>'+s.subject+'</b><br>'+s.teacher : ''}</td>`;

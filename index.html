@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI School Timetable Pro</title>
+    <title>AI Master Timetable Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="no-print">
         <div class="header-section">
-            <h1>School Timetable AI Pro</h1>
-            <button onclick="toggleSettings()" class="btn-secondary">⚙️ Settings & Forms</button>
+            <h1>AI Timetable Dashboard</h1>
+            <button onclick="toggleSettings()" class="btn-secondary">⚙️ School Settings</button>
         </div>
 
         <div id="overlay" onclick="toggleSettings()"></div>
@@ -18,34 +18,44 @@
         <div id="settings-panel" class="settings-box">
             <h3>School Configuration</h3>
             <div class="config-grid">
-                <div class="field">
-                    <label>Break Label:</label>
-                    <input type="text" id="cfg-break-label" value="TEA BREAK">
-                </div>
-                <div class="field">
-                    <label>Forms (Separated by commas):</label>
-                    <textarea id="cfg-forms" rows="5">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea>
-                </div>
+                <div class="field"><label>School Name:</label><input type="text" id="cfg-school-name" value="YOUR SCHOOL NAME"></div>
+                <div class="field"><label>Academic Year:</label><input type="text" id="cfg-academic-year" value="2025/2026"></div>
+                <div class="field"><label>Logo URL:</label><input type="text" id="cfg-logo-url" value="logo.png"></div>
+                <div class="field"><label>Break Label:</label><input type="text" id="cfg-break-label" value="TEA BREAK"></div>
+                <div class="field"><label>Forms (CSV):</label><textarea id="cfg-forms" rows="4">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea></div>
             </div>
-            <div style="margin-top:15px; text-align:right;">
-                <button onclick="saveSettings()" class="btn-success">Save & Apply Changes</button>
-            </div>
+            <button onclick="saveSettings()" class="btn-success">Save & Apply</button>
         </div>
         
         <div class="controls">
             <button onclick="downloadCSVTemplate()" class="btn-secondary">1. Download Template</button>
             <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="handleUpload()">
-            <button onclick="document.getElementById('csvFile').click()" class="btn-primary">2. Upload CSV Data</button>
+            <button onclick="document.getElementById('csvFile').click()" class="btn-primary">2. Upload Data</button>
             <button onclick="startEvolution()" id="genBtn" class="btn-success" disabled>3. Generate Table</button>
-            <button onclick="window.print()" class="btn-print">4. Print to PDF</button>
+            <button onclick="window.print()" class="btn-print">4. Print / PDF</button>
         </div>
-
-        <div class="status-bar">
-            <strong>AI ENGINE:</strong> Gen: <span id="gen-count">0</span> | <span id="best-fit">Ready to start</span>
-        </div>
+        <div class="status-bar">AI Status: Gen <span id="gen-count">0</span> | <span id="best-fit">Waiting...</span></div>
     </div>
 
-    <div id="timetable-display"></div>
+    <div id="master-container">
+        <div id="print-header">
+            <div class="header-content">
+                <img id="school-logo-img" src="logo.png" onerror="this.src='https://via.placeholder.com/80?text=LOGO'">
+                <div class="school-info">
+                    <h1 id="display-school-name">YOUR SCHOOL NAME</h1>
+                    <h2 id="display-academic-year">ACADEMIC YEAR: 2025/2026</h2>
+                    <h3>MASTER TIME TABLE</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="timetable-display"></div>
+
+        <div id="signature-section" class="print-only">
+            <div class="sig-box"><p>_______________________</p><strong>ACADEMICS OFFICER</strong></div>
+            <div class="sig-box"><p>_______________________</p><strong>SCHOOL PRINCIPAL</strong></div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

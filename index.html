@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Master Timetable Pro - Tanzania Edition</title>
+    <title>AI Master Timetable - Double Period Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,21 +20,19 @@
             <div class="config-grid">
                 <div class="field"><label>School Name:</label><input type="text" id="cfg-school-name" value="YOUR SCHOOL NAME"></div>
                 <div class="field"><label>Academic Year:</label><input type="text" id="cfg-academic-year" value="2025/2026"></div>
-                <div class="field"><label>Logo URL:</label><input type="text" id="cfg-logo-url" value="logo.png"></div>
-                <div class="field"><label>Break Label:</label><input type="text" id="cfg-break-label" value="TEA BREAK"></div>
                 <div class="field"><label>Forms (CSV):</label><textarea id="cfg-forms" rows="4">F1A, F1B, F1C, F1D, F1E, F1F, F1G, F2A, F2B, F2C, F2D, F3A, F3B, F3C, F3D, F4A, F4B, F4C</textarea></div>
             </div>
             <button id="saveBtn" class="btn-success">Save & Apply</button>
         </div>
         
         <div class="controls">
-            <button id="dlBtn" class="btn-secondary">1. Download Template (Auto-Allocated)</button>
+            <button id="dlBtn" class="btn-secondary">1. Download Template</button>
             <input type="file" id="csvFile" accept=".csv" style="display:none;">
-            <button id="ulBtn" class="btn-primary">2. Upload Filled Data</button>
+            <button id="ulBtn" class="btn-primary">2. Upload Data</button>
             <button id="genBtn" class="btn-success" disabled>3. Generate Table</button>
             <button onclick="window.print()" class="btn-print">4. Print / PDF</button>
         </div>
-        <div class="status-bar">AI Status: Gen <span id="gen-count">0</span> | <span id="best-fit">Waiting for Data...</span></div>
+        <div class="status-bar">AI Status: Gen <span id="gen-count">0</span> | <span id="best-fit">Waiting...</span></div>
     </div>
 
     <div id="master-container">
@@ -43,12 +41,19 @@
                 <img id="school-logo-img" src="logo.png" onerror="this.src='https://via.placeholder.com/80?text=LOGO'">
                 <div class="school-info">
                     <h1 id="display-school-name">YOUR SCHOOL NAME</h1>
-                    <h2 id="display-academic-year">ACADEMIC YEAR: 2025/2026</h2>
-                    <h3>MASTER TIME TABLE</h3>
+                    <h2 id="display-academic-year">MASTER TIME TABLE 2025/2026</h2>
                 </div>
             </div>
         </div>
         <div id="timetable-display"></div>
+        
+        <div id="summary-panel" class="no-print" style="margin-top: 20px; padding: 20px; background: white; border-radius: 8px; display: none; border: 1px solid #ddd;">
+            <h3>Teacher Workload & Double Period Audit</h3>
+            <table style="width:100%; border-collapse: collapse;">
+                <thead><tr style="background: #f0f0f0;"><th>Teacher</th><th>Periods</th><th>Doubles</th><th>Status</th></tr></thead>
+                <tbody id="workload-body"></tbody>
+            </table>
+        </div>
     </div>
     <script src="app.js"></script>
 </body>

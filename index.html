@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Master Timetable Pro</title>
+    <title>AI Master Timetable Pro - Tanzania Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -28,9 +28,9 @@
         </div>
         
         <div class="controls">
-            <button id="dlBtn" class="btn-secondary">1. Download Template</button>
+            <button id="dlBtn" class="btn-secondary">1. Download Template (Auto-Allocated)</button>
             <input type="file" id="csvFile" accept=".csv" style="display:none;">
-            <button id="ulBtn" class="btn-primary">2. Upload Data</button>
+            <button id="ulBtn" class="btn-primary">2. Upload Filled Data</button>
             <button id="genBtn" class="btn-success" disabled>3. Generate Table</button>
             <button onclick="window.print()" class="btn-print">4. Print / PDF</button>
         </div>
@@ -50,7 +50,6 @@
         </div>
         <div id="timetable-display"></div>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>

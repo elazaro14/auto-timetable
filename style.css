@@ -1,46 +1,41 @@
-body { font-family: Arial, sans-serif; background: #fff; margin: 0; padding: 10px; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #fdfdfd; margin: 0; padding: 10px; }
 
-.day-section {
-    margin-bottom: 40px;
-    page-break-after: always; /* Starts each day on a new page when printing */
-}
+/* Dashboard UI */
+.no-print { background: #fff; padding: 20px; border-bottom: 2px solid #ddd; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+.control-group { display: flex; flex-direction: column; gap: 5px; }
+.status-bar { margin-top: 15px; padding: 10px; background: #e8f4fd; border-radius: 4px; border-left: 4px solid #3498db; }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-}
+/* Buttons */
+button { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+.btn-primary { background: #3498db; color: white; }
+.btn-secondary { background: #7f8c8d; color: white; }
+.btn-success { background: #27ae60; color: white; }
+.btn-print { background: #2c3e50; color: white; }
+button:disabled { background: #ccc; cursor: not-allowed; }
 
-td, th {
-    border: 1px solid #000;
-    padding: 4px;
-    text-align: center;
-    font-size: 11px;
-    word-wrap: break-word;
-}
+/* Timetable Grid */
+.day-section { margin-bottom: 60px; page-break-after: always; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; background: #fff; }
+td, th { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 35px; }
 
-.day-label {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-weight: bold;
-    font-size: 16px;
+.day-label { 
+    writing-mode: vertical-rl; 
+    transform: rotate(180deg); 
+    font-weight: bold; 
+    font-size: 14px; 
+    width: 30px; 
     background: #fff;
-    width: 30px;
 }
 
 .header-row { background-color: #f2f2f2; font-weight: bold; }
-.separator { background-color: #ffeb3b; height: 8px; }
-
-.break-cell {
-    font-weight: bold;
-    background-color: #f9f9f9;
-    color: #555;
-}
-
-.class-cell { height: 45px; background-color: #fff; }
-.class-cell strong { display: block; margin-bottom: 2px; }
+.separator { background-color: #ffeb3b; height: 10px !important; }
+.break-cell { font-weight: bold; background-color: #f9f9f9; color: #333; }
+.class-cell { background-color: #fff; }
+.class-cell strong { display: block; font-size: 11px; color: #000; }
 
 @media print {
     .no-print { display: none; }
     body { padding: 0; }
+    .day-section { margin-bottom: 0; }
 }

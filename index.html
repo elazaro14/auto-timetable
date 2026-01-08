@@ -10,6 +10,14 @@
     <div class="container">
         <h1>School Timetable AI</h1>
         <div class="controls">
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="handleUpload()">1. Load Data</button>
+    <button onclick="startEvolution()" id="genBtn" disabled>2. Generate Timetable</button>
+    <div class="stats">
+        Generation: <span id="gen-count">0</span> | 
+        Best Fitness: <span id="best-fit">0</span>
+    </div>
+</div>
             <button onclick="startEvolution()">Generate Timetable</button>
             <div class="stats">
                 Generation: <span id="gen-count">0</span> | 
@@ -20,4 +28,5 @@
     </div>
     <script src="app.js"></script>
 </body>
-</html>Hello.py
+</html>
+

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Master Timetable - Tanzania Pro (Full Edition)</title>
+    <title>AI Master Timetable - Tanzania Pro (Once-Per-Day Rule)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .no-print { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -17,7 +17,6 @@
         #settings-panel { display: none; background: #fafafa; border: 1px solid #ddd; padding: 20px; margin-top: 15px; border-radius: 8px; }
         .status-bar { margin-top: 15px; padding: 10px; border-radius: 6px; background: #e8f5e9; color: #2e7d32; font-weight: bold; }
 
-        /* Timetable Styling */
         .day-section { background: white; padding: 20px; margin-bottom: 40px; border-radius: 8px; border: 1px solid #000; page-break-after: always; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; overflow: hidden; }
@@ -33,7 +32,7 @@
 
     <div class="no-print">
         <h1>🇹🇿 AI Master Timetable Generator</h1>
-        <p>Optimized for 18 Streams & Double Period Priority</p>
+        <p>Rule: Subjects occur once per day (Single or Double Period only).</p>
         
         <button onclick="toggleSettings()" class="btn-gray">⚙️ School Settings</button>
 
@@ -48,19 +47,19 @@
         </div>
 
         <div class="controls">
-            <button onclick="downloadCurriculumTemplate()" class="btn-gray">1. Download Template (Tanzania Rules)</button>
+            <button onclick="downloadCurriculumTemplate()" class="btn-gray">1. Download Template</button>
             <button onclick="document.getElementById('csvFile').click()" class="btn-blue">2. Upload Data</button>
             <input type="file" id="csvFile" style="display:none" onchange="handleUpload(event)">
             <button id="genBtn" onclick="startEvolution()" class="btn-green" disabled>3. Generate Timetable</button>
-            <button onclick="window.print()" class="btn-gray">4. Print / Save PDF</button>
+            <button onclick="window.print()" class="btn-gray">4. Print / PDF</button>
         </div>
-        <div class="status-bar" id="statusText">Ready: Please upload your CSV data to begin.</div>
+        <div class="status-bar" id="statusText">Ready: Upload CSV to begin.</div>
     </div>
 
     <div id="master-container">
         <div style="text-align: center;">
             <h1 id="displaySchool">YOUR SCHOOL NAME</h1>
-            <h2 id="displayYear">ACADEMIC YEAR 2025/2026</h2>
+            <h2 id="displayYear">MASTER TIME TABLE 2026</h2>
         </div>
         <div id="timetable-display"></div>
     </div>
@@ -88,9 +87,8 @@
             forms.forEach(f => {
                 const isLower = f.startsWith('F1') || f.startsWith('F2');
                 const subs = isLower ? 
-                    [{s:"MATH",p:5},{s:"ENG",p:5},{s:"KISW",p:4},{s:"PHYS",p:3},{s:"CHEM",p:3},{s:"BIO",p:3},{s:"HIST",p:3},{s:"GEO",p:2},{s:"CIVICS",p:2}] : 
-                    [{s:"ENG",p:6},{s:"MATH",p:5},{s:"KISW",p:4},{s:"PHYS",p:4},{s:"CHEM",p:4},{s:"BIO",p:4},{s:"HIST",p:4},{s:"GEO",p:4},{s:"CIVICS",p:3}];
-                
+                    [{s:"MATH",p:5},{s:"ENG",p:5},{s:"KISW",p:4},{s:"PHYS",p:3},{s:"CHEM",p:3},{s:"BIO",p:3},{s:"HIST",p:3},{s:"GEO",p:2},{s:"CIV",p:2}] : 
+                    [{s:"ENG",p:6},{s:"MATH",p:5},{s:"KISW",p:4},{s:"PHYS",p:4},{s:"CHEM",p:4},{s:"BIO",p:4},{s:"HIST",p:4},{s:"GEO",p:4},{s:"CIV",p:3}];
                 subs.forEach(sub => {
                     for(let i=0; i<sub.p; i++) csv += `${sub.s},TEACHER_NAME,ROOM_X,${f}\n`;
                 });
@@ -99,7 +97,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'tz_school_template.csv';
+            a.download = 'school_template.csv';
             a.click();
         }
 
@@ -108,45 +106,65 @@
             reader.onload = (e) => {
                 const lines = e.target.result.split('\n').slice(1);
                 subjectsData = lines.filter(l => l.trim()).map(l => {
-                    const [s, t, r, f] = l.split(',').map(x => x?.trim().toUpperCase());
-                    return { subject: s, teacher: t, room: r, form: f };
+                    const parts = l.split(',');
+                    return { subject: parts[0]?.trim().toUpperCase(), teacher: parts[1]?.trim().toUpperCase(), room: parts[2]?.trim().toUpperCase(), form: parts[3]?.trim().toUpperCase() };
                 });
                 document.getElementById('genBtn').disabled = false;
-                document.getElementById('statusText').innerText = "Data Loaded: " + subjectsData.length + " periods across all streams. Ready!";
+                document.getElementById('statusText').innerText = "Data Loaded: Ready to generate.";
             };
             reader.readAsText(event.target.files[0]);
         }
 
         function isDouble(a, b) {
-            if (a.subject !== b.subject || a.teacher !== b.teacher || a.form !== b.form || a.day !== b.day) return false;
+            if (a.subject !== b.subject || a.form !== b.form || a.day !== b.day) return false;
             const p1 = parseInt(a.period.replace('P','')), p2 = parseInt(b.period.replace('P',''));
-            return Math.abs(p1 - p2) === 1 && a.period !== "BREAK" && b.period !== "BREAK";
+            return Math.abs(p1 - p2) === 1;
         }
 
         function calculateFitness(tt) {
-            let clash = 0, doubles = 0;
-            const teacherMap = new Map();
-            
-            tt.forEach((a, i) => {
-                // Check teacher/form clashes
-                const key = `${a.day}-${a.period}`;
-                if (!teacherMap.has(key)) teacherMap.set(key, []);
-                const currentSlot = teacherMap.get(key);
-                
-                if (currentSlot.some(b => b.teacher === a.teacher || b.form === a.form)) clash += 10;
-                currentSlot.push(a);
+            let clash = 0, doubles = 0, dailyRepeatPenalty = 0;
+            const dayFormMap = {};
 
-                // Double period bonus
+            tt.forEach((a, i) => {
+                const dfKey = `${a.day}-${a.form}`;
+                if (!dayFormMap[dfKey]) dayFormMap[dfKey] = [];
+                dayFormMap[dfKey].push(a);
+
                 for (let j = i + 1; j < tt.length; j++) {
-                    if (isDouble(a, tt[j])) doubles += 15;
+                    const b = tt[j];
+                    if (a.day === b.day && a.period === b.period) {
+                        if (a.teacher === b.teacher || a.form === b.form) clash += 30;
+                    }
+                    if (isDouble(a, b)) doubles += 20;
                 }
             });
-            return (1 + doubles) / (1 + clash);
+
+            // "Once Per Day" Check
+            Object.values(dayFormMap).forEach(lessons => {
+                const subPeriods = {};
+                lessons.forEach(l => {
+                    if (!subPeriods[l.subject]) subPeriods[l.subject] = [];
+                    subPeriods[l.subject].push(parseInt(l.period.replace('P','')));
+                });
+                for (let sub in subPeriods) {
+                    const pList = subPeriods[sub].sort((x,y) => x - y);
+                    if (pList.length > 1) {
+                        for (let k = 0; k < pList.length - 1; k++) {
+                            // If not consecutive, it's a separate session on the same day = Penalty
+                            if (pList[k+1] - pList[k] !== 1) dailyRepeatPenalty += 100;
+                        }
+                        // Penalize if subject appears more than twice (triples) unless allowed
+                        if (pList.length > 2 && (pList[2] - pList[1] !== 1 || pList[1] - pList[0] !== 1)) dailyRepeatPenalty += 100;
+                    }
+                }
+            });
+
+            return (1 + doubles) / (1 + clash + dailyRepeatPenalty);
         }
 
         function startEvolution() {
             const vp = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
-            let pop = Array.from({length: 20}, () => subjectsData.map(it => ({
+            let pop = Array.from({length: 25}, () => subjectsData.map(it => ({
                 ...it, day: days[Math.floor(Math.random()*5)], period: vp[Math.floor(Math.random()*9)]
             })));
 
@@ -154,21 +172,21 @@
             const timer = setInterval(() => {
                 gen++;
                 pop.sort((a, b) => calculateFitness(b) - calculateFitness(a));
-                document.getElementById('statusText').innerText = "AI Optimizing (Gen " + gen + ")... Goal: Maximize Double Periods & Zero Clashes";
+                document.getElementById('statusText').innerText = "AI Optimizing (Gen " + gen + ")... Strict Subject-Per-Day Rule Active.";
                 
-                if(gen % 10 === 0) renderTable(pop[0]);
-                if(gen > 400) { clearInterval(timer); renderTable(pop[0]); document.getElementById('statusText').innerText = "Generation Complete!"; }
+                if(gen % 15 === 0) renderTable(pop[0]);
+                if(gen > 500) { clearInterval(timer); renderTable(pop[0]); document.getElementById('statusText').innerText = "Optimization Complete!"; }
 
-                let next = pop.slice(0, 5);
-                while(next.length < 20) {
-                    let c = JSON.parse(JSON.stringify(next[Math.floor(Math.random()*5)]));
+                let next = pop.slice(0, 8);
+                while(next.length < 25) {
+                    let c = JSON.parse(JSON.stringify(next[Math.floor(Math.random()*8)]));
                     let t = c[Math.floor(Math.random()*c.length)];
                     t.day = days[Math.floor(Math.random()*5)];
                     t.period = vp[Math.floor(Math.random()*9)];
                     next.push(c);
                 }
                 pop = next;
-            }, 40);
+            }, 30);
         }
 
         function renderTable(tt) {

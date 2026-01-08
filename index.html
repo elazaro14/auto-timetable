@@ -3,30 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Timetable Generator</title>
+    <title>School AI Timetable</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>School Timetable AI</h1>
+    <div class="no-print">
+        <h1>School Timetable AI Generator</h1>
         <div class="controls">
-    <input type="file" id="csvFile" accept=".csv">
-    <button onclick="handleUpload()">1. Load Data</button>
-    <button onclick="startEvolution()" id="genBtn" disabled>2. Generate Timetable</button>
-    <div class="stats">
-        Generation: <span id="gen-count">0</span> | 
-        Best Fitness: <span id="best-fit">0</span>
-    </div>
-</div>
-            <button onclick="startEvolution()">Generate Timetable</button>
-            <div class="stats">
-                Generation: <span id="gen-count">0</span> | 
-                Best Fitness: <span id="best-fit">0</span>
-            </div>
+            <input type="file" id="csvFile" accept=".csv">
+            <button onclick="handleUpload()">1. Load Data</button>
+            <button onclick="startEvolution()" id="genBtn" disabled>2. Generate Weekly Table</button>
+            <button onclick="window.print()">3. Print / Save PDF</button>
         </div>
-        <div id="timetable-display"></div>
+        <div class="stats">
+            Generation: <span id="gen-count">0</span> | Best Fitness: <span id="best-fit">0</span>
+        </div>
     </div>
+
+    <div id="timetable-display"></div>
+
     <script src="app.js"></script>
 </body>
 </html>
-

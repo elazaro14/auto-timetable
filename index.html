@@ -2,165 +2,130 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>School Timetable Generator</title>
+<title>School Timetable Generator - Pro</title>
 <style>
- body{font-family:Arial;background:#f4f6f8}
- table{border-collapse:collapse;width:100%;margin-top:10px}
- th,td{border:1px solid #444;padding:6px;text-align:center;font-size:13px}
+ body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f4f6f8;padding:20px}
+ .container{max-width:1100px;margin:auto;background:white;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+ table{border-collapse:collapse;width:100%;margin-top:10px;table-layout:fixed}
+ th,td{border:1px solid #444;padding:6px;text-align:center;font-size:11px;word-wrap:break-word}
  th{background:#2c3e50;color:white}
- select,input,button{padding:6px;margin:4px}
- #views{display:none;gap:10px;flex-wrap:wrap}
- .hdr{background:#34495e;color:#fff;font-weight:bold}
+ .ctrl-group{margin-bottom:15px;padding:10px;border:1px solid #ddd;border-radius:5px}
+ select,input,button{padding:8px;margin:4px;border-radius:4px;border:1px solid #ccc}
+ button{background:#3498db;color:white;cursor:pointer;border:none}
+ button:hover{background:#2980b9}
+ #views{display:none;gap:10px;flex-wrap:wrap;margin-top:10px}
+ .status-bar{font-weight:bold;color:#2c3e50;margin:10px 0}
+ .mosque-religion{background:#ecf0f1;font-style:italic;color:#7f8c8d}
+ @media print{.no-print{display:none} table{page-break-after:always}}
 </style>
 </head>
-
 <body>
 
-<h2 id="schoolTitle">School Timetable</h2>
+<div class="container no-print">
+    <h2>🇹🇿 School Timetable Generator</h2>
+    <div class="ctrl-group">
+        <input id="schoolName" placeholder="School Name">
+        <input id="year" placeholder="Academic Year">
+        <button onclick="applyHeader()">Apply Info</button>
+    </div>
+    
+    <div class="ctrl-group">
+        <input type="file" accept=".csv" onchange="loadCSV(event)">
+        <select id="displayMode">
+            <option value="subject">Subject only</option>
+            <option value="both" selected>Subject & Teacher</option>
+        </select>
+        <button id="genBtn" onclick="startEvolution()" disabled>Generate Timetable</button>
+    </div>
 
-<input id="schoolName" placeholder="School Name">
-<input id="year" placeholder="Academic Year">
-<button onclick="applyHeader()">Apply</button>
+    <div id="status" class="status-bar">Waiting for CSV file...</div>
 
-<hr>
-
-<input type="file" accept=".csv" onchange="loadCSV(event)">
-<button id="genBtn" onclick="startEvolution()" disabled>Generate</button>
-
-<select id="displayMode">
- <option value="subject">Subject only</option>
- <option value="both">Subject & Teacher</option>
-</select>
-
-<div id="status"></div>
-
-<div id="views">
- <button onclick="renderMaster()">Master Timetable</button>
+    <div id="views">
+        <button onclick="renderMaster()">Master Timetable</button>
+        <select id="streamFilter" onchange="renderIndividual('form')"><option value="">-- View Stream --</option></select>
+        <select id="teacherFilter" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
+        <button onclick="window.print()" style="background:#27ae60">Print Current View</button>
+    </div>
 </div>
 
 <div id="output"></div>
 
 <script>
-/* ---------------- BASIC ---------------- */
 const days=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
-
 const periods=[
- {p:"P1",t:"08:00–08:40"},
- {p:"P2",t:"08:40–09:20"},
- {p:"P3",t:"09:20–10:00"},
- {p:"P4",t:"10:00–10:40"},
+ {p:"P1",t:"08:00–08:40"},{p:"P2",t:"08:40–09:20"},{p:"P3",t:"09:20–10:00"},{p:"P4",t:"10:00–10:40"},
  {p:"BREAK",t:"10:40–11:10"},
- {p:"P5",t:"11:10–11:50"},
- {p:"P6",t:"11:50–12:30"},
- {p:"P7",t:"12:30–13:10"},
- {p:"P8",t:"13:10–13:50"},
- {p:"P9",t:"13:50–14:30"}
+ {p:"P5",t:"11:10–11:50"},{p:"P6",t:"11:50–12:30"},{p:"P7",t:"12:30–13:10"},{p:"P8",t:"13:10–13:50"},{p:"P9",t:"13:50–14:30"}
 ];
-
 const validPeriods=periods.filter(x=>x.p!=="BREAK").map(x=>x.p);
-
 let data=[],finalTT=[];
 
-/* ---------------- FIXED PERIODS ---------------- */
 function isFixed(day,p){
- if(day==="WEDNESDAY"&&(p==="P8"||p==="P9"))return true;
- if(day==="FRIDAY"&&(p==="P7"||p==="P8"||p==="P9"))return true;
- return false;
+ if(day==="WEDNESDAY"&&(p==="P8"||p==="P9"))return "RELIGION";
+ if(day==="FRIDAY"&&(p==="P7"||p==="P8"||p==="P9"))return "MOSQUE";
+ return null;
 }
 
 function randPeriod(day){
- let p;
- do{
-  p=validPeriods[Math.floor(Math.random()*validPeriods.length)];
- }while(isFixed(day,p));
+ let p; do{ p=validPeriods[Math.floor(Math.random()*validPeriods.length)]; }while(isFixed(day,p));
  return p;
 }
 
-/* ---------------- UI ---------------- */
-function status(t){document.getElementById("status").innerText=t;}
+function applyHeader(){ status("Header Applied: " + schoolName.value); }
 
-function applyHeader(){
- document.getElementById("schoolTitle").innerText=
-  schoolName.value+" — "+year.value;
-}
-
-/* ---------------- CSV ---------------- */
 function loadCSV(e){
  const r=new FileReader();
  r.onload=()=>{
-  data=r.result.split("\n").slice(1)
-   .filter(x=>x.trim())
-   .map(l=>{
-    let p=l.split(",");
-    return{
-     subject:p[0].trim(),
-     teacher:p[1].trim(),
-     form:p[3].trim()
-    };
-   });
+  data=r.result.split("\n").slice(1).filter(x=>x.trim()).map((l,idx)=>{
+   let p=l.split(",");
+   return{ id:idx, subject:p[0].trim(), teacher:p[1].trim(), form:p[3].trim() };
+  });
+  updateFilters();
   genBtn.disabled=false;
-  status("CSV loaded ✔");
+  status("CSV loaded. Ready to generate.");
  };
  r.readAsText(e.target.files[0]);
 }
 
-/* ---------------- FITNESS (DOUBLE FIRST) ---------------- */
+function updateFilters(){
+ const streams=[...new Set(data.map(x=>x.form))].sort();
+ const teachers=[...new Set(data.map(x=>x.teacher))].sort();
+ streamFilter.innerHTML='<option value="">-- View Stream --</option>'+streams.map(x=>`<option value="${x}">${x}</option>`).join('');
+ teacherFilter.innerHTML='<option value="">-- View Teacher --</option>'+teachers.map(x=>`<option value="${x}">${x}</option>`).join('');
+}
+
 function fitness(tt){
- let score = 100000;
- let pen = 0;
+ let score=100000, pen=0;
+ const teacherLoad={}, streamLoad={}, dailySub={};
 
- /* ---------- SLOT CLASH (HARD) ---------- */
- const slot = {};
  tt.forEach(x=>{
-  let k = `${x.day}-${x.period}`;
-  slot[k] = slot[k] || [];
-  slot[k].push(x);
- });
- Object.values(slot).forEach(s=>{
-  if(s.length > 1) pen += 50000;
+  // 1. Hard Clash: Teacher cannot be in two streams at once
+  let tk=`${x.day}-${x.period}-${x.teacher}`;
+  if(teacherLoad[tk]) pen+=100000; teacherLoad[tk]=true;
+
+  // 2. Hard Clash: Stream cannot have two subjects at once
+  let sk=`${x.day}-${x.period}-${x.form}`;
+  if(streamLoad[sk]) pen+=100000; streamLoad[sk]=true;
+
+  // Group for Double/Triple checks
+  let dsk=`${x.form}-${x.day}-${x.subject}`;
+  dailySub[dsk]=dailySub[dsk]||[];
+  dailySub[dsk].push(+x.period.slice(1));
  });
 
- /* ---------- SUBJECT PER STREAM PER DAY ---------- */
- const group = {};
- tt.forEach(x=>{
-  let k = `${x.form}-${x.day}-${x.subject}`;
-  group[k] = group[k] || [];
-  group[k].push(+x.period.slice(1));
- });
-
- Object.values(group).forEach(p=>{
+ Object.values(dailySub).forEach(p=>{
   p.sort((a,b)=>a-b);
-
-  /* ❌ more than 2 periods */
-  if(p.length > 2){
-   pen += 50000;
-   return;
-  }
-
-  /* ❌ split double */
-  if(p.length === 2 && p[1] - p[0] !== 1){
-   pen += 50000;
-   return;
-  }
-
-  /* ✅ perfect double */
-  if(p.length === 2 && p[1] - p[0] === 1){
-   score += 3000;
-   return;
-  }
-
-  /* ✅ single period */
-  if(p.length === 1){
-   score += 500;
-  }
+  if(p.length>2) pen+=80000; // ❌ Triple
+  else if(p.length===2 && p[1]-p[0]!==1) pen+=60000; // ❌ Split Double
+  else if(p.length===2) score+=5000; // ✅ Consecutive Double
+  else score+=500; // ✅ Single
  });
 
  return score / (1 + pen);
 }
 
-/* ---------------- GENERATION ---------------- */
 function startEvolution(){
- let pop=[...Array(60)].map(()=>data.map(d=>{
+ let pop=[...Array(40)].map(()=>data.map(d=>{
   let day=days[Math.floor(Math.random()*5)];
   return{...d,day,period:randPeriod(day)};
  }));
@@ -169,19 +134,19 @@ function startEvolution(){
  const timer=setInterval(()=>{
   gen++;
   pop.sort((a,b)=>fitness(b)-fitness(a));
-  status("Generating… "+gen);
+  status(`Evolving: Gen ${gen} | Best Score: ${Math.floor(fitness(pop[0]))}`);
 
-  if(gen>2000){
+  if(gen>1200){
    clearInterval(timer);
    finalTT=pop[0];
    renderMaster();
-   views.style.display="flex";
-   status("Completed ✔ Doubles prioritized");
+   document.getElementById("views").style.display="flex";
+   status("Completed! No clashes found.");
   }
 
-  let next=pop.slice(0,15);
-  while(next.length<60){
-   let c=JSON.parse(JSON.stringify(next[Math.floor(Math.random()*15)]));
+  let next=pop.slice(0,10);
+  while(next.length<40){
+   let c=JSON.parse(JSON.stringify(next[Math.floor(Math.random()*10)]));
    let x=c[Math.floor(Math.random()*c.length)];
    x.day=days[Math.floor(Math.random()*5)];
    x.period=randPeriod(x.day);
@@ -191,37 +156,40 @@ function startEvolution(){
  },10);
 }
 
-/* ---------------- RENDER MASTER ---------------- */
 function renderMaster(){
- let mode=document.getElementById("displayMode").value;
- let forms=[...new Set(finalTT.map(x=>x.form))];
- let html="";
-
- forms.forEach(f=>{
-  html+=`<h3>${f}</h3><table><tr><th>Day</th>`;
-  periods.forEach(p=>{
-   html+=`<th>${p.p}<br>${p.t}</th>`;
-  });
-  html+="</tr>";
-
-  days.forEach(d=>{
-   html+=`<tr><th>${d}</th>`;
-   periods.forEach(p=>{
-    if(p.p==="BREAK"){html+="<td>BREAK</td>";return;}
-    let cell=finalTT.find(x=>x.form===f && x.day===d && x.period===p.p);
-    if(!cell)html+="<td></td>";
-    else html+="<td>"+(mode==="both"
-     ?cell.subject+"<br>"+cell.teacher
-     :cell.subject)+"</td>";
-   });
-   html+="</tr>";
-  });
-  html+="</table><br>";
- });
-
+ let mode=displayMode.value;
+ let forms=[...new Set(data.map(x=>x.form))].sort();
+ let html=`<center><h2>${schoolName.value} Master Timetable</h2></center>`;
+ forms.forEach(f=> html += buildTable(f, 'form', mode));
  output.innerHTML=html;
 }
+
+function renderIndividual(type){
+ let val = type === 'form' ? streamFilter.value : teacherFilter.value;
+ if(!val) return;
+ let mode=displayMode.value;
+ output.innerHTML = `<center><h2>${type.toUpperCase()} Schedule: ${val}</h2></center>` + buildTable(val, type, mode);
+}
+
+function buildTable(val, type, mode){
+ let html=`<table><tr><th>Day</th>${periods.map(p=>`<th>${p.p}<br>${p.t}</th>`).join('')}</tr>`;
+ days.forEach(d=>{
+  html+=`<tr><th>${d}</th>`;
+  periods.forEach(p=>{
+   let fixed = isFixed(d, p.p);
+   if(p.p==="BREAK") html+="<td style='background:#eee'>BREAK</td>";
+   else if(fixed) html+=`<td class='mosque-religion'>${fixed}</td>`;
+   else {
+    let cell=finalTT.find(x=>(type==='form'?x.form===val:x.teacher===val) && x.day===d && x.period===p.p);
+    html+=`<td>${cell ? (mode==='both'?`<b>${cell.subject}</b><br>${type==='form'?cell.teacher:cell.form}`:cell.subject) : ''}</td>`;
+   }
+  });
+  html+="</tr>";
+ });
+ return html+"</table><br>";
+}
+
+function status(t){document.getElementById("status").innerText=t;}
 </script>
 </body>
 </html>
-

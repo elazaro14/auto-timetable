@@ -9,7 +9,7 @@
 body{font-family:Segoe UI,sans-serif;background:#f0f2f5;padding:20px}
 .no-print{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.1);margin-bottom:20px}
 .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-button,select,input{padding:8px;border-radius:6px}
+input,select,button{padding:8px;border-radius:6px}
 button{border:none;font-weight:bold;cursor:pointer}
 .btn-blue{background:#007bff;color:#fff}
 .btn-green{background:#28a745;color:#fff}
@@ -41,8 +41,8 @@ td{border:1px solid #000;font-size:10px;padding:4px;text-align:center}
 
 <div class="controls">
 <button class="btn-gray" onclick="downloadTemplate()">Download Template</button>
-<button class="btn-blue" onclick="file.click()">Upload CSV</button>
-<input type="file" id="file" hidden onchange="loadCSV(event)">
+<button class="btn-blue" onclick="csv.click()">Upload CSV</button>
+<input type="file" id="csv" hidden onchange="loadCSV(event)">
 <button class="btn-green" id="genBtn" disabled onclick="startEvolution()">Generate</button>
 <button class="btn-gray" onclick="window.print()">Print</button>
 </div>
@@ -59,7 +59,9 @@ td{border:1px solid #000;font-size:10px;padding:4px;text-align:center}
 <div id="output"></div>
 
 <script>
+/* ---------------- BASIC DATA ---------------- */
 const days=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
+
 const periods=[
  {p:"P1",t:"07:30–08:10"},
  {p:"P2",t:"08:10–08:50"},
@@ -72,48 +74,73 @@ const periods=[
  {p:"P8",t:"12:30–13:10"},
  {p:"P9",t:"13:10–13:50"}
 ];
+
 const validPeriods=periods.filter(x=>x.p!=="BREAK").map(x=>x.p);
 
-const forms=["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
+const forms=[
+"F1A","F1B","F1C","F1D","F1E","F1F","F1G",
+"F2A","F2B","F2C","F2D",
+"F3A","F3B","F3C","F3D",
+"F4A","F4B","F4C"
+];
 
 let data=[],finalTT=[];
 
-function isFixed(d,p){
- if(d==="WEDNESDAY"&&(p==="P8"||p==="P9"))return"RELIGION";
- if(d==="FRIDAY"&&(p==="P7"||p==="P8"||p==="P9"))return"MOSQUE";
+/* ---------------- FIXED BLOCKS ---------------- */
+function isFixed(day,p){
+ if(day==="WEDNESDAY"&&(p==="P8"||p==="P9"))return"RELIGION";
+ if(day==="FRIDAY"&&(p==="P7"||p==="P8"||p==="P9"))return"MOSQUE";
  return null;
 }
-function getValidPeriod(d){
+
+function getValidPeriod(day){
  let p;
  do{p=validPeriods[Math.floor(Math.random()*validPeriods.length)]}
- while(isFixed(d,p));
+ while(isFixed(day,p));
  return p;
 }
 
+/* ---------------- CSV LOADER (FIXED) ---------------- */
 function loadCSV(e){
  const r=new FileReader();
  r.onload=()=>{
-  data=r.result.split("\n").slice(1).filter(x=>x.trim()).map(l=>{
-   let p=l.split(",");
-   return{subject:p[0],teacher:p[1],room:p[2],form:p[3]};
-  });
-  streamSel.innerHTML="<option>-- Stream --</option>"+[...new Set(data.map(x=>x.form))].map(x=>`<option>${x}</option>`).join("");
-  teacherSel.innerHTML="<option>-- Teacher --</option>"+[...new Set(data.map(x=>x.teacher))].map(x=>`<option>${x}</option>`).join("");
+  data=r.result.split("\n").slice(1)
+   .filter(x=>x.trim())
+   .map(l=>{
+    let p=l.split(",");
+    return{
+     subject:p[0].trim(),
+     teacher:p[1].trim(),
+     room:p[2].trim(),
+     form:p[3].trim()
+    };
+   });
+
+  streamSel.innerHTML="<option>-- Stream --</option>"+
+   [...new Set(data.map(x=>x.form))].map(x=>`<option>${x}</option>`).join("");
+
+  teacherSel.innerHTML="<option>-- Teacher --</option>"+
+   [...new Set(data.map(x=>x.teacher))].map(x=>`<option>${x}</option>`).join("");
+
   genBtn.disabled=false;
-  status("Data loaded");
+  status("Data loaded ✔");
  };
  r.readAsText(e.target.files[0]);
 }
 
+/* ---------------- FITNESS (STRONG) ---------------- */
 function fitness(tt){
  let score=100000,pen=0;
  const slot={};
+
  tt.forEach(a=>{
   let k=`${a.day}-${a.period}`;
   slot[k]=slot[k]||[];
   slot[k].push(a);
  });
+
  Object.values(slot).forEach(s=>{
+  if(s.length>1)pen+=20000;   // HARD block overwrite
   let t=new Set(),f=new Set();
   s.forEach(x=>{
    if(t.has(x.teacher))pen+=5000;
@@ -121,26 +148,31 @@ function fitness(tt){
    t.add(x.teacher);f.add(x.form);
   });
  });
+
  return score/(1+pen);
 }
 
+/* ---------------- EVOLUTION ---------------- */
 function startEvolution(){
  let pop=[...Array(40)].map(()=>data.map(d=>{
   let day=days[Math.floor(Math.random()*5)];
   return{...d,day,period:getValidPeriod(day)};
  }));
+
  let gen=0;
  const timer=setInterval(()=>{
   gen++;
   pop.sort((a,b)=>fitness(b)-fitness(a));
   status("Generating... "+gen);
-  if(gen>900){
+
+  if(gen>1500){
    clearInterval(timer);
    finalTT=pop[0];
    renderMaster();
    views.style.display="flex";
-   status("Done ✔");
+   status("Timetable complete ✔");
   }
+
   let next=pop.slice(0,12);
   while(next.length<40){
    let c=JSON.parse(JSON.stringify(next[Math.floor(Math.random()*12)]));
@@ -153,21 +185,26 @@ function startEvolution(){
  },10);
 }
 
-function header(){
+/* ---------------- HEADER ---------------- */
+function headerHTML(){
  return `
  <div class="school-title">
- <h2>${schoolName.value||""}</h2>
- <h4>Academic Year: ${academicYear.value||""}</h4>
+  <h2>${schoolName.value||""}</h2>
+  <h4>Academic Year: ${academicYear.value||""}</h4>
  </div>`;
 }
 
+/* ---------------- MASTER VIEW ---------------- */
 function renderMaster(){
  let mode=displayMode.value;
- let h=header();
+ let h=headerHTML();
+
  days.forEach(d=>{
-  h+=`<div class="day-section"><h3>${d}</h3><table><tr class="header-row"><td>STREAM</td>${
+  h+=`<div class="day-section"><h3>${d}</h3>
+  <table><tr class="header-row"><td>STREAM</td>${
    periods.map(x=>`<td>${x.p}<br>${x.t}</td>`).join("")
   }</tr>`;
+
   forms.forEach(f=>{
    h+=`<tr><td><b>${f}</b></td>`;
    periods.forEach(x=>{
@@ -180,18 +217,24 @@ function renderMaster(){
    });
    h+="</tr>";
   });
+
   h+="</table></div>";
  });
+
  output.innerHTML=h;
 }
 
+/* ---------------- SINGLE VIEW ---------------- */
 function renderSingle(type){
  let v=type==="form"?streamSel.value:teacherSel.value;
  if(!v||v.startsWith("--"))return;
  let mode=displayMode.value;
- let h=header()+`<div class="day-section"><h3>${v}</h3><table><tr class="header-row"><td>DAY</td>${
+
+ let h=headerHTML()+`<div class="day-section"><h3>${v}</h3>
+ <table><tr class="header-row"><td>DAY</td>${
   periods.map(x=>`<td>${x.p}<br>${x.t}</td>`).join("")
  }</tr>`;
+
  days.forEach(d=>{
   h+=`<tr><td><b>${d}</b></td>`;
   periods.forEach(x=>{
@@ -204,20 +247,25 @@ function renderSingle(type){
   });
   h+="</tr>";
  });
+
  h+="</table></div>";
  output.innerHTML=h;
 }
 
+/* ---------------- TEMPLATE ---------------- */
 function downloadTemplate(){
  let csv="Subject,Teacher,Room,Form\n";
  forms.forEach(f=>{
   [["MATHEMATICS",5],["ENGLISH",5],["KISWAHILI",4]].forEach(x=>{
-   for(let i=0;i<x[1];i++)csv+=`${x[0]},TEACHER,ROOM_${f},${f}\n`;
+   for(let i=0;i<x[1];i++)
+    csv+=`${x[0]},TEACHER,ROOM_${f},${f}\n`;
   });
  });
  let b=new Blob([csv],{type:"text/csv"});
  let a=document.createElement("a");
- a.href=URL.createObjectURL(b);a.download="Timetable_Template.csv";a.click();
+ a.href=URL.createObjectURL(b);
+ a.download="Timetable_Template.csv";
+ a.click();
 }
 
 function status(t){document.getElementById("status").innerText=t;}

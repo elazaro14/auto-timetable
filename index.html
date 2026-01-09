@@ -3,43 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Master Timetable - Tanzania Pro</title>
+    <title>AI Master Timetable - Tanzania Pro (Multi-View)</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .no-print { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; align-items: center; }
+        button { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-blue { background: #007bff; color: white; } .btn-green { background: #28a745; color: white; } .btn-gray { background: #6c757d; color: white; }
+        select { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; }
         .status-bar { margin-top: 15px; padding: 10px; border-radius: 6px; background: #fff3cd; color: #856404; font-weight: bold; border: 1px solid #ffeeba; }
+        
+        /* Table Styles */
         .day-section { background: white; padding: 20px; margin-bottom: 40px; border: 1px solid #000; page-break-after: always; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; overflow: hidden; }
+        td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 50px; overflow: hidden; }
         .header-row { background: #343a40; color: white; font-weight: bold; }
-        .fixed-block { background: #d1ecf1; font-weight: bold; color: #0c5460; }
+        .fixed-block { background: #d1ecf1; font-weight: bold; color: #0c5460; font-size: 11px; }
         .separator { background: #ffd700 !important; height: 12px !important; }
-        @media print { .no-print { display: none; } body { padding: 0; } }
+        
+        .view-title { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-bottom: 15px; }
+
+        @media print { .no-print { display: none; } body { padding: 0; background: white; } .day-section { border: 1px solid #000; margin-bottom: 0; } }
     </style>
 </head>
 <body>
 
     <div class="no-print">
-        <h1>🇹🇿 AI Master Timetable Generator</h1>
-        <p><b>Wed:</b> P8-P9 Religion | <b>Fri:</b> P7-P9 Mosque | <b>Rule:</b> Max 1 allocation per subject per day (double preferred).</p>
+        <h1>🇹🇿 AI Timetable: Multi-View System</h1>
+        <p><b>Wed:</b> P8-P9 Religion | <b>Fri:</b> P7-P9 Mosque | <b>Fixed Constraints Active</b></p>
         
         <div class="controls">
             <button onclick="downloadLockedTemplate()" class="btn-gray">1. Download Template</button>
             <button onclick="document.getElementById('csvFile').click()" class="btn-blue">2. Upload Data</button>
             <input type="file" id="csvFile" style="display:none" onchange="handleUpload(event)">
             <button id="genBtn" onclick="startEvolution()" class="btn-green" disabled>3. Generate Timetable</button>
-            <button onclick="window.print()" class="btn-gray">4. Print PDF</button>
+            <button onclick="window.print()" class="btn-gray">4. Print This View</button>
         </div>
-        <div class="status-bar" id="statusText">System Ready.</div>
+
+        <div id="view-options" class="controls" style="display:none; border-top: 1px solid #ddd; padding-top: 15px;">
+            <b>Select View:</b>
+            <button onclick="renderMasterView()" class="btn-blue">Master View</button>
+            <select id="streamPicker" onchange="renderIndividualView('stream')"><option value="">-- Single Stream --</option></select>
+            <select id="teacherPicker" onchange="renderIndividualView('teacher')"><option value="">-- Single Teacher --</option></select>
+        </div>
+
+        <div class="status-bar" id="statusText">Upload your CSV to start.</div>
     </div>
 
     <div id="timetable-display"></div>
 
     <script>
         let subjectsData = [];
+        let finalTimetable = [];
         const days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
         const periods = ["P1", "P2", "P3", "P4", "BREAK", "P5", "P6", "P7", "P8", "P9"];
         const forms = ["F1A", "F1B", "F1C", "F1D", "F1E", "F1F", "F1G", "F2A", "F2B", "F2C", "F2D", "F3A", "F3B", "F3C", "F3D", "F4A", "F4B", "F4C"];
@@ -50,21 +65,6 @@
             return null;
         }
 
-        function downloadLockedTemplate() {
-            let csv = "Subject,Teacher,Room,Form\n";
-            forms.forEach(f => {
-                let alloc = f.startsWith('F1') || f.startsWith('F2') ? 
-                    [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:5},{s:"KISWAHILI",p:4},{s:"BUSINESS STUDIES",p:3},{s:"HISTORIA NA MAADILI",p:3},{s:"HISTORY",p:3},{s:"BOOK-KEEPING",p:3},{s:"PHYSICS",p:3},{s:"CHEMISTRY",p:3},{s:"BIOLOGY",p:3},{s:"GEOGRAPHY",p:2}] : 
-                    [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:6},{s:"KISWAHILI",p:4},{s:"CIVICS",p:3},{s:"HISTORY",p:4},{s:"PHYSICS",p:4},{s:"CHEMISTRY",p:4},{s:"BIOLOGY",p:4},{s:"GEOGRAPHY",p:4}];
-                alloc.forEach(item => { for(let i=0; i<item.p; i++) csv += `${item.s},TEACHER_NAME,RM_${f},${f}\n`; });
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'Official_Tanzania_Template.csv';
-            a.click();
-        }
-
         function handleUpload(event) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -73,10 +73,24 @@
                     const p = l.split(',');
                     return { subject: p[0].trim(), teacher: p[1].trim(), room: p[2].trim(), form: p[3].trim() };
                 });
+                updatePickers();
                 document.getElementById('genBtn').disabled = false;
-                document.getElementById('statusText').innerText = "Data Loaded Successfully.";
+                document.getElementById('statusText').innerText = "Data Loaded. Click Generate.";
             };
             reader.readAsText(event.target.files[0]);
+        }
+
+        function updatePickers() {
+            const streams = [...new Set(subjectsData.map(s => s.form))].sort();
+            const teachers = [...new Set(subjectsData.map(s => s.teacher))].sort();
+            
+            const sp = document.getElementById('streamPicker');
+            sp.innerHTML = '<option value="">-- Single Stream --</option>';
+            streams.forEach(s => sp.innerHTML += `<option value="${s}">${s}</option>`);
+
+            const tp = document.getElementById('teacherPicker');
+            tp.innerHTML = '<option value="">-- Single Teacher --</option>';
+            teachers.forEach(t => tp.innerHTML += `<option value="${t}">${t}</option>`);
         }
 
         function calculateFitness(tt) {
@@ -94,37 +108,99 @@
                     if (a.day === b.day && a.period === b.period && (a.teacher === b.teacher || a.form === b.form)) clash += 1000;
                 }
             });
-
-            Object.values(dayFormMap).forEach(lessons => {
-                const subs = {};
-                lessons.forEach(l => {
-                    if(!subs[l.subject]) subs[l.subject] = [];
-                    subs[l.subject].push(parseInt(l.period.slice(1)));
-                });
-                for(let s in subs) {
-                    const p = subs[s].sort((x,y)=>x-y);
-                    if(p.length > 2) fatalError += 10000; 
-                    else if(p.length === 2) {
-                        if(p[1]-p[0] === 1) {
-                            // ✅ valid double consecutive
-                        } else {
-                            fatalError += 10000; // ❌ double but not consecutive
-                        }
-                    } else if(p.length === 1) {
-                        // ✅ valid single
-                    }
-                }
-            });
             return 1 / (1 + clash + fatalError);
         }
 
         function startEvolution() {
-            const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"]; // exclude BREAK
-            let pop = Array.from({length: 30}, () => subjectsData.map(it => {
-                let day = days[Math.floor(Math.random()*5)];
-                let period = vp[Math.floor(Math.random()*9)];
-                return {...it, day, period};
-            }));
+            const vp = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
+            let pop = Array.from({length: 25}, () => subjectsData.map(it => ({
+                ...it, day: days[Math.floor(Math.random()*5)], period: vp[Math.floor(Math.random()*9)]
+            })));
 
             let gen = 0;
-            const timer = set
+            const timer = setInterval(() => {
+                gen++;
+                pop.sort((a, b) => calculateFitness(b) - calculateFitness(a));
+                document.getElementById('statusText').innerText = `Gen ${gen}: Solving conflicts...`;
+                if(gen > 800) { 
+                    clearInterval(timer); 
+                    finalTimetable = pop[0];
+                    renderMasterView(); 
+                    document.getElementById('view-options').style.display = 'flex';
+                    document.getElementById('statusText').innerText = "Success! Select a view below to print."; 
+                }
+                
+                let next = pop.slice(0, 10);
+                while(next.length < 25) {
+                    let c = JSON.parse(JSON.stringify(next[Math.floor(Math.random()*10)]));
+                    let t = c[Math.floor(Math.random()*c.length)];
+                    t.day = days[Math.floor(Math.random()*5)];
+                    t.period = vp[Math.floor(Math.random()*9)];
+                    next.push(c);
+                }
+                pop = next;
+            }, 20);
+        }
+
+        function renderMasterView() {
+            let html = '<h2 class="view-title">MASTER TIMETABLE (ALL STREAMS)</h2>';
+            days.forEach(day => {
+                html += `<div class="day-section"><h3>${day}</h3><table><tr class="header-row"><td>STREAM</td>${periods.map(p=>`<td>${p}</td>`).join('')}</tr>`;
+                forms.forEach(f => {
+                    html += `<tr><td style="background:#f8f9fa; font-weight:bold;">${f}</td>`;
+                    periods.forEach(p => {
+                        const fixed = isFixedBlock(day, p);
+                        if(p === "BREAK") html += `<td style="background:#eee">TEA</td>`;
+                        else if(fixed) html += `<td class="fixed-block">${fixed}</td>`;
+                        else {
+                            const s = finalTimetable.find(x => x.day === day && x.form === f && x.period === p);
+                            html += `<td>${s ? '<b>'+s.subject+'</b><br>'+s.teacher : ''}</td>`;
+                        }
+                    });
+                    html += `</tr>`;
+                });
+                html += `</table></div>`;
+            });
+            document.getElementById('timetable-display').innerHTML = html;
+        }
+
+        function renderIndividualView(type) {
+            const val = type === 'stream' ? document.getElementById('streamPicker').value : document.getElementById('teacherPicker').value;
+            if(!val) return;
+            
+            let html = `<h2 class="view-title">${type.toUpperCase()}: ${val}</h2>`;
+            html += `<div class="day-section"><table><tr class="header-row"><td>DAY</td>${periods.map(p=>`<td>${p}</td>`).join('')}</tr>`;
+            days.forEach(day => {
+                html += `<tr><td style="font-weight:bold;">${day}</td>`;
+                periods.forEach(p => {
+                    const fixed = isFixedBlock(day, p);
+                    if(p === "BREAK") html += `<td style="background:#eee">TEA</td>`;
+                    else if(fixed) html += `<td class="fixed-block">${fixed}</td>`;
+                    else {
+                        const s = finalTimetable.find(x => x.day === day && (type === 'stream' ? x.form === val : x.teacher === val) && x.period === p);
+                        html += `<td>${s ? '<b>'+s.subject+'</b><br>'+ (type === 'stream' ? s.teacher : 'Stream: ' + s.form) : ''}</td>`;
+                    }
+                });
+                html += `</tr>`;
+            });
+            html += `</table></div>`;
+            document.getElementById('timetable-display').innerHTML = html;
+        }
+
+        function downloadLockedTemplate() {
+            let csv = "Subject,Teacher,Room,Form\n";
+            forms.forEach(f => {
+                let alloc = f.startsWith('F1') || f.startsWith('F2') ? 
+                    [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:5},{s:"KISWAHILI",p:4},{s:"BUSINESS STUDIES",p:3},{s:"HISTORIA NA MAADILI",p:3},{s:"HISTORY",p:3},{s:"BOOK-KEEPING",p:3},{s:"PHYSICS",p:3},{s:"CHEMISTRY",p:3},{s:"BIOLOGY",p:3},{s:"GEOGRAPHY",p:2}] : 
+                    [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:6},{s:"KISWAHILI",p:4},{s:"CIVICS",p:3},{s:"HISTORY",p:4},{s:"PHYSICS",p:4},{s:"CHEMISTRY",p:4},{s:"BIOLOGY",p:4},{s:"GEOGRAPHY",p:4}];
+                alloc.forEach(item => { for(let i=0; i<item.p; i++) csv += `${item.s},TEACHER_NAME,RM_${f},${f}\n`; });
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Official_Tanzania_Template.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>

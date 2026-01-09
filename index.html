@@ -63,16 +63,16 @@ td{border:1px solid #000;font-size:10px;padding:4px;text-align:center}
 const days=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
 const periods=[
- {p:"P1",t:"07:30–08:10"},
- {p:"P2",t:"08:10–08:50"},
- {p:"P3",t:"08:50–09:30"},
- {p:"P4",t:"09:30–10:10"},
- {p:"BREAK",t:"10:10–10:30"},
- {p:"P5",t:"10:30–11:10"},
- {p:"P6",t:"11:10–11:50"},
- {p:"P7",t:"11:50–12:30"},
- {p:"P8",t:"12:30–13:10"},
- {p:"P9",t:"13:10–13:50"}
+ {p:"P1",t:"08:00–08:40"},
+ {p:"P2",t:"08:40–09:20"},
+ {p:"P3",t:"09:20–10:00"},
+ {p:"P4",t:"10:00–10:40"},
+ {p:"BREAK",t:"10:40–11:10"},
+ {p:"P5",t:"11:10–11:50"},
+ {p:"P6",t:"11:50–12:30"},
+ {p:"P7",t:"12:30–13:10"},
+ {p:"P8",t:"13:10–13:50"},
+ {p:"P9",t:"13:50–14:30"}
 ];
 
 const validPeriods=periods.filter(x=>x.p!=="BREAK").map(x=>x.p);
@@ -272,3 +272,4 @@ function status(t){document.getElementById("status").innerText=t;}
 </script>
 </body>
 </html>
+

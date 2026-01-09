@@ -24,7 +24,7 @@
 
     <div class="no-print">
         <h1>🇹🇿 AI Master Timetable Generator</h1>
-        <p><b>Wed:</b> P8-P9 Religion | <b>Fri:</b> P7-P9 Mosque | <b>Rule:</b> Max 2 Periods per Day.</p>
+        <p><b>Wed:</b> P8-P9 Religion | <b>Fri:</b> P7-P9 Mosque | <b>Rule:</b> Max 1 allocation per subject per day (double preferred).</p>
         
         <div class="controls">
             <button onclick="downloadLockedTemplate()" class="btn-gray">1. Download Template</button>
@@ -80,7 +80,7 @@
         }
 
         function calculateFitness(tt) {
-            let clash = 0, doubles = 0, fatalError = 0;
+            let clash = 0, fatalError = 0;
             const dayFormMap = {};
 
             tt.forEach((a, i) => {
@@ -92,10 +92,6 @@
                 for (let j = i + 1; j < tt.length; j++) {
                     const b = tt[j];
                     if (a.day === b.day && a.period === b.period && (a.teacher === b.teacher || a.form === b.form)) clash += 1000;
-                    if (a.subject === b.subject && a.form === b.form && a.day === b.day) {
-                        const p1 = parseInt(a.period.slice(1)), p2 = parseInt(b.period.slice(1));
-                        if (Math.abs(p1 - p2) === 1) doubles += 100;
-                    }
                 }
             });
 
@@ -108,62 +104,27 @@
                 for(let s in subs) {
                     const p = subs[s].sort((x,y)=>x-y);
                     if(p.length > 2) fatalError += 10000; 
-                    if(p.length === 2 && (p[1]-p[0] !== 1)) fatalError += 10000;
+                    else if(p.length === 2) {
+                        if(p[1]-p[0] === 1) {
+                            // ✅ valid double consecutive
+                        } else {
+                            fatalError += 10000; // ❌ double but not consecutive
+                        }
+                    } else if(p.length === 1) {
+                        // ✅ valid single
+                    }
                 }
             });
-            return (1 + doubles) / (1 + clash + fatalError);
+            return 1 / (1 + clash + fatalError);
         }
 
         function startEvolution() {
-            const vp = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
-            let pop = Array.from({length: 30}, () => subjectsData.map(it => ({
-                ...it, day: days[Math.floor(Math.random()*5)], period: vp[Math.floor(Math.random()*9)]
-            })));
+            const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"]; // exclude BREAK
+            let pop = Array.from({length: 30}, () => subjectsData.map(it => {
+                let day = days[Math.floor(Math.random()*5)];
+                let period = vp[Math.floor(Math.random()*9)];
+                return {...it, day, period};
+            }));
 
             let gen = 0;
-            const timer = setInterval(() => {
-                gen++;
-                pop.sort((a, b) => calculateFitness(b) - calculateFitness(a));
-                document.getElementById('statusText').innerText = `Gen ${gen}: Allocating Subjects Around Religion/Mosque...`;
-                if(gen % 40 === 0) renderTable(pop[0]);
-                if(gen > 1200) { clearInterval(timer); renderTable(pop[0]); document.getElementById('statusText').innerText = "Process Complete."; }
-                
-                let next = pop.slice(0, 10);
-                while(next.length < 30) {
-                    let c = JSON.parse(JSON.stringify(next[Math.floor(Math.random()*10)]));
-                    let t = c[Math.floor(Math.random()*c.length)];
-                    t.day = days[Math.floor(Math.random()*5)];
-                    t.period = vp[Math.floor(Math.random()*9)];
-                    next.push(c);
-                }
-                pop = next;
-            }, 20);
-        }
-
-        function renderTable(tt) {
-            let html = '';
-            days.forEach(day => {
-                html += `<div class="day-section"><h2>${day}</h2><table><tr class="header-row"><td>STREAM</td>${periods.map(p=>`<td>${p}</td>`).join('')}</tr>`;
-                let lastF = "";
-                forms.forEach(f => {
-                    if(lastF !== "" && f.substring(0,2) !== lastF.substring(0,2)) html += `<tr class="separator"><td colspan="11"></td></tr>`;
-                    lastF = f;
-                    html += `<tr><td style="background:#f8f9fa; font-weight:bold;">${f}</td>`;
-                    periods.forEach(p => {
-                        const fixed = isFixedBlock(day, p);
-                        if(p === "BREAK") html += `<td style="background:#eee">TEA</td>`;
-                        else if(fixed) html += `<td class="fixed-block">${fixed}</td>`;
-                        else {
-                            const s = tt.find(x => x.day === day && x.form === f && x.period === p);
-                            html += `<td>${s ? '<b>'+s.subject+'</b><br>'+s.teacher : ''}</td>`;
-                        }
-                    });
-                    html += `</tr>`;
-                });
-                html += `</table></div>`;
-            });
-            document.getElementById('timetable-display').innerHTML = html;
-        }
-    </script>
-</body>
-</html>
+            const timer = set

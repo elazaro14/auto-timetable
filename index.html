@@ -23,7 +23,6 @@
     </style>
 </head>
 <body>
-
     <div class="no-print">
         <h2>🇹🇿 Official Timetable System (Double Period Focus)</h2>
         <div class="controls">
@@ -31,7 +30,7 @@
             <button onclick="startEvolution()" id="genBtn" disabled style="background:#28a745;">Generate Timetable</button>
             <button onclick="window.print()" style="background:#6c757d;">Print Current View</button>
         </div>
-        
+       
         <div id="view-controls" class="controls" style="display:none; border-top: 1px solid #ddd; padding-top: 15px;">
             <span>Switch View:</span>
             <button onclick="renderMaster()" style="background:#34495e;">Full Master View</button>
@@ -40,9 +39,7 @@
         </div>
         <div id="status">Upload CSV to begin.</div>
     </div>
-
     <div id="output"></div>
-
 <script>
 const days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 const periods = [
@@ -51,77 +48,210 @@ const periods = [
     {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
 ];
 const forms = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let rawData = [], bestTT = [];
-
+const doubleSlots = [
+    ['P1','P2'], ['P2','P3'], ['P3','P4'],
+    ['P5','P6'], ['P6','P7'], ['P7','P8'], ['P8','P9']
+];
+let requiredLessons = [], bestTT = [];
 function isFixed(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
     if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
     return null;
 }
-
 function handleUpload(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
-        rawData = event.target.result.split('\n').slice(1).filter(l => l.trim()).map(l => {
-            const p = l.split(',');
-            return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() };
+        const lines = event.target.result.split('\n').slice(1).filter(l => l.trim());
+        const data = lines.map(l => {
+            const [subject, teacher, room, form] = l.split(',').map(s => s.trim());
+            return {subject, teacher: teacher || null, room: room || null, form};
         });
+
+        // Count required periods per form-subject-teacher
+        const counts = {};
+        data.forEach(item => {
+            const key = `${item.form}-${item.subject}-${item.teacher || 'ANY'}`;
+            counts[key] = (counts[key] || 0) + 1;
+        });
+
+        requiredLessons = [];
+        Object.entries(counts).forEach(([key, count]) => {
+            const [form, subject, teacher] = key.split('-');
+            for(let i = 0; i < count; i++) {
+                requiredLessons.push({
+                    subject,
+                    teacher: teacher === 'ANY' ? null : teacher,
+                    form
+                });
+            }
+        });
+
         populateSelectors();
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = "Data Loaded. Optimized for Doubles.";
+        document.getElementById('status').innerText = `Loaded ${requiredLessons.length} required lessons. Optimized for Doubles.`;
     };
     reader.readAsText(e.target.files[0]);
 }
-
 function populateSelectors() {
-    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    const teachers = [...new Set(requiredLessons.map(x => x.teacher).filter(t => t))].sort();
     document.getElementById('teacherSelect').innerHTML = '<option value="">-- View Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
     document.getElementById('streamSelect').innerHTML = '<option value="">-- View Stream --</option>' + forms.map(f => `<option value="${f}">${f}</option>`).join('');
 }
-
 function calculateFitness(tt) {
     let score = 0, penalty = 0;
-    const dailyAllocation = {};
 
+    // Teacher clashes (only if teacher assigned)
+    const teacherSlots = {};
+    tt.forEach(lesson => {
+        if (lesson.teacher) {
+            const slot = `${lesson.day}-${lesson.period}`;
+            if (!teacherSlots[lesson.teacher]) teacherSlots[lesson.teacher] = new Set();
+            if (teacherSlots[lesson.teacher].has(slot)) penalty += 20000;
+            teacherSlots[lesson.teacher].add(slot);
+        }
+    });
+
+    // Daily allocation for doubles/splits
+    const dailyAllocation = {};
+    const subjectSpread = {};
     tt.forEach(lesson => {
         const key = `${lesson.day}-${lesson.form}-${lesson.subject}`;
         if (!dailyAllocation[key]) dailyAllocation[key] = [];
         dailyAllocation[key].push(parseInt(lesson.period.slice(1)));
+
+        const spreadKey = `${lesson.form}-${lesson.subject}`;
+        if (!subjectSpread[spreadKey]) subjectSpread[spreadKey] = new Set();
+        subjectSpread[spreadKey].add(lesson.day);
+    });
+    Object.entries(dailyAllocation).forEach(([key, pList]) => {
+        pList.sort((a, b) => a - b);
+        const n = pList.length;
+        if (n === 2 && pList[1] - pList[0] === 1) score += 1200; // Strong reward for double
+        if (n === 2 && pList[1] - pList[0] > 1) penalty += 1800; // Penalty for split
+        if (n > 2) penalty += 6000 + (n - 2) * 2000; // Heavy for triples+
+        if (n === 1) score += 300; // OK for single
     });
 
-    Object.values(dailyAllocation).forEach(pList => {
-        pList.sort((a, b) => a - b);
-        // Reward consecutive periods (Double)
-        if (pList.length === 2 && pList[1] - pList[0] === 1) score += 500;
-        // Penalize split periods of same subject in one day
-        if (pList.length === 2 && pList[1] - pList[0] > 1) penalty += 1000;
-        // Penalize more than 2 periods (Triple)
-        if (pList.length > 2) penalty += 5000;
+    // Reward spread across days
+    Object.entries(subjectSpread).forEach(([key, daySet]) => {
+        if (daySet.size >= 3) score += 200;
     });
+
+    // Penalty if not all lessons placed (coverage)
+    if (tt.length < requiredLessons.length) penalty += (requiredLessons.length - tt.length) * 5000;
 
     return score - penalty;
 }
+function generateIndividual() {
+    const tt = [];
+    const schedule = {}; // form -> day -> period -> lesson
+    forms.forEach(f => {
+        schedule[f] = {};
+        days.forEach(d => {
+            schedule[f][d] = {};
+            periods.forEach(p => {
+                if (p.p !== 'BREAK' && !isFixed(d, p.p)) schedule[f][d][p.p] = null;
+            });
+        });
+    });
 
+    // Group lessons by form-subject for double placement
+    const grouped = {};
+    requiredLessons.forEach(les => {
+        const key = `${les.form}-${les.subject}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(les);
+    });
+
+    // For each group with >=2 lessons, try to place doubles
+    Object.entries(grouped).forEach(([key, lessons]) => {
+        const [form, subject] = key.split('-');
+        let remaining = lessons.length;
+        while (remaining >= 2) {
+            // Find a day with two consecutive free slots
+            const day = days[Math.floor(Math.random() * days.length)];
+            const dSlot = doubleSlots[Math.floor(Math.random() * doubleSlots.length)];
+            if (schedule[form][day][dSlot[0]] === null && schedule[form][day][dSlot[1]] === null && !isFixed(day, dSlot[0]) && !isFixed(day, dSlot[1])) {
+                const teacher = lessons[0].teacher; // Assume same teacher for group
+                tt.push({subject, teacher, form, day, period: dSlot[0]});
+                tt.push({subject, teacher, form, day, period: dSlot[1]});
+                schedule[form][day][dSlot[0]] = true;
+                schedule[form][day][dSlot[1]] = true;
+                remaining -= 2;
+            }
+        }
+        // Place remaining as singles
+        while (remaining > 0) {
+            const day = days[Math.floor(Math.random() * days.length)];
+            const vp = periods.filter(p => p.p !== 'BREAK' && !isFixed(day, p.p) && schedule[form][day][p.p] === null).map(p => p.p);
+            if (vp.length > 0) {
+                const period = vp[Math.floor(Math.random() * vp.length)];
+                const teacher = lessons[0].teacher;
+                tt.push({subject, teacher, form, day, period});
+                schedule[form][day][period] = true;
+                remaining--;
+            }
+        }
+    });
+
+    return tt;
+}
+function crossover(parent1, parent2) {
+    // Simple: split at random point and combine
+    const split = Math.floor(Math.random() * parent1.length);
+    return [...parent1.slice(0, split), ...parent2.slice(split)];
+}
+function mutate(tt) {
+    if (Math.random() < 0.4) {
+        // Swap two lessons
+        const i = Math.floor(Math.random() * tt.length);
+        const j = Math.floor(Math.random() * tt.length);
+        const temp = {day: tt[i].day, period: tt[i].period};
+        tt[i].day = tt[j].day;
+        tt[i].period = tt[j].period;
+        tt[j].day = temp.day;
+        tt[j].period = temp.period;
+    } else if (Math.random() < 0.4) {
+        // Move one lesson to new slot (if free, but simplified)
+        const i = Math.floor(Math.random() * tt.length);
+        tt[i].day = days[Math.floor(Math.random() * 5)];
+        tt[i].period = `P${Math.floor(Math.random() * 9) + 1}`;
+    }
+    // TODO: Add double-creating mutation
+    return tt;
+}
 function startEvolution() {
-    const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
-    let pop = Array.from({length: 40}, () => rawData.map(it => ({
-        ...it, day: days[Math.floor(Math.random()*5)], period: vp[Math.floor(Math.random()*9)]
-    })));
-
+    let popSize = 80;
+    let generations = 3000;
+    let pop = Array.from({length: popSize}, generateIndividual);
     let gen = 0;
     const timer = setInterval(() => {
         gen++;
-        document.getElementById('status').innerText = `Building Doubles: Gen ${gen}...`;
-        if (gen > 1500) {
+        document.getElementById('status').innerText = `Evolving Doubles: Gen ${gen}/${generations}...`;
+
+        // Sort pop by fitness
+        pop.sort((a, b) => calculateFitness(b) - calculateFitness(a));
+
+        // Create new pop: elitism + crossover + mutation
+        const newPop = [pop[0], pop[1]]; // Keep top 2
+        while (newPop.length < popSize) {
+            const p1 = pop[Math.floor(Math.random() * (popSize / 2))];
+            const p2 = pop[Math.floor(Math.random() * (popSize / 2))];
+            let child = crossover(p1, p2);
+            child = mutate(child);
+            newPop.push(child);
+        }
+        pop = newPop;
+
+        if (gen >= generations) {
             clearInterval(timer);
-            bestTT = pop.sort((a, b) => calculateFitness(b) - calculateFitness(a))[0];
+            bestTT = pop[0];
             renderMaster();
             document.getElementById('view-controls').style.display = 'flex';
             document.getElementById('status').innerText = "Complete! Double periods prioritized.";
         }
     }, 5);
 }
-
 function renderMaster() {
     let html = "";
     days.forEach(day => {
@@ -138,7 +268,7 @@ function renderMaster() {
                 else if (fixed) html += `<td class="fixed-block">${fixed}</td>`;
                 else {
                     const lesson = bestTT.find(x => x.day === day && x.form === f && x.period === per.p);
-                    html += `<td>${lesson ? '<b>'+lesson.subject+'</b><br>'+lesson.teacher : ''}</td>`;
+                    html += `<td>${lesson ? '<b>'+lesson.subject+'</b><br>'+ (lesson.teacher || '') : ''}</td>`;
                 }
             });
             html += `</tr>`;
@@ -147,7 +277,6 @@ function renderMaster() {
     });
     document.getElementById('output').innerHTML = html;
 }
-
 function renderIndividual(type) {
     const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
     if (!val) return;
@@ -161,12 +290,13 @@ function renderIndividual(type) {
             else if (fixed) html += `<td class="fixed-block">${fixed}</td>`;
             else {
                 const lesson = bestTT.find(x => x.day === day && (type === 'stream' ? x.form === val : x.teacher === val) && x.period === per.p);
-                html += `<td>${lesson ? '<b>'+lesson.subject+'</b><br>'+ (type === 'stream' ? lesson.teacher : 'Class: '+lesson.form) : ''}</td>`;
+                html += `<td>${lesson ? '<b>'+lesson.subject+'</b><br>'+ (type === 'stream' ? (lesson.teacher || '') : 'Class: '+lesson.form) : ''}</td>`;
             }
         });
         html += `</tr>`;
     });
-    document.getElementById('output').innerHTML = html + `</table>`;
+    html += `</table>`;
+    document.getElementById('output').innerHTML = html;
 }
 </script>
 </body>

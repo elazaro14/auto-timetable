@@ -106,49 +106,56 @@ function loadCSV(e){
 
 /* ---------------- FITNESS (DOUBLE FIRST) ---------------- */
 function fitness(tt){
- let score=100000,pen=0;
+ let score = 100000;
+ let pen = 0;
 
- /* slot clash */
- const slot={};
+ /* ---------- SLOT CLASH (HARD) ---------- */
+ const slot = {};
  tt.forEach(x=>{
-  let k=`${x.day}-${x.period}`;
-  slot[k]=slot[k]||[];
+  let k = `${x.day}-${x.period}`;
+  slot[k] = slot[k] || [];
   slot[k].push(x);
  });
  Object.values(slot).forEach(s=>{
-  if(s.length>1)pen+=30000;
+  if(s.length > 1) pen += 50000;
  });
 
- /* form + day + subject */
- const fd={};
+ /* ---------- SUBJECT PER STREAM PER DAY ---------- */
+ const group = {};
  tt.forEach(x=>{
-  let k=`${x.form}-${x.day}-${x.subject}`;
-  fd[k]=fd[k]||[];
-  fd[k].push(+x.period.slice(1));
+  let k = `${x.form}-${x.day}-${x.subject}`;
+  group[k] = group[k] || [];
+  group[k].push(+x.period.slice(1));
  });
 
- Object.values(fd).forEach(p=>{
+ Object.values(group).forEach(p=>{
   p.sort((a,b)=>a-b);
 
-  if(p.length>2){pen+=30000;return;}
-
-  if(p.length===2){
-   if(p[1]-p[0]!==1)pen+=30000;
-   else score+=3000;
+  /* ❌ more than 2 periods */
+  if(p.length > 2){
+   pen += 50000;
+   return;
   }
 
-  if(p.length===1){
-   let canDouble=false;
-   for(let i=1;i<9;i++){
-    if(!isFixed("X","P"+i)&&!isFixed("X","P"+(i+1)))
-     canDouble=true;
-   }
-   if(canDouble)pen+=8000;
-   else score+=200;
+  /* ❌ split double */
+  if(p.length === 2 && p[1] - p[0] !== 1){
+   pen += 50000;
+   return;
+  }
+
+  /* ✅ perfect double */
+  if(p.length === 2 && p[1] - p[0] === 1){
+   score += 3000;
+   return;
+  }
+
+  /* ✅ single period */
+  if(p.length === 1){
+   score += 500;
   }
  });
 
- return score/(1+pen);
+ return score / (1 + pen);
 }
 
 /* ---------------- GENERATION ---------------- */
@@ -217,3 +224,4 @@ function renderMaster(){
 </script>
 </body>
 </html>
+

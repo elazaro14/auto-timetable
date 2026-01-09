@@ -2,33 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Timetable - Official Master Layout</title>
+    <title>AI Timetable - Official Double Period Layout</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f8; padding: 20px; }
         .no-print { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
         table { border-collapse: collapse; width: 100%; background: white; table-layout: fixed; }
-        th, td { border: 1px solid #444; padding: 4px; text-align: center; font-size: 11px; height: 45px; }
+        th, td { border: 1px solid #444; padding: 4px; text-align: center; font-size: 11px; height: 50px; }
         th { background: #343a40; color: white; }
         .time-hdr { font-size: 10px; font-weight: normal; }
         .day-title { background: #2c3e50; color: white; font-size: 18px; padding: 10px; text-align: center; margin-top: 20px; }
         .break-cell { background: #eeeeee; font-weight: bold; color: #666; width: 35px; font-size: 9px; }
         .fixed-block { background: #d1ecf1; font-weight: bold; color: #0c5460; font-style: italic; }
-        
-        /* NARROW YELLOW DIVIDER */
         .separator { background: #ffd700 !important; height: 3px !important; line-height: 3px; }
         .separator td { height: 3px !important; padding: 0; border: none; }
-
         select, button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; }
         button { background: #007bff; color: white; border: none; }
         #status { font-weight: bold; margin: 10px 0; color: #2c3e50; }
-        @media print { .no-print { display: none; } body { padding: 0; background: white; } .day-section { page-break-after: always; } }
+        @media print { .no-print { display: none; } body { padding: 0; background: white; .day-section { page-break-after: always; } }
     </style>
 </head>
 <body>
 
     <div class="no-print">
-        <h2>🇹🇿 Official Timetable System</h2>
+        <h2>🇹🇿 Official Timetable System (Double Period Focus)</h2>
         <div class="controls">
             <input type="file" id="csvFile" accept=".csv" onchange="handleUpload(event)">
             <button onclick="startEvolution()" id="genBtn" disabled style="background:#28a745;">Generate Timetable</button>
@@ -71,7 +68,7 @@ function handleUpload(e) {
         });
         populateSelectors();
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = "Data Loaded. Click Generate.";
+        document.getElementById('status').innerText = "Data Loaded. Optimized for Doubles.";
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -80,6 +77,29 @@ function populateSelectors() {
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
     document.getElementById('teacherSelect').innerHTML = '<option value="">-- View Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
     document.getElementById('streamSelect').innerHTML = '<option value="">-- View Stream --</option>' + forms.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+function calculateFitness(tt) {
+    let score = 0, penalty = 0;
+    const dailyAllocation = {};
+
+    tt.forEach(lesson => {
+        const key = `${lesson.day}-${lesson.form}-${lesson.subject}`;
+        if (!dailyAllocation[key]) dailyAllocation[key] = [];
+        dailyAllocation[key].push(parseInt(lesson.period.slice(1)));
+    });
+
+    Object.values(dailyAllocation).forEach(pList => {
+        pList.sort((a, b) => a - b);
+        // Reward consecutive periods (Double)
+        if (pList.length === 2 && pList[1] - pList[0] === 1) score += 500;
+        // Penalize split periods of same subject in one day
+        if (pList.length === 2 && pList[1] - pList[0] > 1) penalty += 1000;
+        // Penalize more than 2 periods (Triple)
+        if (pList.length > 2) penalty += 5000;
+    });
+
+    return score - penalty;
 }
 
 function startEvolution() {
@@ -91,13 +111,13 @@ function startEvolution() {
     let gen = 0;
     const timer = setInterval(() => {
         gen++;
-        document.getElementById('status').innerText = `Calculating: Gen ${gen}...`;
-        if (gen > 1200) {
+        document.getElementById('status').innerText = `Building Doubles: Gen ${gen}...`;
+        if (gen > 1500) {
             clearInterval(timer);
-            bestTT = pop[0];
+            bestTT = pop.sort((a, b) => calculateFitness(b) - calculateFitness(a))[0];
             renderMaster();
             document.getElementById('view-controls').style.display = 'flex';
-            document.getElementById('status').innerText = "Complete! Use selectors below to view/print.";
+            document.getElementById('status').innerText = "Complete! Double periods prioritized.";
         }
     }, 5);
 }
@@ -107,13 +127,9 @@ function renderMaster() {
     days.forEach(day => {
         html += `<div class="day-section"><div class="day-title">${day}</div>`;
         html += `<table><tr><th>STREAM</th>` + periods.map(per => `<th>${per.p}<br><span class="time-hdr">${per.t}</span></th>`).join('') + `</tr>`;
-
         let lastPrefix = "F1";
         forms.forEach(f => {
-            // Add narrow yellow divider when Form level changes
-            if (f.substring(0, 2) !== lastPrefix) {
-                html += `<tr class="separator"><td colspan="11"></td></tr>`;
-            }
+            if (f.substring(0, 2) !== lastPrefix) html += `<tr class="separator"><td colspan="11"></td></tr>`;
             lastPrefix = f.substring(0, 2);
             html += `<tr><td><b>${f}</b></td>`;
             periods.forEach(per => {

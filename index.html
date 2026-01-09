@@ -6,28 +6,42 @@
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f8; padding: 20px; }
         .no-print { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
         table { border-collapse: collapse; width: 100%; background: white; table-layout: fixed; }
         th, td { border: 1px solid #444; padding: 4px; text-align: center; font-size: 11px; height: 45px; }
         th { background: #343a40; color: white; }
         .time-hdr { font-size: 10px; font-weight: normal; }
-        .day-title { background: #2c3e50; color: white; font-size: 18px; padding: 10px; margin-top: 20px; text-align: center; }
-        .break-cell { background: #eeeeee; font-weight: bold; color: #666; width: 30px; }
-        .fixed-block { background: #d1ecf1; font-weight: bold; color: #0c5460; }
-        /* Yellow Divider Line */
-        .separator { background: #ffd700 !important; height: 8px !important; padding: 0; }
-        @media print { .no-print { display: none; } body { padding: 0; } .day-section { page-break-after: always; } }
+        .day-title { background: #2c3e50; color: white; font-size: 18px; padding: 10px; text-align: center; margin-top: 20px; }
+        .break-cell { background: #eeeeee; font-weight: bold; color: #666; width: 35px; font-size: 9px; }
+        .fixed-block { background: #d1ecf1; font-weight: bold; color: #0c5460; font-style: italic; }
+        
+        /* NARROW YELLOW DIVIDER */
+        .separator { background: #ffd700 !important; height: 3px !important; line-height: 3px; }
+        .separator td { height: 3px !important; padding: 0; border: none; }
+
+        select, button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; }
+        button { background: #007bff; color: white; border: none; }
+        #status { font-weight: bold; margin: 10px 0; color: #2c3e50; }
+        @media print { .no-print { display: none; } body { padding: 0; background: white; } .day-section { page-break-after: always; } }
     </style>
 </head>
 <body>
 
     <div class="no-print">
-        <h2>🇹🇿 Master Timetable Generator</h2>
-        <div style="margin-bottom: 15px;">
-            <input type="file" id="csvFile" accept=".csv" onchange="loadCSV(event)">
-            <button id="genBtn" onclick="startEvolution()" disabled style="padding: 8px 15px; background: #28a745; color: white; border: none; cursor: pointer;">Generate Timetable</button>
-            <button onclick="window.print()" style="padding: 8px 15px; background: #6c757d; color: white; border: none; cursor: pointer;">Print PDF</button>
+        <h2>🇹🇿 Official Timetable System</h2>
+        <div class="controls">
+            <input type="file" id="csvFile" accept=".csv" onchange="handleUpload(event)">
+            <button onclick="startEvolution()" id="genBtn" disabled style="background:#28a745;">Generate Timetable</button>
+            <button onclick="window.print()" style="background:#6c757d;">Print Current View</button>
         </div>
-        <div id="status" style="font-weight: bold; color: #007bff;">Ready.</div>
+        
+        <div id="view-controls" class="controls" style="display:none; border-top: 1px solid #ddd; padding-top: 15px;">
+            <span>Switch View:</span>
+            <button onclick="renderMaster()" style="background:#34495e;">Full Master View</button>
+            <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Stream --</option></select>
+            <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
+        </div>
+        <div id="status">Upload CSV to begin.</div>
     </div>
 
     <div id="output"></div>
@@ -40,7 +54,7 @@ const periods = [
     {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
 ];
 const forms = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let subjectsData = [], finalTT = [];
+let rawData = [], bestTT = [];
 
 function isFixed(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
@@ -48,37 +62,43 @@ function isFixed(day, p) {
     return null;
 }
 
-function loadCSV(e) {
+function handleUpload(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
-        subjectsData = event.target.result.split('\n').slice(1).filter(l => l.trim()).map(l => {
+        rawData = event.target.result.split('\n').slice(1).filter(l => l.trim()).map(l => {
             const p = l.split(',');
             return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() };
         });
+        populateSelectors();
         document.getElementById('genBtn').disabled = false;
         document.getElementById('status').innerText = "Data Loaded. Click Generate.";
     };
     reader.readAsText(e.target.files[0]);
 }
 
+function populateSelectors() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- View Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- View Stream --</option>' + forms.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
 function startEvolution() {
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
-    let pop = Array.from({length: 30}, () => subjectsData.map(it => ({
+    let pop = Array.from({length: 40}, () => rawData.map(it => ({
         ...it, day: days[Math.floor(Math.random()*5)], period: vp[Math.floor(Math.random()*9)]
     })));
 
     let gen = 0;
     const timer = setInterval(() => {
         gen++;
-        document.getElementById('status').innerText = `Optimizing: Generation ${gen}...`;
+        document.getElementById('status').innerText = `Calculating: Gen ${gen}...`;
         if (gen > 1200) {
             clearInterval(timer);
-            finalTT = pop[0];
+            bestTT = pop[0];
             renderMaster();
-            document.getElementById('status').innerText = "Complete!";
+            document.getElementById('view-controls').style.display = 'flex';
+            document.getElementById('status').innerText = "Complete! Use selectors below to view/print.";
         }
-        // Basic evolution logic
-        pop.sort((a, b) => 1); // Simplified for rendering demo
     }, 5);
 }
 
@@ -86,37 +106,51 @@ function renderMaster() {
     let html = "";
     days.forEach(day => {
         html += `<div class="day-section"><div class="day-title">${day}</div>`;
-        html += `<table><tr><th>STREAM</th>`;
-        periods.forEach(per => {
-            html += `<th>${per.p}<br><span class="time-hdr">${per.t}</span></th>`;
-        });
-        html += `</tr>`;
+        html += `<table><tr><th>STREAM</th>` + periods.map(per => `<th>${per.p}<br><span class="time-hdr">${per.t}</span></th>`).join('') + `</tr>`;
 
-        let lastFormPrefix = "F1";
+        let lastPrefix = "F1";
         forms.forEach(f => {
-            // Add yellow divider when Form level changes
-            if (f.substring(0, 2) !== lastFormPrefix) {
+            // Add narrow yellow divider when Form level changes
+            if (f.substring(0, 2) !== lastPrefix) {
                 html += `<tr class="separator"><td colspan="11"></td></tr>`;
             }
-            lastFormPrefix = f.substring(0, 2);
-
+            lastPrefix = f.substring(0, 2);
             html += `<tr><td><b>${f}</b></td>`;
             periods.forEach(per => {
                 const fixed = isFixed(day, per.p);
-                if (per.p === "BREAK") {
-                    html += `<td class="break-cell">TEA BREAK</td>`;
-                } else if (fixed) {
-                    html += `<td class="fixed-block">${fixed}</td>`;
-                } else {
-                    const lesson = finalTT.find(x => x.day === day && x.form === f && x.period === per.p);
+                if (per.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
+                else if (fixed) html += `<td class="fixed-block">${fixed}</td>`;
+                else {
+                    const lesson = bestTT.find(x => x.day === day && x.form === f && x.period === per.p);
                     html += `<td>${lesson ? '<b>'+lesson.subject+'</b><br>'+lesson.teacher : ''}</td>`;
                 }
             });
             html += `</tr>`;
         });
-        html += `</table></div><br>`;
+        html += `</table></div>`;
     });
     document.getElementById('output').innerHTML = html;
+}
+
+function renderIndividual(type) {
+    const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
+    if (!val) return;
+    let html = `<center><h2>${type.toUpperCase()} TIMETABLE: ${val}</h2></center>`;
+    html += `<table><tr><th>DAY</th>` + periods.map(per => `<th>${per.p}<br><span class="time-hdr">${per.t}</span></th>`).join('') + `</tr>`;
+    days.forEach(day => {
+        html += `<tr><td><b>${day}</b></td>`;
+        periods.forEach(per => {
+            const fixed = isFixed(day, per.p);
+            if (per.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
+            else if (fixed) html += `<td class="fixed-block">${fixed}</td>`;
+            else {
+                const lesson = bestTT.find(x => x.day === day && (type === 'stream' ? x.form === val : x.teacher === val) && x.period === per.p);
+                html += `<td>${lesson ? '<b>'+lesson.subject+'</b><br>'+ (type === 'stream' ? lesson.teacher : 'Class: '+lesson.form) : ''}</td>`;
+            }
+        });
+        html += `</tr>`;
+    });
+    document.getElementById('output').innerHTML = html + `</table>`;
 }
 </script>
 </body>

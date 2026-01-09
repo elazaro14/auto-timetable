@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Master Timetable - Zero Triples Edition</title>
+    <title>AI Master Timetable - Tanzania Pro</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .no-print { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -15,7 +15,7 @@
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; overflow: hidden; }
         .header-row { background: #343a40; color: white; font-weight: bold; }
-        .stream-label { background: #f8f9fa; font-weight: bold; width: 50px; }
+        .fixed-block { background: #d1ecf1; font-weight: bold; color: #0c5460; }
         .separator { background: #ffd700 !important; height: 12px !important; }
         @media print { .no-print { display: none; } body { padding: 0; } }
     </style>
@@ -23,17 +23,17 @@
 <body>
 
     <div class="no-print">
-        <h1>🇹🇿 AI Master Timetable (No Triples)</h1>
-        <p>Current Rule: <b>Max 2 periods per day per subject.</b> Triples are now impossible.</p>
+        <h1>🇹🇿 AI Master Timetable Generator</h1>
+        <p><b>Wed:</b> P8-P9 Religion | <b>Fri:</b> P7-P9 Mosque | <b>Rule:</b> Max 2 Periods per Day.</p>
         
         <div class="controls">
             <button onclick="downloadLockedTemplate()" class="btn-gray">1. Download Template</button>
-            <button onclick="document.getElementById('csvFile').click()" class="btn-blue">2. Upload CSV</button>
+            <button onclick="document.getElementById('csvFile').click()" class="btn-blue">2. Upload Data</button>
             <input type="file" id="csvFile" style="display:none" onchange="handleUpload(event)">
             <button id="genBtn" onclick="startEvolution()" class="btn-green" disabled>3. Generate Timetable</button>
             <button onclick="window.print()" class="btn-gray">4. Print PDF</button>
         </div>
-        <div class="status-bar" id="statusText">Waiting for data...</div>
+        <div class="status-bar" id="statusText">System Ready.</div>
     </div>
 
     <div id="timetable-display"></div>
@@ -44,18 +44,24 @@
         const periods = ["P1", "P2", "P3", "P4", "BREAK", "P5", "P6", "P7", "P8", "P9"];
         const forms = ["F1A", "F1B", "F1C", "F1D", "F1E", "F1F", "F1G", "F2A", "F2B", "F2C", "F2D", "F3A", "F3B", "F3C", "F3D", "F4A", "F4B", "F4C"];
 
+        function isFixedBlock(day, period) {
+            if (day === "WEDNESDAY" && (period === "P8" || period === "P9")) return "RELIGION";
+            if (day === "FRIDAY" && (period === "P7" || period === "P8" || period === "P9")) return "MOSQUE";
+            return null;
+        }
+
         function downloadLockedTemplate() {
             let csv = "Subject,Teacher,Room,Form\n";
             forms.forEach(f => {
                 let alloc = f.startsWith('F1') || f.startsWith('F2') ? 
                     [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:5},{s:"KISWAHILI",p:4},{s:"BUSINESS STUDIES",p:3},{s:"HISTORIA NA MAADILI",p:3},{s:"HISTORY",p:3},{s:"BOOK-KEEPING",p:3},{s:"PHYSICS",p:3},{s:"CHEMISTRY",p:3},{s:"BIOLOGY",p:3},{s:"GEOGRAPHY",p:2}] : 
                     [{s:"MATHEMATICS",p:5},{s:"ENGLISH LANGUAGE",p:6},{s:"KISWAHILI",p:4},{s:"CIVICS",p:3},{s:"HISTORY",p:4},{s:"PHYSICS",p:4},{s:"CHEMISTRY",p:4},{s:"BIOLOGY",p:4},{s:"GEOGRAPHY",p:4}];
-                alloc.forEach(item => { for(let i=0; i<item.p; i++) csv += `${item.s},TEACHER_${item.s},RM_${f},${f}\n`; });
+                alloc.forEach(item => { for(let i=0; i<item.p; i++) csv += `${item.s},TEACHER_NAME,RM_${f},${f}\n`; });
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'Timetable_Template.csv';
+            a.download = 'Official_Tanzania_Template.csv';
             a.click();
         }
 
@@ -68,7 +74,7 @@
                     return { subject: p[0].trim(), teacher: p[1].trim(), room: p[2].trim(), form: p[3].trim() };
                 });
                 document.getElementById('genBtn').disabled = false;
-                document.getElementById('statusText').innerText = "Data Loaded. Ready to Generate.";
+                document.getElementById('statusText').innerText = "Data Loaded Successfully.";
             };
             reader.readAsText(event.target.files[0]);
         }
@@ -78,13 +84,14 @@
             const dayFormMap = {};
 
             tt.forEach((a, i) => {
+                if (isFixedBlock(a.day, a.period)) fatalError += 10000;
                 const dfKey = `${a.day}-${a.form}`;
                 if (!dayFormMap[dfKey]) dayFormMap[dfKey] = [];
                 dayFormMap[dfKey].push(a);
 
                 for (let j = i + 1; j < tt.length; j++) {
                     const b = tt[j];
-                    if (a.day === b.day && a.period === b.period && (a.teacher === b.teacher || a.form === b.form)) clash += 500;
+                    if (a.day === b.day && a.period === b.period && (a.teacher === b.teacher || a.form === b.form)) clash += 1000;
                     if (a.subject === b.subject && a.form === b.form && a.day === b.day) {
                         const p1 = parseInt(a.period.slice(1)), p2 = parseInt(b.period.slice(1));
                         if (Math.abs(p1 - p2) === 1) doubles += 100;
@@ -100,11 +107,8 @@
                 });
                 for(let s in subs) {
                     const p = subs[s].sort((x,y)=>x-y);
-                    // 1. HARD LIMIT: Max 2 periods per day
-                    if(p.length > 2) fatalError += 5000; 
-                    
-                    // 2. HARD LIMIT: Must be consecutive if appearing twice
-                    if(p.length === 2 && (p[1]-p[0] !== 1)) fatalError += 5000;
+                    if(p.length > 2) fatalError += 10000; 
+                    if(p.length === 2 && (p[1]-p[0] !== 1)) fatalError += 10000;
                 }
             });
             return (1 + doubles) / (1 + clash + fatalError);
@@ -120,15 +124,9 @@
             const timer = setInterval(() => {
                 gen++;
                 pop.sort((a, b) => calculateFitness(b) - calculateFitness(a));
-                document.getElementById('statusText').innerText = `Gen ${gen}: Destroying Triples...`;
-                if(gen % 50 === 0) renderTable(pop[0]);
-                
-                // Increased Gen Limit to 1200 for harder solving
-                if(gen > 1200) { 
-                    clearInterval(timer); 
-                    renderTable(pop[0]); 
-                    document.getElementById('statusText').innerText = "Timetable Cleaned. No Triples found."; 
-                }
+                document.getElementById('statusText').innerText = `Gen ${gen}: Allocating Subjects Around Religion/Mosque...`;
+                if(gen % 40 === 0) renderTable(pop[0]);
+                if(gen > 1200) { clearInterval(timer); renderTable(pop[0]); document.getElementById('statusText').innerText = "Process Complete."; }
                 
                 let next = pop.slice(0, 10);
                 while(next.length < 30) {
@@ -150,9 +148,11 @@
                 forms.forEach(f => {
                     if(lastF !== "" && f.substring(0,2) !== lastF.substring(0,2)) html += `<tr class="separator"><td colspan="11"></td></tr>`;
                     lastF = f;
-                    html += `<tr><td class="stream-label">${f}</td>`;
+                    html += `<tr><td style="background:#f8f9fa; font-weight:bold;">${f}</td>`;
                     periods.forEach(p => {
+                        const fixed = isFixedBlock(day, p);
                         if(p === "BREAK") html += `<td style="background:#eee">TEA</td>`;
+                        else if(fixed) html += `<td class="fixed-block">${fixed}</td>`;
                         else {
                             const s = tt.find(x => x.day === day && x.form === f && x.period === p);
                             html += `<td>${s ? '<b>'+s.subject+'</b><br>'+s.teacher : ''}</td>`;

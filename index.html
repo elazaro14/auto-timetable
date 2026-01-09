@@ -1,65 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>AI School Timetable – Tanzania</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>School Timetable Generator</title>
 <style>
-body{font-family:Segoe UI,sans-serif;background:#f0f2f5;padding:20px}
-.no-print{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.1);margin-bottom:20px}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-input,select,button{padding:8px;border-radius:6px}
-button{border:none;font-weight:bold;cursor:pointer}
-.btn-blue{background:#007bff;color:#fff}
-.btn-green{background:#28a745;color:#fff}
-.btn-gray{background:#6c757d;color:#fff}
-.status-bar{margin-top:10px;padding:10px;background:#fff3cd;border-radius:6px;font-weight:bold}
-.day-section{background:#fff;padding:15px;margin-bottom:40px;border:1px solid #000;page-break-after:always}
-table{width:100%;border-collapse:collapse;table-layout:fixed}
-td{border:1px solid #000;font-size:10px;padding:4px;text-align:center}
-.header-row{background:#343a40;color:#fff;font-weight:bold}
-.fixed-block{background:#d1ecf1;font-weight:bold}
-.school-title{text-align:center;margin-bottom:10px}
-@media print{.no-print{display:none}body{padding:0}}
+ body{font-family:Arial;background:#f4f6f8}
+ table{border-collapse:collapse;width:100%;margin-top:10px}
+ th,td{border:1px solid #444;padding:6px;text-align:center;font-size:13px}
+ th{background:#2c3e50;color:white}
+ select,input,button{padding:6px;margin:4px}
+ #views{display:none;gap:10px;flex-wrap:wrap}
+ .hdr{background:#34495e;color:#fff;font-weight:bold}
 </style>
 </head>
 
 <body>
 
-<div class="no-print">
-<h2>🇹🇿 AI Master Timetable Generator</h2>
+<h2 id="schoolTitle">School Timetable</h2>
 
-<div class="controls">
 <input id="schoolName" placeholder="School Name">
-<input id="academicYear" placeholder="Academic Year (e.g. 2026)">
+<input id="year" placeholder="Academic Year">
+<button onclick="applyHeader()">Apply</button>
+
+<hr>
+
+<input type="file" accept=".csv" onchange="loadCSV(event)">
+<button id="genBtn" onclick="startEvolution()" disabled>Generate</button>
+
 <select id="displayMode">
-<option value="subject">Subject only</option>
-<option value="full">Subject + Teacher</option>
+ <option value="subject">Subject only</option>
+ <option value="both">Subject & Teacher</option>
 </select>
-</div>
 
-<div class="controls">
-<button class="btn-gray" onclick="downloadTemplate()">Download Template</button>
-<button class="btn-blue" onclick="csv.click()">Upload CSV</button>
-<input type="file" id="csv" hidden onchange="loadCSV(event)">
-<button class="btn-green" id="genBtn" disabled onclick="startEvolution()">Generate</button>
-<button class="btn-gray" onclick="window.print()">Print</button>
-</div>
+<div id="status"></div>
 
-<div class="controls" id="views" style="display:none">
-<button class="btn-blue" onclick="renderMaster()">Master</button>
-<select id="streamSel" onchange="renderSingle('form')"></select>
-<select id="teacherSel" onchange="renderSingle('teacher')"></select>
-</div>
-
-<div class="status-bar" id="status">Upload CSV to begin</div>
+<div id="views">
+ <button onclick="renderMaster()">Master Timetable</button>
 </div>
 
 <div id="output"></div>
 
 <script>
-/* ---------------- BASIC DATA ---------------- */
+/* ---------------- BASIC ---------------- */
 const days=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
 const periods=[
@@ -77,30 +59,32 @@ const periods=[
 
 const validPeriods=periods.filter(x=>x.p!=="BREAK").map(x=>x.p);
 
-const forms=[
-"F1A","F1B","F1C","F1D","F1E","F1F","F1G",
-"F2A","F2B","F2C","F2D",
-"F3A","F3B","F3C","F3D",
-"F4A","F4B","F4C"
-];
-
 let data=[],finalTT=[];
 
-/* ---------------- FIXED BLOCKS ---------------- */
+/* ---------------- FIXED PERIODS ---------------- */
 function isFixed(day,p){
- if(day==="WEDNESDAY"&&(p==="P8"||p==="P9"))return"RELIGION";
- if(day==="FRIDAY"&&(p==="P7"||p==="P8"||p==="P9"))return"MOSQUE";
- return null;
+ if(day==="WEDNESDAY"&&(p==="P8"||p==="P9"))return true;
+ if(day==="FRIDAY"&&(p==="P7"||p==="P8"||p==="P9"))return true;
+ return false;
 }
 
-function getValidPeriod(day){
+function randPeriod(day){
  let p;
- do{p=validPeriods[Math.floor(Math.random()*validPeriods.length)]}
- while(isFixed(day,p));
+ do{
+  p=validPeriods[Math.floor(Math.random()*validPeriods.length)];
+ }while(isFixed(day,p));
  return p;
 }
 
-/* ---------------- CSV LOADER (FIXED) ---------------- */
+/* ---------------- UI ---------------- */
+function status(t){document.getElementById("status").innerText=t;}
+
+function applyHeader(){
+ document.getElementById("schoolTitle").innerText=
+  schoolName.value+" — "+year.value;
+}
+
+/* ---------------- CSV ---------------- */
 function loadCSV(e){
  const r=new FileReader();
  r.onload=()=>{
@@ -111,165 +95,125 @@ function loadCSV(e){
     return{
      subject:p[0].trim(),
      teacher:p[1].trim(),
-     room:p[2].trim(),
      form:p[3].trim()
     };
    });
-
-  streamSel.innerHTML="<option>-- Stream --</option>"+
-   [...new Set(data.map(x=>x.form))].map(x=>`<option>${x}</option>`).join("");
-
-  teacherSel.innerHTML="<option>-- Teacher --</option>"+
-   [...new Set(data.map(x=>x.teacher))].map(x=>`<option>${x}</option>`).join("");
-
   genBtn.disabled=false;
-  status("Data loaded ✔");
+  status("CSV loaded ✔");
  };
  r.readAsText(e.target.files[0]);
 }
 
-/* ---------------- FITNESS (STRONG) ---------------- */
+/* ---------------- FITNESS (DOUBLE FIRST) ---------------- */
 function fitness(tt){
  let score=100000,pen=0;
- const slot={};
 
- tt.forEach(a=>{
-  let k=`${a.day}-${a.period}`;
+ /* slot clash */
+ const slot={};
+ tt.forEach(x=>{
+  let k=`${x.day}-${x.period}`;
   slot[k]=slot[k]||[];
-  slot[k].push(a);
+  slot[k].push(x);
+ });
+ Object.values(slot).forEach(s=>{
+  if(s.length>1)pen+=30000;
  });
 
- Object.values(slot).forEach(s=>{
-  if(s.length>1)pen+=20000;   // HARD block overwrite
-  let t=new Set(),f=new Set();
-  s.forEach(x=>{
-   if(t.has(x.teacher))pen+=5000;
-   if(f.has(x.form))pen+=5000;
-   t.add(x.teacher);f.add(x.form);
-  });
+ /* form + day + subject */
+ const fd={};
+ tt.forEach(x=>{
+  let k=`${x.form}-${x.day}-${x.subject}`;
+  fd[k]=fd[k]||[];
+  fd[k].push(+x.period.slice(1));
+ });
+
+ Object.values(fd).forEach(p=>{
+  p.sort((a,b)=>a-b);
+
+  if(p.length>2){pen+=30000;return;}
+
+  if(p.length===2){
+   if(p[1]-p[0]!==1)pen+=30000;
+   else score+=3000;
+  }
+
+  if(p.length===1){
+   let canDouble=false;
+   for(let i=1;i<9;i++){
+    if(!isFixed("X","P"+i)&&!isFixed("X","P"+(i+1)))
+     canDouble=true;
+   }
+   if(canDouble)pen+=8000;
+   else score+=200;
+  }
  });
 
  return score/(1+pen);
 }
 
-/* ---------------- EVOLUTION ---------------- */
+/* ---------------- GENERATION ---------------- */
 function startEvolution(){
- let pop=[...Array(40)].map(()=>data.map(d=>{
+ let pop=[...Array(60)].map(()=>data.map(d=>{
   let day=days[Math.floor(Math.random()*5)];
-  return{...d,day,period:getValidPeriod(day)};
+  return{...d,day,period:randPeriod(day)};
  }));
 
  let gen=0;
  const timer=setInterval(()=>{
   gen++;
   pop.sort((a,b)=>fitness(b)-fitness(a));
-  status("Generating... "+gen);
+  status("Generating… "+gen);
 
-  if(gen>1500){
+  if(gen>2000){
    clearInterval(timer);
    finalTT=pop[0];
    renderMaster();
    views.style.display="flex";
-   status("Timetable complete ✔");
+   status("Completed ✔ Doubles prioritized");
   }
 
-  let next=pop.slice(0,12);
-  while(next.length<40){
-   let c=JSON.parse(JSON.stringify(next[Math.floor(Math.random()*12)]));
+  let next=pop.slice(0,15);
+  while(next.length<60){
+   let c=JSON.parse(JSON.stringify(next[Math.floor(Math.random()*15)]));
    let x=c[Math.floor(Math.random()*c.length)];
    x.day=days[Math.floor(Math.random()*5)];
-   x.period=getValidPeriod(x.day);
+   x.period=randPeriod(x.day);
    next.push(c);
   }
   pop=next;
  },10);
 }
 
-/* ---------------- HEADER ---------------- */
-function headerHTML(){
- return `
- <div class="school-title">
-  <h2>${schoolName.value||""}</h2>
-  <h4>Academic Year: ${academicYear.value||""}</h4>
- </div>`;
-}
-
-/* ---------------- MASTER VIEW ---------------- */
+/* ---------------- RENDER MASTER ---------------- */
 function renderMaster(){
- let mode=displayMode.value;
- let h=headerHTML();
+ let mode=document.getElementById("displayMode").value;
+ let forms=[...new Set(finalTT.map(x=>x.form))];
+ let html="";
 
- days.forEach(d=>{
-  h+=`<div class="day-section"><h3>${d}</h3>
-  <table><tr class="header-row"><td>STREAM</td>${
-   periods.map(x=>`<td>${x.p}<br>${x.t}</td>`).join("")
-  }</tr>`;
-
-  forms.forEach(f=>{
-   h+=`<tr><td><b>${f}</b></td>`;
-   periods.forEach(x=>{
-    if(x.p==="BREAK")h+=`<td>TEA</td>`;
-    else if(isFixed(d,x.p))h+=`<td class="fixed-block">${isFixed(d,x.p)}</td>`;
-    else{
-     let s=finalTT.find(z=>z.day===d&&z.form===f&&z.period===x.p);
-     h+=`<td>${s?(mode==="full"?`<b>${s.subject}</b><br>${s.teacher}`:`<b>${s.subject}</b>`):""}</td>`;
-    }
-   });
-   h+="</tr>";
-  });
-
-  h+="</table></div>";
- });
-
- output.innerHTML=h;
-}
-
-/* ---------------- SINGLE VIEW ---------------- */
-function renderSingle(type){
- let v=type==="form"?streamSel.value:teacherSel.value;
- if(!v||v.startsWith("--"))return;
- let mode=displayMode.value;
-
- let h=headerHTML()+`<div class="day-section"><h3>${v}</h3>
- <table><tr class="header-row"><td>DAY</td>${
-  periods.map(x=>`<td>${x.p}<br>${x.t}</td>`).join("")
- }</tr>`;
-
- days.forEach(d=>{
-  h+=`<tr><td><b>${d}</b></td>`;
-  periods.forEach(x=>{
-   if(x.p==="BREAK")h+=`<td>TEA</td>`;
-   else if(isFixed(d,x.p))h+=`<td class="fixed-block">${isFixed(d,x.p)}</td>`;
-   else{
-    let s=finalTT.find(z=>z.day===d&&(type==="form"?z.form===v:z.teacher===v)&&z.period===x.p);
-    h+=`<td>${s?(mode==="full"?`<b>${s.subject}</b><br>${type==="form"?s.teacher:s.form}`:`<b>${s.subject}</b>`):""}</td>`;
-   }
-  });
-  h+="</tr>";
- });
-
- h+="</table></div>";
- output.innerHTML=h;
-}
-
-/* ---------------- TEMPLATE ---------------- */
-function downloadTemplate(){
- let csv="Subject,Teacher,Room,Form\n";
  forms.forEach(f=>{
-  [["MATHEMATICS",5],["ENGLISH",5],["KISWAHILI",4]].forEach(x=>{
-   for(let i=0;i<x[1];i++)
-    csv+=`${x[0]},TEACHER,ROOM_${f},${f}\n`;
+  html+=`<h3>${f}</h3><table><tr><th>Day</th>`;
+  periods.forEach(p=>{
+   html+=`<th>${p.p}<br>${p.t}</th>`;
   });
- });
- let b=new Blob([csv],{type:"text/csv"});
- let a=document.createElement("a");
- a.href=URL.createObjectURL(b);
- a.download="Timetable_Template.csv";
- a.click();
-}
+  html+="</tr>";
 
-function status(t){document.getElementById("status").innerText=t;}
+  days.forEach(d=>{
+   html+=`<tr><th>${d}</th>`;
+   periods.forEach(p=>{
+    if(p.p==="BREAK"){html+="<td>BREAK</td>";return;}
+    let cell=finalTT.find(x=>x.form===f && x.day===d && x.period===p.p);
+    if(!cell)html+="<td></td>";
+    else html+="<td>"+(mode==="both"
+     ?cell.subject+"<br>"+cell.teacher
+     :cell.subject)+"</td>";
+   });
+   html+="</tr>";
+  });
+  html+="</table><br>";
+ });
+
+ output.innerHTML=html;
+}
 </script>
 </body>
 </html>
-

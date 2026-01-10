@@ -2,99 +2,125 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AI School Timetable - Grouped by Day Layout</title>
+<title>School Timetable - Compact Day Layout</title>
 <style>
     body {
         font-family: Arial, Helvetica, sans-serif;
-        background: #f5f6f8;
+        background: #f8f9fa;
         margin: 0;
-        padding: 20px;
-        color: #333;
+        padding: 12px;
+        color: #222;
     }
-    .container {
-        max-width: 1450px;
-        margin: 0 auto;
-    }
+    .container { max-width: 1380px; margin: 0 auto; }
+
     .panel {
         background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
+        padding: 14px;
+        border-radius: 8px;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+        margin-bottom: 18px;
     }
-    button, input, select {
-        padding: 8px 14px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        margin: 5px;
-    }
-    button {
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .blue  { background:#0069d9; color:white; border:none; }
-    .green { background:#1e7e34; color:white; border:none; }
-    .gray  { background:#6c757d; color:white; border:none; }
 
-    table.master-timetable {
+    button, input, select {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        margin: 3px;
+    }
+
+    .master-timetable {
         width: 100%;
         border-collapse: collapse;
-        font-size: 11.5px;
+        font-size: 10px;
         background: white;
-        margin: 20px 0;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        margin: 10px 0 20px;
+        line-height: 1.15;
     }
+
     th, td {
-        border: 1px solid #555;
-        padding: 6px 4px;
+        border: 1px solid #666;
+        padding: 3px 4px;
         text-align: center;
-        vertical-align: middle;
+        height: 26px;
     }
+
     th {
         background: #2c3e50;
         color: white;
         font-weight: normal;
+        font-size: 9.5px;
     }
-    td.break {
-        background: #f0f0f0;
-        color: #555;
+
+    .break-cell {
+        background: #f1f3f5;
+        color: #444;
         font-weight: bold;
+        font-size: 9px;
+        width: 60px;
     }
+
+    .fixed {
+        background: #e3f2fd;
+        color: #0d47a1;
+        font-weight: bold;
+        font-size: 9px;
+    }
+
     .group-separator td {
-        background: #ffc107;
-        height: 8px;
+        background: #ffcc00;
+        height: 5px;
         padding: 0;
         border: none;
     }
+
     .day-title {
         background: #34495e;
         color: white;
-        padding: 12px;
-        font-size: 1.4em;
-        margin: 30px 0 10px;
+        padding: 8px;
+        font-size: 1.2em;
+        margin: 18px 0 6px;
         text-align: center;
-        border-radius: 6px;
+        border-radius: 5px;
     }
-    .small {
-        font-size: 9.5px;
+
+    .form-col {
+        font-weight: bold;
+        width: 52px;
+        font-size: 10.5px;
+    }
+
+    .time-small {
+        font-size: 8px;
+        color: #ddd;
+        display: block;
+        margin-top: 1px;
+    }
+
+    .lesson-subject { font-size: 10px; }
+    .lesson-teacher {
+        font-size: 8.5px;
         color: #444;
+        display: block;
+        margin-top: 1px;
     }
 
     @media print {
         .panel { display: none; }
-        body { background: white; padding: 0; }
-        .day-title { page-break-before: always; }
+        body { padding: 0; margin: 0; }
+        .master-timetable { page-break-inside: avoid; }
+        .day-title { page-break-before: always; margin-top: 0; }
     }
 </style>
 </head>
 <body>
 
 <div class="panel container">
-    <h2>🇹🇿 School Timetable Generator - Day Grouped Layout</h2>
+    <h2 style="margin:0 0 12px 0; text-align:center">School Timetable - Compact View</h2>
 
-    <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:15px 0;">
-        <input id="school" placeholder="School Name" style="width:240px;">
-        <input id="year" placeholder="Year (e.g. 2026)" style="width:140px;">
+    <div style="text-align:center; margin:12px 0;">
+        <input id="school" placeholder="School Name" style="width:220px">
+        <input id="year" placeholder="Year" style="width:100px">
         <select id="display">
             <option value="subject">Subject only</option>
             <option value="full" selected>Subject + Teacher</option>
@@ -102,204 +128,187 @@
     </div>
 
     <div style="text-align:center;">
-        <button onclick="document.getElementById('csvInput').click()" class="blue">Upload CSV</button>
-        <input type="file" id="csvInput" accept=".csv" hidden onchange="loadCSV(event)">
-        <button onclick="generateTimetable()" class="green" id="generateBtn" disabled>Generate</button>
-        <button onclick="window.print()" class="gray">Print / Save as PDF</button>
+        <button onclick="document.getElementById('csv').click()" class="blue">Upload CSV</button>
+        <input type="file" id="csv" accept=".csv" hidden onchange="loadCSV(event)">
+        <button onclick="generate()" class="green" id="genBtn" disabled>Generate</button>
+        <button onclick="window.print()" class="gray">Print</button>
     </div>
 
-    <p id="status" style="margin-top:15px; font-weight:bold; color:#2c3e50;">Upload CSV lesson demand file to begin...</p>
+    <p id="status" style="margin-top:12px; font-weight:bold; text-align:center">
+        Upload lesson demand CSV to begin...
+    </p>
 </div>
 
 <div class="container" id="output"></div>
 
 <script>
-const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 const PERIODS = [
-    {code:"P1", time:"8:00-8:40"},
-    {code:"P2", time:"8:40-9:20"},
-    {code:"P3", time:"9:20-10:00"},
-    {code:"P4", time:"10:00-10:40"},
-    {code:"BREAK", time:"10:40-11:10"},
-    {code:"P5", time:"11:10-11:50"},
-    {code:"P6", time:"11:50-12:30"},
-    {code:"P7", time:"12:30-13:10"},
-    {code:"P8", time:"13:10-13:50"},
-    {code:"P9", time:"13:50-14:30"}
+    {c:"P1",t:"8:00-8:40"},{c:"P2",t:"8:40-9:20"},{c:"P3",t:"9:20-10:00"},
+    {c:"P4",t:"10:00-10:40"},{c:"BREAK",t:"10:40-11:10"},
+    {c:"P5",t:"11:10-11:50"},{c:"P6",t:"11:50-12:30"},{c:"P7",t:"12:30-13:10"},
+    {c:"P8",t:"13:10-13:50"},{c:"P9",t:"13:50-14:30"}
 ];
 
-let lessonsDemand = [];
-let placedLessons = [];
+let lessons = [];
+let timetable = [];
 
-function isFixedBlock(day, period) {
-    if (day === "WEDNESDAY" && ["P8","P9"].includes(period)) return "RELIGION";
-    if (day === "FRIDAY"    && ["P7","P8","P9"].includes(period)) return "MOSQUE";
+function isFixed(day, p) {
+    if (day === "WEDNESDAY" && ["P8","P9"].includes(p)) return "RELIGION";
+    if (day === "FRIDAY" && ["P7","P8","P9"].includes(p)) return "MOSQUE";
     return null;
 }
 
-function loadCSV(event) {
-    const file = event.target.files[0];
+function loadCSV(e) {
+    const file = e.target.files[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        const lines = reader.result.split("\n").slice(1)
-            .map(l => l.trim())
-            .filter(l => l && l.split(",").length >= 3);
-
-        lessonsDemand = lines.map(line => {
-            const parts = line.split(",");
-            return {
-                subject: parts[0]?.trim(),
-                teacher: (parts[1]?.trim()) || null,
-                form: parts[3]?.trim()
-            };
-        }).filter(l => l.form && l.subject);
-
-        document.getElementById("generateBtn").disabled = false;
-        document.getElementById("status").innerHTML = 
-            `Loaded <b>${lessonsDemand.length}</b> periods • ${new Set(lessonsDemand.map(l=>l.form)).size} classes`;
+    const r = new FileReader();
+    r.onload = () => {
+        lessons = r.result.split("\n").slice(1)
+            .map(l=>l.trim())
+            .filter(l=>l)
+            .map(l=>{
+                const [sub, tea,, frm] = l.split(",").map(x=>x.trim());
+                return {subject:sub, teacher:tea||null, form:frm};
+            });
+        document.getElementById("genBtn").disabled = false;
+        document.getElementById("status").innerText = 
+            `Loaded ${lessons.length} periods • ${new Set(lessons.map(l=>l.form)).size} classes`;
     };
-    reader.readAsText(file);
+    r.readAsText(file);
 }
 
-function generateTimetable() {
-    if (!lessonsDemand.length) {
-        alert("Please upload CSV first!");
-        return;
-    }
+function generate() {
+    if (!lessons.length) return alert("Upload CSV first");
+    
+    timetable = [];
+    const used = {}; // form → day → period
 
-    placedLessons = [];
-    const used = {}; // form → day → period → true
-
-    lessonsDemand.forEach(les => {
-        if (!used[les.form]) used[les.form] = {};
-        DAYS.forEach(d => { if (!used[les.form][d]) used[les.form][d] = {}; });
+    lessons.forEach(l=>{
+        if(!used[l.form]) used[l.form]={};
+        DAYS.forEach(d=>{if(!used[l.form][d]) used[l.form][d]={}});
     });
 
-    // Try to place doubles first (greedy approach)
-    const grouped = {};
-    lessonsDemand.forEach(l => {
-        const k = `${l.form}|${l.subject}`;
-        if (!grouped[k]) grouped[k] = [];
-        grouped[k].push(l);
+    // Simple greedy double placement
+    const groups = {};
+    lessons.forEach(l=>{
+        const k = l.form+"|"+l.subject;
+        if(!groups[k]) groups[k]=[];
+        groups[k].push(l);
     });
 
-    Object.values(grouped).forEach(group => {
-        const form = group[0].form;
-        const subject = group[0].subject;
-        const teacher = group[0].teacher;
-        let remaining = group.length;
+    Object.values(groups).forEach(g=>{
+        const f = g[0].form;
+        const s = g[0].subject;
+        const t = g[0].teacher;
+        let rem = g.length;
 
-        // Doubles first
-        while (remaining >= 2) {
-            let placed = false;
-            for (const day of DAYS) {
-                for (const [p1, p2] of [['P1','P2'],['P2','P3'],['P3','P4'],['P5','P6'],['P6','P7'],['P7','P8'],['P8','P9']]) {
-                    if (!used[form][day][p1] && !used[form][day][p2] &&
-                        !isFixedBlock(day, p1) && !isFixedBlock(day, p2)) {
-                        placedLessons.push({form, subject, teacher, day, period: p1});
-                        placedLessons.push({form, subject, teacher, day, period: p2});
-                        used[form][day][p1] = true;
-                        used[form][day][p2] = true;
-                        remaining -= 2;
-                        placed = true;
+        while(rem>=2){
+            let placed=false;
+            for(const d of DAYS){
+                for(const [p1,p2] of [['P1','P2'],['P2','P3'],['P3','P4'],['P5','P6'],['P6','P7'],['P7','P8'],['P8','P9']]){
+                    if(!used[f][d][p1] && !used[f][d][p2] && !isFixed(d,p1) && !isFixed(d,p2)){
+                        timetable.push({form:f,subject:s,teacher:t,day:d,period:p1});
+                        timetable.push({form:f,subject:s,teacher:t,day:d,period:p2});
+                        used[f][d][p1]=used[f][d][p2]=true;
+                        rem-=2;
+                        placed=true;
                         break;
                     }
                 }
-                if (placed) break;
+                if(placed) break;
             }
-            if (!placed) break;
+            if(!placed) break;
         }
 
-        // Remaining singles
-        while (remaining > 0) {
-            let placed = false;
-            for (const day of DAYS) {
-                for (const p of PERIODS.map(pp => pp.code).filter(c => c !== "BREAK")) {
-                    if (!used[form][day][p] && !isFixedBlock(day, p)) {
-                        placedLessons.push({form, subject, teacher, day, period: p});
-                        used[form][day][p] = true;
-                        remaining--;
-                        placed = true;
+        while(rem>0){
+            let placed=false;
+            for(const d of DAYS){
+                for(const p of PERIODS.map(pp=>pp.c).filter(c=>c!=="BREAK")){
+                    if(!used[f][d][p] && !isFixed(d,p)){
+                        timetable.push({form:f,subject:s,teacher:t,day:d,period:p});
+                        used[f][d][p]=true;
+                        rem--;
+                        placed=true;
                         break;
                     }
                 }
-                if (placed) break;
+                if(placed) break;
             }
-            if (!placed) break;
+            if(!placed) break;
         }
     });
 
-    renderDayGroupedLayout();
-    document.getElementById("status").innerHTML = 
-        `Generated • ${placedLessons.length} / ${lessonsDemand.length} lessons placed`;
+    renderCompact();
+    document.getElementById("status").innerText = 
+        `Done • ${timetable.length}/${lessons.length} periods placed`;
 }
 
-function renderDayGroupedLayout() {
-    const output = document.getElementById("output");
-    output.innerHTML = "";
+function renderCompact() {
+    const out = document.getElementById("output");
+    out.innerHTML = "";
 
     const school = document.getElementById("school").value.trim() || "School";
-    const year = document.getElementById("year").value.trim() || "2026";
-    const mode = document.getElementById("display").value;
+    const year   = document.getElementById("year").value.trim()   || "2026";
+    const mode   = document.getElementById("display").value;
 
-    output.innerHTML += `<h2 style="text-align:center">${school} - ${year}</h2>`;
+    out.innerHTML += `<h2 style="text-align:center;margin-bottom:8px">${school} – ${year}</h2>`;
 
-    const allForms = [...new Set(lessonsDemand.map(l => l.form))].sort();
+    const forms = [...new Set(lessons.map(l=>l.form))].sort();
 
     DAYS.forEach(day => {
-        output.innerHTML += `<div class="day-title">${day}</div>`;
+        out.innerHTML += `<div class="day-title">${day}</div>`;
 
         let html = `
         <table class="master-timetable">
-            <thead>
-                <tr>
-                    <th rowspan="2" style="width:60px;">FORM</th>
-                    <th colspan="4">MORNING</th>
-                    <th rowspan="2" class="break" style="width:80px;">TEA BREAK</th>
-                    <th colspan="5">AFTERNOON</th>
-                </tr>
-                <tr>`;
+        <thead>
+            <tr>
+                <th rowspan="2" class="form-col">FORM</th>
+                <th colspan="4">MORNING</th>
+                <th rowspan="2" class="break-cell">BREAK</th>
+                <th colspan="5">AFTERNOON</th>
+            </tr>
+            <tr>`;
 
-        PERIODS.forEach(p => {
-            if (p.code === "BREAK") return;
-            html += `<th>${p.code}<br><span class="small">${p.time}</span></th>`;
+        PERIODS.forEach(p=>{
+            if(p.c==="BREAK") return;
+            html += `<th>${p.c}<span class="time-small">${p.t}</span></th>`;
         });
 
         html += `</tr></thead><tbody>`;
 
-        let lastLevel = "";
-        allForms.forEach(form => {
-            const level = form.substring(0,2);
-            if (level !== lastLevel) {
-                if (lastLevel) html += `<tr class="group-separator"><td colspan="${PERIODS.length+1}"></td></tr>`;
-                lastLevel = level;
+        let prevLevel = "";
+        forms.forEach(form => {
+            const level = form.slice(0,2);
+            if(level !== prevLevel){
+                if(prevLevel) html += `<tr class="group-separator"><td colspan="11"></td></tr>`;
+                prevLevel = level;
             }
 
-            html += `<tr><td><b>${form}</b></td>`;
+            html += `<tr><td class="form-col"><b>${form}</b></td>`;
 
             PERIODS.forEach(per => {
-                if (per.code === "BREAK") {
-                    html += `<td class="break">TEA BREAK</td>`;
+                if(per.c === "BREAK"){
+                    html += `<td class="break-cell">BREAK</td>`;
                     return;
                 }
 
-                const fixed = isFixedBlock(day, per.code);
-                if (fixed) {
-                    html += `<td class="break">${fixed}</td>`;
+                const fixed = isFixed(day, per.c);
+                if(fixed){
+                    html += `<td class="fixed">${fixed}</td>`;
                     return;
                 }
 
-                const lesson = placedLessons.find(l => 
-                    l.form === form && l.day === day && l.period === per.code
+                const les = timetable.find(l => 
+                    l.form === form && l.day === day && l.period === per.c
                 );
 
-                if (lesson) {
-                    const content = (mode === "full" && lesson.teacher) 
-                        ? `${lesson.subject}<br><span class="small">${lesson.teacher}</span>`
-                        : lesson.subject;
-                    html += `<td>${content}</td>`;
+                if(les){
+                    if(mode === "full" && les.teacher){
+                        html += `<td><span class="lesson-subject">${les.subject}</span><span class="lesson-teacher">${les.teacher}</span></td>`;
+                    } else {
+                        html += `<td><span class="lesson-subject">${les.subject}</span></td>`;
+                    }
                 } else {
                     html += `<td></td>`;
                 }
@@ -309,7 +318,7 @@ function renderDayGroupedLayout() {
         });
 
         html += `</tbody></table>`;
-        output.innerHTML += html;
+        out.innerHTML += html;
     });
 }
 </script>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Official School Timetable 2026</title>
     <style>
         :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; }
         .compact-mode { --row-height: 32px; --font-size: 9.5px; --cell-padding: 2px; }
@@ -20,7 +21,6 @@
         .time-hdr { font-size: 0.85em; font-weight: normal; display: block; }
         .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
         
-        /* NARROWED BREAK COLUMN */
         .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
         
         .fixed-block { background: #d1ecf1; color: #0c5460; font-weight: bold; font-style: italic; }
@@ -35,7 +35,14 @@
         .btn-gen { background: #28a745; color: white; border: none; }
         .btn-up { background: #007bff; color: white; border: none; }
 
-        @media print { .panel, .view-bar { display: none !important; } .day-section { page-break-after: always; } }
+        /* PRINT STYLES - REMOVES HEADER/FOOTER/CONTROLS */
+        @media print { 
+            .panel, .view-bar, .school-info, .settings-bar, #status, .no-print { display: none !important; } 
+            body { background: white; padding: 0; margin: 0; }
+            .container { max-width: 100%; margin: 0; }
+            .day-section { page-break-after: always; }
+            h2, h3 { display: none !important; } /* Hides School Name and Year on Print as requested */
+        }
     </style>
 </head>
 <body id="mainBody">
@@ -171,8 +178,8 @@ function canPlace(day, period, lesson) {
 function renderMaster() {
     let sName = document.getElementById('schoolName').value || "SCHOOL NAME";
     let aYear = document.getElementById('academicYear').value || "2026";
-    let html = `<h2 style="text-align:center; margin-bottom:5px;">${sName}</h2>`;
-    html += `<h3 style="text-align:center; margin-top:0;">ACADEMIC YEAR: ${aYear}</h3>`;
+    let html = `<h2 class="screen-only" style="text-align:center; margin-bottom:5px;">${sName}</h2>`;
+    html += `<h3 class="screen-only" style="text-align:center; margin-top:0;">ACADEMIC YEAR: ${aYear}</h3>`;
     
     DAYS.forEach(day => {
         html += `<div class="day-section"><div class="day-title">${day}</div>`;
@@ -204,8 +211,8 @@ function renderIndividual(type) {
     const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
     if(!val) return;
     let sName = document.getElementById('schoolName').value || "SCHOOL NAME";
-    let html = `<h2 style="text-align:center;">${sName}</h2>`;
-    html += `<h3 style="text-align:center;">${type.toUpperCase()}: ${val}</h3>`;
+    let html = `<h2 class="screen-only" style="text-align:center;">${sName}</h2>`;
+    html += `<h3 class="screen-only" style="text-align:center;">${type.toUpperCase()}: ${val}</h3>`;
     html += `<table><colgroup><col style="width:70px">` + 
             PERIODS.map(p => p.p === "BREAK" ? `<col style="width:25px">` : `<col>`).join('') + `</colgroup>`;
     html += `<tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
@@ -227,4 +234,3 @@ function renderIndividual(type) {
 </script>
 </body>
 </html>
-

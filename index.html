@@ -2,42 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Official Timetable 2026 - No Triple Blocks</title>
+    <title>Official Timetable 2026 - Compact Edition</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 15px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 30px; }
-        th, td { border: 1px solid #444; padding: 5px; text-align: center; font-size: 11px; height: 45px; }
+        :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; }
+        .compact-mode { --row-height: 32px; --font-size: 9.5px; --cell-padding: 2px; }
+
+        body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 10px; }
+        .container { max-width: 1450px; margin: 0 auto; }
+        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        
+        /* Layout Styling */
+        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 25px; }
+        th, td { border: 1px solid #444; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); }
         th { background: #2c3e50; color: white; }
-        .time-hdr { font-size: 9px; font-weight: normal; display: block; margin-top: 2px; }
-        .day-title { background: #34495e; color: white; padding: 12px; font-size: 18px; text-align: center; margin: 25px 0 10px; border-radius: 4px; }
-        .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 45px; font-size: 10px; }
+        
+        .time-hdr { font-size: 0.85em; font-weight: normal; display: block; }
+        .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
+        
+        /* Specialized Cells */
+        .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 45px; font-size: 0.9em; }
         .fixed-block { background: #d1ecf1; color: #0c5460; font-weight: bold; font-style: italic; }
-        .separator { background: #ffd700 !important; height: 4px !important; line-height: 4px; }
-        .separator td { height: 4px !important; padding: 0; border: none; }
-        .view-bar { background: #e9ecef; padding: 15px; border-radius: 6px; display: none; margin-top: 15px; text-align: center; }
-        button, select { padding: 10px 15px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
+        .separator { background: #ffd700 !important; height: 3px !important; line-height: 3px; }
+        .separator td { height: 3px !important; padding: 0; border: none; }
+
+        /* Controls */
+        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
+        .settings-bar { margin-top: 10px; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; gap: 20px; font-size: 13px; }
+        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; }
+        
+        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-gen { background: #28a745; color: white; border: none; }
         .btn-up { background: #007bff; color: white; border: none; }
+
         @media print { .panel, .view-bar { display: none !important; } .day-section { page-break-after: always; } }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
 <div class="panel container">
-    <h2 style="text-align:center; margin-top:0;">🇹🇿 Professional Timetable System</h2>
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button class="btn-up" onclick="document.getElementById('csvFile').click()">1. Upload CSV Data</button>
-        <button class="btn-gen" id="genBtn" onclick="startGeneration()" disabled>2. Generate (No Triple Periods)</button>
-        <button onclick="window.print()">Print View</button>
+        <button class="btn-up" onclick="document.getElementById('csvFile').click()">Upload CSV</button>
+        <button class="btn-gen" id="genBtn" onclick="startGeneration()" disabled>Generate Timetable</button>
+        <button onclick="window.print()">Print</button>
     </div>
-    <div id="status" style="text-align:center; margin-top:15px; font-weight:bold; color:#555;">Ready for CSV upload.</div>
+
+    <div class="settings-bar">
+        <label><input type="checkbox" onchange="toggleCompact(this)"> <b>Compact Mode</b> (Fit more on screen)</label>
+        <label><b>Row Height:</b> <input type="range" min="30" max="60" value="45" oninput="adjustHeight(this.value)"></label>
+    </div>
+    
+    <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#555; font-size: 12px;">Waiting for CSV...</div>
     
     <div class="view-bar" id="viewBar">
-        <strong>View:</strong>
         <button onclick="renderMaster()">Full School View</button>
         <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
         <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
@@ -56,6 +73,14 @@ const PERIODS = [
 const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
 let rawData = [], timetable = [];
 
+function toggleCompact(cb) {
+    document.getElementById('mainBody').classList.toggle('compact-mode', cb.checked);
+}
+
+function adjustHeight(val) {
+    document.documentElement.style.setProperty('--row-height', val + 'px');
+}
+
 function isFixed(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
     if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
@@ -71,7 +96,7 @@ function handleUpload(e) {
             return { subject: parts[0].trim(), teacher: parts[1].trim(), form: parts[3].trim() };
         });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = `Data loaded: ${rawData.length} lessons. Ready to generate.`;
+        document.getElementById('status').innerText = `Data loaded: ${rawData.length} lessons. Ready.`;
         populateFilters();
     };
     reader.readAsText(e.target.files[0]);
@@ -86,8 +111,6 @@ function populateFilters() {
 function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
-    
-    // Group lessons to handle doubles correctly
     const grouped = {};
     rawData.forEach(l => {
         const key = `${l.form}-${l.subject}`;
@@ -97,51 +120,42 @@ function startGeneration() {
 
     Object.values(grouped).forEach(lessons => {
         let remaining = lessons.length;
-        // Priority: Place Double Periods first (Max 2 per day)
+        // Priority: Doubles (Strictly No Triples)
         while(remaining >= 2) {
-            let placed = false;
-            for(let attempt = 0; attempt < 50; attempt++) {
-                const day = DAYS[Math.floor(Math.random()*5)];
-                const startIdx = Math.floor(Math.random()*8);
-                const p1 = vp[startIdx];
-                const p2 = vp[startIdx+1];
-
-                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !isFixed(day, p1) && !isFixed(day, p2)) {
-                    // Check to ensure no more than 2 periods of this subject on this day
-                    const currentCount = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-                    if(currentCount === 0) {
-                        timetable.push({...lessons[0], day, period: p1});
-                        timetable.push({...lessons[0], day, period: p2});
-                        remaining -= 2;
-                        placed = true;
-                        break;
-                    }
-                }
-            }
-            if(!placed) break; // Fall back to singles if doubles can't fit
-        }
-        // Place remaining as Singles (Max 2 total per day per stream/subject)
-        while(remaining > 0) {
             let placed = false;
             for(let attempt = 0; attempt < 100; attempt++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
-                const period = vp[Math.floor(Math.random()*9)];
-                const currentCount = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
+                const startIdx = Math.floor(Math.random()*8);
+                const p1 = vp[startIdx]; const p2 = vp[startIdx+1];
 
-                if(canPlace(day, period, lessons[0]) && !isFixed(day, period) && currentCount < 2) {
-                    timetable.push({...lessons[0], day, period});
-                    remaining--;
-                    placed = true;
-                    break;
+                const dayCount = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
+
+                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !isFixed(day, p1) && !isFixed(day, p2) && dayCount === 0) {
+                    timetable.push({...lessons[0], day, period: p1});
+                    timetable.push({...lessons[0], day, period: p2});
+                    remaining -= 2; placed = true; break;
                 }
             }
-            if(!placed) remaining--; // Emergency skip to prevent infinite loop
+            if(!placed) break;
+        }
+        // Singles (Strictly Max 2 per day)
+        while(remaining > 0) {
+            for(let attempt = 0; attempt < 100; attempt++) {
+                const day = DAYS[Math.floor(Math.random()*5)];
+                const period = vp[Math.floor(Math.random()*9)];
+                const dayCount = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
+
+                if(canPlace(day, period, lessons[0]) && !isFixed(day, period) && dayCount < 2) {
+                    timetable.push({...lessons[0], day, period});
+                    remaining--; break;
+                }
+            }
+            if(remaining > 0 && attempt === 99) remaining--; 
         }
     });
 
     document.getElementById('viewBar').style.display = 'block';
     renderMaster();
-    document.getElementById('status').innerText = "Generation complete. No triple blocks allowed.";
 }
 
 function canPlace(day, period, lesson) {
@@ -152,21 +166,19 @@ function renderMaster() {
     let html = "";
     DAYS.forEach(day => {
         html += `<div class="day-section"><div class="day-title">${day}</div>`;
-        html += `<table><tr><th>STREAM</th>` + PERIODS.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
-        
+        html += `<table><tr><th style="width:70px">STREAM</th>` + PERIODS.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
         let lastPref = "F1";
         FORMS.forEach(f => {
             if(f.substring(0,2) !== lastPref) html += `<tr class="separator"><td colspan="11"></td></tr>`;
             lastPref = f.substring(0,2);
-            
-            html += `<tr><td><b>${f}</b></td>`;
+            html += `<tr><td style="font-weight:bold">${f}</td>`;
             PERIODS.forEach(p => {
                 const fix = isFixed(day, p.p);
-                if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
+                if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
                 else if(fix) html += `<td class="fixed-block">${fix}</td>`;
                 else {
-                    const match = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
-                    html += `<td>${match ? `<b>${match.subject}</b><br>${match.teacher}` : ''}</td>`;
+                    const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
+                    html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
                 }
             });
             html += `</tr>`;
@@ -179,17 +191,17 @@ function renderMaster() {
 function renderIndividual(type) {
     const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
     if(!val) return;
-    let html = `<h2 style="text-align:center;">${type.toUpperCase()} VIEW: ${val}</h2>`;
+    let html = `<h3 style="text-align:center;">${type.toUpperCase()}: ${val}</h3>`;
     html += `<table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
     DAYS.forEach(day => {
-        html += `<tr><td><b>${day}</b></td>`;
+        html += `<tr><td style="font-weight:bold">${day}</td>`;
         PERIODS.forEach(p => {
             const fix = isFixed(day, p.p);
-            if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
+            if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
             else if(fix) html += `<td class="fixed-block">${fix}</td>`;
             else {
-                const match = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
-                html += `<td>${match ? `<b>${match.subject}</b><br>${type === 'stream' ? match.teacher : 'Class: ' + match.form}` : ''}</td>`;
+                const m = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
+                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;
             }
         });
         html += `</tr>`;

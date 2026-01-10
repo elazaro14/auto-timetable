@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>School Timetable - Compact + Teacher Conflict Detection</title>
+<title>School Timetable - Compact + Views</title>
 <style>
     body {
         font-family: Arial, Helvetica, sans-serif;
@@ -29,7 +29,7 @@
         margin: 3px;
     }
 
-    .master-timetable {
+    .master-timetable, .individual-timetable {
         width: 100%;
         border-collapse: collapse;
         font-size: 10px;
@@ -105,10 +105,18 @@
         margin-top: 1px;
     }
 
+    .view-controls {
+        margin: 15px 0;
+        padding: 10px;
+        background: #f1f3f5;
+        border-radius: 6px;
+        display: none;
+    }
+
     @media print {
-        .panel { display: none; }
+        .panel, .view-controls { display: none !important; }
         body { padding: 0; margin: 0; }
-        .master-timetable { page-break-inside: avoid; }
+        .master-timetable, .individual-timetable { page-break-inside: avoid; }
         .day-title { page-break-before: always; margin-top: 0; }
     }
 </style>
@@ -131,7 +139,18 @@
         <button onclick="document.getElementById('csv').click()" class="blue">Upload CSV</button>
         <input type="file" id="csv" accept=".csv" hidden onchange="loadCSV(event)">
         <button onclick="generate()" class="green" id="genBtn" disabled>Generate</button>
-        <button onclick="window.print()" class="gray">Print</button>
+        <button onclick="window.print()" class="gray">Print Current View</button>
+    </div>
+
+    <div class="view-controls" id="viewControls">
+        <strong>View:</strong>
+        <button onclick="renderMaster()">Full Master View</button>
+        <select id="streamSelect" onchange="renderStream()">
+            <option value="">-- Select Stream --</option>
+        </select>
+        <select id="teacherSelect" onchange="renderTeacher()">
+            <option value="">-- Select Teacher --</option>
+        </select>
     </div>
 
     <p id="status" style="margin-top:12px; font-weight:bold; text-align:center">
@@ -150,13 +169,12 @@ const PERIODS = [
     {c:"P8",t:"13:10-13:50"},{c:"P9",t:"13:50-14:30"}
 ];
 
-const DOUBLE_PAIRS = [
-    ['P1','P2'],['P2','P3'],['P3','P4'],
-    ['P5','P6'],['P6','P7'],['P7','P8'],['P8','P9']
-];
+const DOUBLE_PAIRS = [['P1','P2'],['P2','P3'],['P3','P4'],['P5','P6'],['P6','P7'],['P7','P8'],['P8','P9']];
 
 let lessonsDemand = [];
 let timetable = [];
+let allForms = [];
+let allTeachers = new Set();
 
 function isFixed(day, p) {
     if (day === "WEDNESDAY" && ["P8","P9"].includes(p)) return "RELIGION";
@@ -175,15 +193,34 @@ function loadCSV(e) {
             .filter(l=>l)
             .map(l=>{
                 const [sub, tea,, frm] = l.split(",").map(x=>x.trim());
+                if (tea) allTeachers.add(tea);
                 return {subject:sub, teacher:tea||null, form:frm};
             })
             .filter(l => l.subject && l.form);
 
+        allForms = [...new Set(lessonsDemand.map(l=>l.form))].sort();
+
         document.getElementById("genBtn").disabled = false;
         document.getElementById("status").innerText = 
-            `Loaded ${lessonsDemand.length} periods • ${new Set(lessonsDemand.map(l=>l.form)).size} classes`;
+            `Loaded ${lessonsDemand.length} periods • ${allForms.length} classes • ${allTeachers.size} teachers`;
     };
     r.readAsText(file);
+}
+
+function populateSelectors() {
+    const streamSel = document.getElementById("streamSelect");
+    streamSel.innerHTML = '<option value="">-- Select Stream --</option>';
+    allForms.forEach(f => {
+        streamSel.innerHTML += `<option value="${f}">${f}</option>`;
+    });
+
+    const teacherSel = document.getElementById("teacherSelect");
+    teacherSel.innerHTML = '<option value="">-- Select Teacher --</option>';
+    [...allTeachers].sort().forEach(t => {
+        teacherSel.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+
+    document.getElementById("viewControls").style.display = "block";
 }
 
 function generate() {
@@ -191,16 +228,14 @@ function generate() {
 
     timetable = [];
 
-    // Track used slots
-    const classUsed  = {}; // form → day → period → true
-    const teacherUsed = {}; // teacher → day → period → true
+    const classUsed  = {};
+    const teacherUsed = {};
 
     lessonsDemand.forEach(l=>{
         if(!classUsed[l.form]) classUsed[l.form] = {};
         DAYS.forEach(d=>{if(!classUsed[l.form][d]) classUsed[l.form][d] = {}});
     });
 
-    // Group by form + subject (to prefer doubles)
     const groups = {};
     lessonsDemand.forEach(l=>{
         const key = `${l.form}|${l.subject}`;
@@ -211,10 +246,9 @@ function generate() {
     Object.values(groups).forEach(group => {
         const form = group[0].form;
         const subject = group[0].subject;
-        const teacher = group[0].teacher; // can be null
+        const teacher = group[0].teacher;
         let remaining = group.length;
 
-        // Phase 1: Try to place doubles
         while (remaining >= 2) {
             let placed = false;
             for (const day of DAYS) {
@@ -224,23 +258,19 @@ function generate() {
 
                     let teacherFree = true;
                     if (teacher) {
-                        teacherFree = 
-                            (!teacherUsed[teacher]?.[day]?.[p1]) &&
-                            (!teacherUsed[teacher]?.[day]?.[p2]);
+                        if (!teacherUsed[teacher]) teacherUsed[teacher] = {};
+                        if (!teacherUsed[teacher][day]) teacherUsed[teacher][day] = {};
+                        teacherFree = !teacherUsed[teacher][day][p1] && !teacherUsed[teacher][day][p2];
                     }
 
                     if (slot1Free && slot2Free && teacherFree) {
                         timetable.push({form, subject, teacher, day, period: p1});
                         timetable.push({form, subject, teacher, day, period: p2});
 
-                        classUsed[form][day][p1] = true;
-                        classUsed[form][day][p2] = true;
+                        classUsed[form][day][p1] = classUsed[form][day][p2] = true;
 
                         if (teacher) {
-                            if (!teacherUsed[teacher]) teacherUsed[teacher] = {};
-                            if (!teacherUsed[teacher][day]) teacherUsed[teacher][day] = {};
-                            teacherUsed[teacher][day][p1] = true;
-                            teacherUsed[teacher][day][p2] = true;
+                            teacherUsed[teacher][day][p1] = teacherUsed[teacher][day][p2] = true;
                         }
 
                         remaining -= 2;
@@ -250,10 +280,9 @@ function generate() {
                 }
                 if (placed) break;
             }
-            if (!placed) break; // no more possible doubles
+            if (!placed) break;
         }
 
-        // Phase 2: Place remaining as singles
         while (remaining > 0) {
             let placed = false;
             for (const day of DAYS) {
@@ -262,7 +291,9 @@ function generate() {
 
                     let teacherOk = true;
                     if (teacher) {
-                        teacherOk = !teacherUsed[teacher]?.[day]?.[p];
+                        if (!teacherUsed[teacher]) teacherUsed[teacher] = {};
+                        if (!teacherUsed[teacher][day]) teacherUsed[teacher][day] = {};
+                        teacherOk = !teacherUsed[teacher][day][p];
                     }
 
                     if (slotFree && teacherOk) {
@@ -271,8 +302,6 @@ function generate() {
                         classUsed[form][day][p] = true;
 
                         if (teacher) {
-                            if (!teacherUsed[teacher]) teacherUsed[teacher] = {};
-                            if (!teacherUsed[teacher][day]) teacherUsed[teacher][day] = {};
                             teacherUsed[teacher][day][p] = true;
                         }
 
@@ -283,19 +312,27 @@ function generate() {
                 }
                 if (placed) break;
             }
-            if (!placed) {
-                console.warn(`Could not place all ${remaining} lessons for ${form} - ${subject}`);
-                break;
-            }
+            if (!placed) break;
         }
     });
 
-    renderCompactDayLayout();
+    populateSelectors();
+    renderMaster();
     document.getElementById("status").innerText = 
-        `Generated • ${timetable.length}/${lessonsDemand.length} periods placed (teacher conflicts prevented)`;
+        `Generated • ${timetable.length}/${lessonsDemand.length} periods placed (no teacher conflicts)`;
 }
 
-function renderCompactDayLayout() {
+// ── Rendering Functions ───────────────────────────────────────────────
+
+function getDisplayContent(lesson, mode) {
+    if (!lesson) return "";
+    if (mode === "full" && lesson.teacher) {
+        return `<span class="lesson-subject">${lesson.subject}</span><span class="lesson-teacher">${lesson.teacher}</span>`;
+    }
+    return `<span class="lesson-subject">${lesson.subject}</span>`;
+}
+
+function renderMaster() {
     const output = document.getElementById("output");
     output.innerHTML = "";
 
@@ -303,9 +340,9 @@ function renderCompactDayLayout() {
     const year   = document.getElementById("year").value.trim()   || "2026";
     const mode   = document.getElementById("display").value;
 
-    output.innerHTML += `<h2 style="text-align:center;margin-bottom:8px">${school} – ${year}</h2>`;
+    output.innerHTML += `<h2 style="text-align:center;margin-bottom:8px">${school} – ${year} (Master View)</h2>`;
 
-    const allForms = [...new Set(lessonsDemand.map(l => l.form))].sort();
+    const forms = [...new Set(lessonsDemand.map(l=>l.form))].sort();
 
     DAYS.forEach(day => {
         output.innerHTML += `<div class="day-title">${day}</div>`;
@@ -329,7 +366,7 @@ function renderCompactDayLayout() {
         html += `</tr></thead><tbody>`;
 
         let prevLevel = "";
-        allForms.forEach(form => {
+        forms.forEach(form => {
             const level = form.slice(0,2);
             if (level !== prevLevel) {
                 if (prevLevel) html += `<tr class="group-separator"><td colspan="11"></td></tr>`;
@@ -350,19 +387,8 @@ function renderCompactDayLayout() {
                     return;
                 }
 
-                const lesson = timetable.find(l => 
-                    l.form === form && l.day === day && l.period === per.c
-                );
-
-                if (lesson) {
-                    if (mode === "full" && lesson.teacher) {
-                        html += `<td><span class="lesson-subject">${lesson.subject}</span><span class="lesson-teacher">${lesson.teacher}</span></td>`;
-                    } else {
-                        html += `<td><span class="lesson-subject">${lesson.subject}</span></td>`;
-                    }
-                } else {
-                    html += `<td></td>`;
-                }
+                const lesson = timetable.find(l => l.form === form && l.day === day && l.period === per.c);
+                html += `<td>${getDisplayContent(lesson, mode)}</td>`;
             });
 
             html += `</tr>`;
@@ -371,6 +397,109 @@ function renderCompactDayLayout() {
         html += `</tbody></table>`;
         output.innerHTML += html;
     });
+}
+
+function renderStream() {
+    const stream = document.getElementById("streamSelect").value;
+    if (!stream) return renderMaster();
+
+    const output = document.getElementById("output");
+    output.innerHTML = "";
+
+    const school = document.getElementById("school").value.trim() || "School";
+    const year   = document.getElementById("year").value.trim()   || "2026";
+    const mode   = document.getElementById("display").value;
+
+    output.innerHTML += `<h2 style="text-align:center;margin-bottom:8px">${school} – ${year}</h2>`;
+    output.innerHTML += `<h3 style="text-align:center;color:#34495e">STREAM: ${stream}</h3>`;
+
+    let html = `<table class="individual-timetable"><thead><tr><th>DAY</th>`;
+    PERIODS.forEach(p => {
+        if (p.c === "BREAK") html += `<th class="break-cell">BREAK</th>`;
+        else html += `<th>${p.c}<span class="time-small">${p.t}</span></th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    DAYS.forEach(day => {
+        html += `<tr><td style="font-weight:bold;width:90px">${day}</td>`;
+
+        PERIODS.forEach(per => {
+            if (per.c === "BREAK") {
+                html += `<td class="break-cell">BREAK</td>`;
+                return;
+            }
+
+            const fixed = isFixed(day, per.c);
+            if (fixed) {
+                html += `<td class="fixed">${fixed}</td>`;
+                return;
+            }
+
+            const lesson = timetable.find(l => 
+                l.form === stream && l.day === day && l.period === per.c
+            );
+            html += `<td>${getDisplayContent(lesson, mode)}</td>`;
+        });
+
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table>`;
+    output.innerHTML += html;
+}
+
+function renderTeacher() {
+    const teacher = document.getElementById("teacherSelect").value;
+    if (!teacher) return renderMaster();
+
+    const output = document.getElementById("output");
+    output.innerHTML = "";
+
+    const school = document.getElementById("school").value.trim() || "School";
+    const year   = document.getElementById("year").value.trim()   || "2026";
+    const mode   = document.getElementById("display").value;
+
+    output.innerHTML += `<h2 style="text-align:center;margin-bottom:8px">${school} – ${year}</h2>`;
+    output.innerHTML += `<h3 style="text-align:center;color:#34495e">TEACHER: ${teacher}</h3>`;
+
+    let html = `<table class="individual-timetable"><thead><tr><th>DAY</th>`;
+    PERIODS.forEach(p => {
+        if (p.c === "BREAK") html += `<th class="break-cell">BREAK</th>`;
+        else html += `<th>${p.c}<span class="time-small">${p.t}</span></th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    DAYS.forEach(day => {
+        html += `<tr><td style="font-weight:bold;width:90px">${day}</td>`;
+
+        PERIODS.forEach(per => {
+            if (per.c === "BREAK") {
+                html += `<td class="break-cell">BREAK</td>`;
+                return;
+            }
+
+            const fixed = isFixed(day, per.c);
+            if (fixed) {
+                html += `<td class="fixed">${fixed}</td>`;
+                return;
+            }
+
+            const lesson = timetable.find(l => 
+                l.teacher === teacher && l.day === day && l.period === per.c
+            );
+
+            if (lesson) {
+                html += `<td><span class="lesson-subject">${lesson.subject}</span><span class="lesson-teacher">Class: ${lesson.form}</span></td>`;
+            } else {
+                html += `<td></td>`;
+            }
+        });
+
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table>`;
+    output.innerHTML += html;
 }
 </script>
 </body>

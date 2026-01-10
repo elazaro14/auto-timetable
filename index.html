@@ -2,154 +2,302 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AI School Timetable</title>
-
+<title>AI School Timetable Generator - Improved</title>
 <style>
-body{font-family:Segoe UI;background:#f4f6f9;margin:0;padding:20px}
-.panel{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px}
-button,select,input{padding:8px;border-radius:6px;border:1px solid #ccc}
-button{cursor:pointer;font-weight:bold}
-.blue{background:#007bff;color:#fff}
-.green{background:#28a745;color:#fff}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th,td{border:1px solid #000;padding:4px;text-align:center}
-th{background:#343a40;color:#fff}
-.fixed{background:#d1ecf1;font-weight:bold}
-.break{background:#eee}
-h2,h3{text-align:center;margin:5px}
-@media print {.panel{display:none}}
+    body {
+        font-family: Segoe UI, Arial, sans-serif;
+        background: #f0f2f5;
+        margin: 0;
+        padding: 20px;
+        line-height: 1.4;
+    }
+    .panel {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-width: 1200px;
+        margin: 0 auto 20px;
+    }
+    button, select, input {
+        padding: 9px 14px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        margin: 4px;
+    }
+    button {
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .blue { background:#0069d9; color:white; border:none; }
+    .green { background:#218838; color:white; border:none; }
+    .gray  { background:#6c757d; color:white; border:none; }
+
+    table {
+        width:100%;
+        border-collapse: collapse;
+        font-size: 11.5px;
+        background: white;
+        margin: 15px 0;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    th, td {
+        border: 1px solid #444;
+        padding: 6px;
+        text-align: center;
+    }
+    th {
+        background: #2c3e50;
+        color: white;
+        font-weight: normal;
+    }
+    .break { background:#f8f9fa; color:#555; font-weight:bold; }
+    .fixed { background:#cce5ff; color:#004085; font-weight:bold; }
+    .separator-row td { background:#ffc107; height:6px; padding:0; border:none; }
+
+    h2, h3 { margin: 8px 0; text-align:center; }
+    #status { font-weight:bold; margin:12px 0; color:#2c3e50; min-height:1.4em; }
+
+    @media print {
+        .panel { display:none; }
+        body { background:white; padding:0; }
+        table { page-break-inside:avoid; }
+    }
 </style>
 </head>
-
 <body>
 
 <div class="panel">
-<h2>🇹🇿 AI School Timetable Generator</h2>
+    <h2>🇹🇿 AI School Timetable Generator (Double Periods Priority)</h2>
+    
+    <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:15px 0;">
+        <input id="school" placeholder="School Name" style="width:220px">
+        <input id="year" placeholder="Academic Year" style="width:140px">
+        <select id="display">
+            <option value="subject">Subject Only</option>
+            <option value="full" selected>Subject + Teacher</option>
+        </select>
+    </div>
 
-<input id="school" placeholder="School Name">
-<input id="year" placeholder="Academic Year">
+    <div style="text-align:center; margin:15px 0;">
+        <button onclick="document.getElementById('csv').click()" class="blue">Upload CSV</button>
+        <input type="file" id="csv" accept=".csv" hidden onchange="loadCSV(event)">
+        <button onclick="generate()" class="green" id="genBtn" disabled>Generate Timetable</button>
+        <button onclick="window.print()" class="gray">Print / Save PDF</button>
+    </div>
 
-<br><br>
-
-<select id="display">
-<option value="subject">Subject Only</option>
-<option value="full">Subject + Teacher</option>
-</select>
-
-<button onclick="document.getElementById('csv').click()" class="blue">Upload CSV</button>
-<input type="file" id="csv" hidden onchange="loadCSV(event)">
-
-<button onclick="generate()" class="green" id="gen" disabled>Generate</button>
-<button onclick="window.print()">Print</button>
-
-<p id="status">Upload data to begin</p>
+    <p id="status">Upload your lesson demand CSV to begin...</p>
 </div>
 
-<div id="output"></div>
+<div id="output" style="max-width:1400px; margin:0 auto;"></div>
 
 <script>
-const days=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
-const periods=[
- {p:"P1",t:"07:30-08:10"},
- {p:"P2",t:"08:10-08:50"},
- {p:"P3",t:"08:50-09:30"},
- {p:"P4",t:"09:30-10:10"},
- {p:"BREAK",t:"10:10-10:40"},
- {p:"P5",t:"10:40-11:20"},
- {p:"P6",t:"11:20-12:00"},
- {p:"P7",t:"12:00-12:40"},
- {p:"P8",t:"12:40-13:20"},
- {p:"P9",t:"13:20-14:00"}
+const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+const PERIODS = [
+    {p:"P1", t:"07:30-08:10"}, {p:"P2", t:"08:10-08:50"}, {p:"P3", t:"08:50-09:30"},
+    {p:"P4", t:"09:30-10:10"}, {p:"BREAK", t:"10:10-10:40"},
+    {p:"P5", t:"10:40-11:20"}, {p:"P6", t:"11:20-12:00"}, {p:"P7", t:"12:00-12:40"},
+    {p:"P8", t:"12:40-13:20"}, {p:"P9", t:"13:20-14:00"}
 ];
 
-let lessons=[],finalTT=[];
+const DOUBLE_POSSIBLE = [
+    ['P1','P2'], ['P2','P3'], ['P3','P4'],
+    ['P5','P6'], ['P6','P7'], ['P7','P8'], ['P8','P9']
+];
 
-function loadCSV(e){
- let r=new FileReader();
- r.onload=()=>{
-  lessons=r.result.split("\n").slice(1).filter(l=>l.trim()).map(l=>{
-   let p=l.split(",");
-   return{subject:p[0],teacher:p[1],form:p[3]};
-  });
-  document.getElementById("gen").disabled=false;
-  document.getElementById("status").innerText="Data loaded";
- };
- r.readAsText(e.target.files[0]);
+let lessonsDemand = [];   // raw input: many rows = many required periods
+let timetable = [];       // final placed lessons
+
+function isFixed(day, period) {
+    if (day === "WEDNESDAY" && ["P8","P9"].includes(period)) return "RELIGION";
+    if (day === "FRIDAY"    && ["P7","P8","P9"].includes(period)) return "MOSQUE";
+    return null;
 }
 
-function generate(){
- finalTT=[];
- const forms=[...new Set(lessons.map(l=>l.form))];
+function loadCSV(e) {
+    const file = e.target.files[0];
+    if (!file) return;
 
- forms.forEach(f=>{
-  days.forEach(d=>{
-   let dailyCount={};
+    const reader = new FileReader();
+    reader.onload = () => {
+        const lines = reader.result.split("\n").slice(1)
+            .map(l => l.trim())
+            .filter(l => l && l.split(",").length >= 3);
 
-   let dayPeriods=periods.filter(x=>x.p!=="BREAK").map(x=>x.p)
-   .sort(()=>Math.random()-0.5);
+        lessonsDemand = lines.map(line => {
+            const [subject, teacher, , form] = line.split(",").map(s => s.trim());
+            return { subject, teacher: teacher || null, form };
+        });
 
-   lessons.filter(l=>l.form===f).forEach(l=>{
-    if(dailyCount[l.subject]>=2) return;
+        document.getElementById("genBtn").disabled = false;
+        document.getElementById("status").innerHTML = 
+            `Loaded <b>${lessonsDemand.length}</b> required periods from ${new Set(lessonsDemand.map(l=>l.form)).size} classes`;
+    };
+    reader.readAsText(file);
+}
 
-    let idx=dayPeriods.findIndex(p=>{
-     let n=parseInt(p.slice(1));
-     return dayPeriods.includes("P"+(n+1));
+function canPlace(placementMap, form, day, period, teacher) {
+    if (placementMap[form]?.[day]?.[period]) return false;
+    if (isFixed(day, period)) return false;
+
+    // Check teacher conflict
+    if (teacher) {
+        for (const les of timetable) {
+            if (les.teacher === teacher && les.day === day && les.period === period) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function generate() {
+    if (lessonsDemand.length === 0) {
+        alert("Please upload CSV first!");
+        return;
+    }
+
+    timetable = [];
+    const placementMap = {}; // form → day → period → true
+
+    // Initialize placement map
+    lessonsDemand.forEach(l => {
+        if (!placementMap[l.form]) placementMap[l.form] = {};
+        DAYS.forEach(d => {
+            if (!placementMap[l.form][d]) placementMap[l.form][d] = {};
+        });
     });
 
-    if(idx!==-1 && dailyCount[l.subject]!==1){
-     let p1=dayPeriods.splice(idx,1)[0];
-     let p2="P"+(parseInt(p1.slice(1))+1);
-     dayPeriods.splice(dayPeriods.indexOf(p2),1);
+    // Group lessons by form + subject
+    const groups = {};
+    lessonsDemand.forEach(les => {
+        const key = `${les.form}|${les.subject}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(les);
+    });
 
-     finalTT.push({...l,day:d,period:p1});
-     finalTT.push({...l,day:d,period:p2});
-     dailyCount[l.subject]=2;
-    }
-    else if(dailyCount[l.subject]!==1 && dayPeriods.length){
-     let p=dayPeriods.shift();
-     finalTT.push({...l,day:d,period:p});
-     dailyCount[l.subject]=1;
-    }
-   });
-  });
- });
+    // Sort groups by size (biggest first → better chance for doubles)
+    const sortedGroups = Object.entries(groups)
+        .sort(([,a], [,b]) => b.length - a.length);
 
- render();
- document.getElementById("status").innerText="Timetable generated";
+    document.getElementById("status").innerText = "Generating timetable... (trying to create many double periods)";
+
+    for (const [key, groupLessons] of sortedGroups) {
+        const [form, subject] = key.split("|");
+        const teacher = groupLessons[0]?.teacher || null;
+
+        let remaining = groupLessons.length;
+
+        // Phase 1: Try to place doubles
+        while (remaining >= 2) {
+            let placed = false;
+            for (let attempt = 0; attempt < 60; attempt++) {
+                const day = DAYS[Math.floor(Math.random() * DAYS.length)];
+                const slot = DOUBLE_POSSIBLE[Math.floor(Math.random() * DOUBLE_POSSIBLE.length)];
+
+                if (canPlace(placementMap, form, day, slot[0], teacher) &&
+                    canPlace(placementMap, form, day, slot[1], teacher)) {
+                    
+                    timetable.push({form, subject, teacher, day, period: slot[0]});
+                    timetable.push({form, subject, teacher, day, period: slot[1]});
+
+                    placementMap[form][day][slot[0]] = true;
+                    placementMap[form][day][slot[1]] = true;
+
+                    remaining -= 2;
+                    placed = true;
+                    break;
+                }
+            }
+            if (!placed) break; // couldn't place more doubles
+        }
+
+        // Phase 2: Place remaining as singles
+        while (remaining > 0) {
+            let placed = false;
+            for (let attempt = 0; attempt < 80; attempt++) {
+                const day = DAYS[Math.floor(Math.random() * DAYS.length)];
+                for (const per of PERIODS) {
+                    if (per.p === "BREAK") continue;
+                    if (canPlace(placementMap, form, day, per.p, teacher)) {
+                        timetable.push({form, subject, teacher, day, period: per.p});
+                        placementMap[form][day][per.p] = true;
+                        remaining--;
+                        placed = true;
+                        break;
+                    }
+                }
+                if (placed) break;
+            }
+            if (!placed) {
+                console.warn(`Could not place all lessons for ${form} - ${subject} (${remaining} remaining)`);
+                break;
+            }
+        }
+    }
+
+    renderTimetable();
+    document.getElementById("status").innerHTML = 
+        `Generation finished • ${timetable.length} / ${lessonsDemand.length} lessons placed`;
 }
 
-function render(){
- let out=document.getElementById("output");
- out.innerHTML="";
+function renderTimetable() {
+    const output = document.getElementById("output");
+    output.innerHTML = "";
 
- let mode=document.getElementById("display").value;
+    const school = document.getElementById("school").value.trim() || "School";
+    const year   = document.getElementById("year").value.trim()   || "2026";
+    const mode   = document.getElementById("display").value;
 
- let school=document.getElementById("school").value;
- let year=document.getElementById("year").value;
+    output.innerHTML += `<h2>${school}</h2><h3>${year} Timetable</h3>`;
 
- out.innerHTML+=`<h2>${school}</h2><h3>${year}</h3>`;
+    const allForms = [...new Set(timetable.map(t => t.form))].sort();
 
- let forms=[...new Set(finalTT.map(x=>x.form))];
+    let currentLevel = "";
+    allForms.forEach(form => {
+        const level = form.substring(0,2); // F1, F2, F3, F4
 
- forms.forEach(f=>{
-  out.innerHTML+=`<h3>${f}</h3><table>`;
-  out.innerHTML+="<tr><th>DAY</th>";
-  periods.forEach(p=>out.innerHTML+=`<th>${p.p}<br>${p.t}</th>`);
-  out.innerHTML+="</tr>";
+        if (level !== currentLevel) {
+            if (currentLevel) output.innerHTML += "<br>";
+            output.innerHTML += `<h3>${level} Forms</h3>`;
+            currentLevel = level;
+        }
 
-  days.forEach(d=>{
-   out.innerHTML+=`<tr><th>${d}</th>`;
-   periods.forEach(p=>{
-    if(p.p==="BREAK"){out.innerHTML+=`<td class="break">TEA</td>`;return;}
-    let c=finalTT.find(x=>x.form===f && x.day===d && x.period===p.p);
-    if(!c) out.innerHTML+="<td></td>";
-    else out.innerHTML+=`<td>${mode==="subject"?c.subject:c.subject+"<br>"+c.teacher}</td>`;
-   });
-   out.innerHTML+="</tr>";
-  });
+        output.innerHTML += `<h4>${form}</h4><table>`;
+        output.innerHTML += "<tr><th>DAY</th>" + PERIODS.map(p => `<th>${p.p}<br>${p.t}</th>`).join("") + "</tr>";
 
-  out.innerHTML+="</table><br>";
- });
+        DAYS.forEach(day => {
+            output.innerHTML += `<tr><th>${day}</th>`;
+            PERIODS.forEach(per => {
+                if (per.p === "BREAK") {
+                    output.innerHTML += `<td class="break">TEA BREAK</td>`;
+                    return;
+                }
+
+                const fixed = isFixed(day, per.p);
+                if (fixed) {
+                    output.innerHTML += `<td class="fixed">${fixed}</td>`;
+                    return;
+                }
+
+                const lesson = timetable.find(l => 
+                    l.form === form && l.day === day && l.period === per.p
+                );
+
+                if (lesson) {
+                    const content = mode === "full" && lesson.teacher
+                        ? `${lesson.subject}<br><small>${lesson.teacher}</small>`
+                        : lesson.subject;
+                    output.innerHTML += `<td>${content}</td>`;
+                } else {
+                    output.innerHTML += "<td></td>";
+                }
+            });
+            output.innerHTML += "</tr>";
+        });
+
+        output.innerHTML += "</table><br>";
+    });
 }
 </script>
 </body>

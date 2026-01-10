@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>School Timetable - Compact Day Layout</title>
+<title>School Timetable - Compact + Teacher Conflict Detection</title>
 <style>
     body {
         font-family: Arial, Helvetica, sans-serif;
@@ -116,7 +116,7 @@
 <body>
 
 <div class="panel container">
-    <h2 style="margin:0 0 12px 0; text-align:center">School Timetable - Compact View</h2>
+    <h2 style="margin:0 0 12px 0; text-align:center">School Timetable Generator</h2>
 
     <div style="text-align:center; margin:12px 0;">
         <input id="school" placeholder="School Name" style="width:220px">
@@ -135,7 +135,7 @@
     </div>
 
     <p id="status" style="margin-top:12px; font-weight:bold; text-align:center">
-        Upload lesson demand CSV to begin...
+        Upload lesson demand CSV (Subject,Teacher,Room,Form) to begin...
     </p>
 </div>
 
@@ -150,7 +150,12 @@ const PERIODS = [
     {c:"P8",t:"13:10-13:50"},{c:"P9",t:"13:50-14:30"}
 ];
 
-let lessons = [];
+const DOUBLE_PAIRS = [
+    ['P1','P2'],['P2','P3'],['P3','P4'],
+    ['P5','P6'],['P6','P7'],['P7','P8'],['P8','P9']
+];
+
+let lessonsDemand = [];
 let timetable = [];
 
 function isFixed(day, p) {
@@ -162,102 +167,148 @@ function isFixed(day, p) {
 function loadCSV(e) {
     const file = e.target.files[0];
     if (!file) return;
+
     const r = new FileReader();
     r.onload = () => {
-        lessons = r.result.split("\n").slice(1)
+        lessonsDemand = r.result.split("\n").slice(1)
             .map(l=>l.trim())
             .filter(l=>l)
             .map(l=>{
                 const [sub, tea,, frm] = l.split(",").map(x=>x.trim());
                 return {subject:sub, teacher:tea||null, form:frm};
-            });
+            })
+            .filter(l => l.subject && l.form);
+
         document.getElementById("genBtn").disabled = false;
         document.getElementById("status").innerText = 
-            `Loaded ${lessons.length} periods • ${new Set(lessons.map(l=>l.form)).size} classes`;
+            `Loaded ${lessonsDemand.length} periods • ${new Set(lessonsDemand.map(l=>l.form)).size} classes`;
     };
     r.readAsText(file);
 }
 
 function generate() {
-    if (!lessons.length) return alert("Upload CSV first");
-    
+    if (!lessonsDemand.length) return alert("Please upload CSV first!");
+
     timetable = [];
-    const used = {}; // form → day → period
 
-    lessons.forEach(l=>{
-        if(!used[l.form]) used[l.form]={};
-        DAYS.forEach(d=>{if(!used[l.form][d]) used[l.form][d]={}});
+    // Track used slots
+    const classUsed  = {}; // form → day → period → true
+    const teacherUsed = {}; // teacher → day → period → true
+
+    lessonsDemand.forEach(l=>{
+        if(!classUsed[l.form]) classUsed[l.form] = {};
+        DAYS.forEach(d=>{if(!classUsed[l.form][d]) classUsed[l.form][d] = {}});
     });
 
-    // Simple greedy double placement
+    // Group by form + subject (to prefer doubles)
     const groups = {};
-    lessons.forEach(l=>{
-        const k = l.form+"|"+l.subject;
-        if(!groups[k]) groups[k]=[];
-        groups[k].push(l);
+    lessonsDemand.forEach(l=>{
+        const key = `${l.form}|${l.subject}`;
+        if(!groups[key]) groups[key] = [];
+        groups[key].push(l);
     });
 
-    Object.values(groups).forEach(g=>{
-        const f = g[0].form;
-        const s = g[0].subject;
-        const t = g[0].teacher;
-        let rem = g.length;
+    Object.values(groups).forEach(group => {
+        const form = group[0].form;
+        const subject = group[0].subject;
+        const teacher = group[0].teacher; // can be null
+        let remaining = group.length;
 
-        while(rem>=2){
-            let placed=false;
-            for(const d of DAYS){
-                for(const [p1,p2] of [['P1','P2'],['P2','P3'],['P3','P4'],['P5','P6'],['P6','P7'],['P7','P8'],['P8','P9']]){
-                    if(!used[f][d][p1] && !used[f][d][p2] && !isFixed(d,p1) && !isFixed(d,p2)){
-                        timetable.push({form:f,subject:s,teacher:t,day:d,period:p1});
-                        timetable.push({form:f,subject:s,teacher:t,day:d,period:p2});
-                        used[f][d][p1]=used[f][d][p2]=true;
-                        rem-=2;
-                        placed=true;
+        // Phase 1: Try to place doubles
+        while (remaining >= 2) {
+            let placed = false;
+            for (const day of DAYS) {
+                for (const [p1, p2] of DOUBLE_PAIRS) {
+                    const slot1Free = !classUsed[form][day][p1] && !isFixed(day, p1);
+                    const slot2Free = !classUsed[form][day][p2] && !isFixed(day, p2);
+
+                    let teacherFree = true;
+                    if (teacher) {
+                        teacherFree = 
+                            (!teacherUsed[teacher]?.[day]?.[p1]) &&
+                            (!teacherUsed[teacher]?.[day]?.[p2]);
+                    }
+
+                    if (slot1Free && slot2Free && teacherFree) {
+                        timetable.push({form, subject, teacher, day, period: p1});
+                        timetable.push({form, subject, teacher, day, period: p2});
+
+                        classUsed[form][day][p1] = true;
+                        classUsed[form][day][p2] = true;
+
+                        if (teacher) {
+                            if (!teacherUsed[teacher]) teacherUsed[teacher] = {};
+                            if (!teacherUsed[teacher][day]) teacherUsed[teacher][day] = {};
+                            teacherUsed[teacher][day][p1] = true;
+                            teacherUsed[teacher][day][p2] = true;
+                        }
+
+                        remaining -= 2;
+                        placed = true;
                         break;
                     }
                 }
-                if(placed) break;
+                if (placed) break;
             }
-            if(!placed) break;
+            if (!placed) break; // no more possible doubles
         }
 
-        while(rem>0){
-            let placed=false;
-            for(const d of DAYS){
-                for(const p of PERIODS.map(pp=>pp.c).filter(c=>c!=="BREAK")){
-                    if(!used[f][d][p] && !isFixed(d,p)){
-                        timetable.push({form:f,subject:s,teacher:t,day:d,period:p});
-                        used[f][d][p]=true;
-                        rem--;
-                        placed=true;
+        // Phase 2: Place remaining as singles
+        while (remaining > 0) {
+            let placed = false;
+            for (const day of DAYS) {
+                for (const p of PERIODS.map(pp => pp.c).filter(c => c !== "BREAK")) {
+                    const slotFree = !classUsed[form][day][p] && !isFixed(day, p);
+
+                    let teacherOk = true;
+                    if (teacher) {
+                        teacherOk = !teacherUsed[teacher]?.[day]?.[p];
+                    }
+
+                    if (slotFree && teacherOk) {
+                        timetable.push({form, subject, teacher, day, period: p});
+
+                        classUsed[form][day][p] = true;
+
+                        if (teacher) {
+                            if (!teacherUsed[teacher]) teacherUsed[teacher] = {};
+                            if (!teacherUsed[teacher][day]) teacherUsed[teacher][day] = {};
+                            teacherUsed[teacher][day][p] = true;
+                        }
+
+                        remaining--;
+                        placed = true;
                         break;
                     }
                 }
-                if(placed) break;
+                if (placed) break;
             }
-            if(!placed) break;
+            if (!placed) {
+                console.warn(`Could not place all ${remaining} lessons for ${form} - ${subject}`);
+                break;
+            }
         }
     });
 
-    renderCompact();
+    renderCompactDayLayout();
     document.getElementById("status").innerText = 
-        `Done • ${timetable.length}/${lessons.length} periods placed`;
+        `Generated • ${timetable.length}/${lessonsDemand.length} periods placed (teacher conflicts prevented)`;
 }
 
-function renderCompact() {
-    const out = document.getElementById("output");
-    out.innerHTML = "";
+function renderCompactDayLayout() {
+    const output = document.getElementById("output");
+    output.innerHTML = "";
 
     const school = document.getElementById("school").value.trim() || "School";
     const year   = document.getElementById("year").value.trim()   || "2026";
     const mode   = document.getElementById("display").value;
 
-    out.innerHTML += `<h2 style="text-align:center;margin-bottom:8px">${school} – ${year}</h2>`;
+    output.innerHTML += `<h2 style="text-align:center;margin-bottom:8px">${school} – ${year}</h2>`;
 
-    const forms = [...new Set(lessons.map(l=>l.form))].sort();
+    const allForms = [...new Set(lessonsDemand.map(l => l.form))].sort();
 
     DAYS.forEach(day => {
-        out.innerHTML += `<div class="day-title">${day}</div>`;
+        output.innerHTML += `<div class="day-title">${day}</div>`;
 
         let html = `
         <table class="master-timetable">
@@ -270,44 +321,44 @@ function renderCompact() {
             </tr>
             <tr>`;
 
-        PERIODS.forEach(p=>{
-            if(p.c==="BREAK") return;
+        PERIODS.forEach(p => {
+            if (p.c === "BREAK") return;
             html += `<th>${p.c}<span class="time-small">${p.t}</span></th>`;
         });
 
         html += `</tr></thead><tbody>`;
 
         let prevLevel = "";
-        forms.forEach(form => {
+        allForms.forEach(form => {
             const level = form.slice(0,2);
-            if(level !== prevLevel){
-                if(prevLevel) html += `<tr class="group-separator"><td colspan="11"></td></tr>`;
+            if (level !== prevLevel) {
+                if (prevLevel) html += `<tr class="group-separator"><td colspan="11"></td></tr>`;
                 prevLevel = level;
             }
 
             html += `<tr><td class="form-col"><b>${form}</b></td>`;
 
             PERIODS.forEach(per => {
-                if(per.c === "BREAK"){
+                if (per.c === "BREAK") {
                     html += `<td class="break-cell">BREAK</td>`;
                     return;
                 }
 
                 const fixed = isFixed(day, per.c);
-                if(fixed){
+                if (fixed) {
                     html += `<td class="fixed">${fixed}</td>`;
                     return;
                 }
 
-                const les = timetable.find(l => 
+                const lesson = timetable.find(l => 
                     l.form === form && l.day === day && l.period === per.c
                 );
 
-                if(les){
-                    if(mode === "full" && les.teacher){
-                        html += `<td><span class="lesson-subject">${les.subject}</span><span class="lesson-teacher">${les.teacher}</span></td>`;
+                if (lesson) {
+                    if (mode === "full" && lesson.teacher) {
+                        html += `<td><span class="lesson-subject">${lesson.subject}</span><span class="lesson-teacher">${lesson.teacher}</span></td>`;
                     } else {
-                        html += `<td><span class="lesson-subject">${les.subject}</span></td>`;
+                        html += `<td><span class="lesson-subject">${lesson.subject}</span></td>`;
                     }
                 } else {
                     html += `<td></td>`;
@@ -318,7 +369,7 @@ function renderCompact() {
         });
 
         html += `</tbody></table>`;
-        out.innerHTML += html;
+        output.innerHTML += html;
     });
 }
 </script>

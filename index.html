@@ -1,231 +1,183 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Official School Timetable Generator</title>
-
+<title>School Timetable Generator</title>
 <style>
-body{font-family:Segoe UI,Arial;background:#f4f6f8;padding:20px}
-.no-print{background:#fff;padding:20px;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.15);margin-bottom:20px}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
-input,select,button{padding:8px;border-radius:4px;border:1px solid #ccc;font-weight:bold}
-button{background:#007bff;color:white;border:none;cursor:pointer}
-button.green{background:#28a745}
-button.gray{background:#6c757d}
-table{border-collapse:collapse;width:100%;table-layout:fixed;background:#fff}
-th,td{border:1px solid #333;padding:4px;font-size:11px;text-align:center;height:48px}
-th{background:#2c3e50;color:#fff}
-.day-title{background:#34495e;color:#fff;padding:8px;font-size:18px;text-align:center;margin-top:20px}
-.break{background:#eee;font-weight:bold}
-.fixed{background:#d1ecf1;font-weight:bold;color:#0c5460}
-small{font-weight:normal}
-@media print{.no-print{display:none}body{padding:0;background:white}}
+ body{font-family:Arial}
+ table{border-collapse:collapse;width:100%}
+ th,td{border:1px solid #000;padding:4px;text-align:center}
+ th{background:#eee}
+ select,button,input{margin:4px}
 </style>
 </head>
 
 <body>
 
-<div class="no-print">
-<h2>🇹🇿 Official School Timetable System</h2>
+<h2 id="schoolTitle">School Timetable</h2>
 
-<div class="controls">
 <input id="schoolName" placeholder="School Name">
-<input id="year" placeholder="Academic Year (e.g. 2026)">
-<input type="file" accept=".csv" onchange="loadCSV(event)">
-<button id="genBtn" class="green" disabled onclick="generate()">Generate</button>
-<button class="gray" onclick="window.print()">Print</button>
-</div>
+<input id="year" placeholder="Academic Year">
+<button onclick="applyHeader()">Apply</button>
+<br><br>
 
-<div class="controls" id="views" style="display:none">
-<button onclick="renderMaster()">Master View</button>
-<select id="streamSel" onchange="renderIndividual('stream')">
-<option value="">-- Stream --</option>
+<input type="file" id="csv">
+<button id="gen" disabled>Generate Timetable</button>
+
+<hr>
+
+<select id="view">
+<option value="master">Master</option>
+<option value="stream">Stream</option>
+<option value="teacher">Teacher</option>
 </select>
-<select id="teacherSel" onchange="renderIndividual('teacher')">
-<option value="">-- Teacher --</option>
-</select>
-</div>
 
-<div id="status"><b>Upload CSV to begin</b></div>
-</div>
+<select id="filter"></select>
 
-<div id="output"></div>
+<table id="tt"></table>
 
 <script>
-/* ------------------ CONSTANTS ------------------ */
-const days=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
-const periods=[
- {p:"P1",t:"08:00–08:40"},
- {p:"P2",t:"08:40–09:20"},
- {p:"P3",t:"09:20–10:00"},
- {p:"P4",t:"10:00–10:40"},
- {p:"BREAK",t:"10:40–11:10"},
- {p:"P5",t:"11:10–11:50"},
- {p:"P6",t:"11:50–12:30"},
- {p:"P7",t:"12:30–13:10"},
- {p:"P8",t:"13:10–13:50"},
- {p:"P9",t:"13:50–14:30"}
-];
-const forms=["F1A","F1B","F1C","F1D","F1E","F1F","F1G",
-             "F2A","F2B","F2C","F2D",
-             "F3A","F3B","F3C","F3D",
-             "F4A","F4B","F4C"];
-const doubleSlots=[["P1","P2"],["P2","P3"],["P3","P4"],["P5","P6"],["P6","P7"],["P7","P8"],["P8","P9"]];
+const days=["Mon","Tue","Wed","Thu","Fri"];
+const periods=["P1","P2","P3","P4","P5","P6","P7","P8"];
 
-let lessons=[], timetable=[];
+let data=[],finalTT=[];
 
-/* ------------------ FIXED BLOCKS ------------------ */
-function fixed(day,p){
- if(day==="WEDNESDAY"&&(p==="P8"||p==="P9"))return"RELIGION";
- if(day==="FRIDAY"&&(p==="P7"||p==="P8"||p==="P9"))return"MOSQUE";
- return null;
+csv.onchange=e=>loadCSV(e);
+gen.onclick=generate;
+view.onchange=render;
+
+function applyHeader(){
+ schoolTitle.textContent=
+  schoolName.value+" — "+year.value;
 }
 
-/* ------------------ LOAD CSV ------------------ */
+/* ---------- LOAD CSV ---------- */
 function loadCSV(e){
  const r=new FileReader();
  r.onload=()=>{
-  const rows=r.result.split("\n").slice(1).filter(x=>x.trim());
-  const map={};
-  rows.forEach(l=>{
-   let [sub,teach,room,form]=l.split(",").map(x=>x.trim());
-   let k=`${form}-${sub}-${teach}`;
-   map[k]=(map[k]||0)+1;
-  });
-  lessons=[];
-  Object.entries(map).forEach(([k,c])=>{
-   let [f,s,t]=k.split("-");
-   for(let i=0;i<c;i++)lessons.push({form:f,subject:s,teacher:t});
-  });
-  document.getElementById("genBtn").disabled=false;
-  document.getElementById("status").innerText=`Loaded ${lessons.length} lessons`;
+  data=r.result.split("\n").slice(1)
+   .filter(x=>x.trim())
+   .map(l=>{
+    let p=l.split(",");
+    return{
+     subject:p[0].trim(),
+     teacher:p[1].trim(),
+     form:p[2].trim()
+    };
+   });
+  gen.disabled=false;
  };
  r.readAsText(e.target.files[0]);
 }
 
-/* ------------------ GENERATOR (STRICT RULE) ------------------ */
+/* ---------- GENERATE ---------- */
 function generate(){
- const grid={},usedDay={};
- timetable=[];
+ finalTT=[];
+ const forms=[...new Set(data.map(x=>x.form))];
+
  forms.forEach(f=>{
-  grid[f]={};usedDay[f]={};
+  let lessons=data.filter(x=>x.form===f);
+  let weekly=[...lessons];
+  let used={};
+
   days.forEach(d=>{
-   grid[f][d]={};usedDay[f][d]={};
-   periods.forEach(p=>{
-    if(p.p!=="BREAK"&&!fixed(d,p.p))grid[f][d][p.p]=null;
-   });
-  });
- });
+   shuffle(weekly);
 
- const groups={};
- lessons.forEach(l=>{
-  let k=`${l.form}-${l.subject}`;
-  (groups[k]=groups[k]||[]).push(l);
- });
+   weekly.forEach(l=>{
+    let key=`${d}-${l.subject}`;
+    if(used[key]) return;
 
- Object.entries(groups).forEach(([k,list])=>{
-  let [form,subject]=k.split("-");
-  let teacher=list[0].teacher;
-  let remain=list.length;
+    let p=pickPeriod(f,d,l.subject);
+    if(!p) return;
 
-  /* DOUBLES FIRST */
-  while(remain>=2){
-   let placed=false;
-   days.forEach(d=>{
-    if(placed||usedDay[form][d][subject])return;
-    doubleSlots.forEach(([a,b])=>{
-     if(!placed&&grid[form][d][a]===null&&grid[form][d][b]===null){
-      timetable.push({form,subject,teacher,day:d,period:a});
-      timetable.push({form,subject,teacher,day:d,period:b});
-      grid[form][d][a]=grid[form][d][b]=true;
-      usedDay[form][d][subject]=true;
-      remain-=2;placed=true;
-     }
+    finalTT.push({
+     day:d,period:p,form:f,
+     subject:l.subject,teacher:l.teacher
     });
-   });
-   if(!placed)break;
-  }
+    used[key]=true;
 
-  /* SINGLE ONLY IF DAY EMPTY */
-  while(remain>0){
-   let done=false;
-   days.forEach(d=>{
-    if(done||usedDay[form][d][subject])return;
-    Object.keys(grid[form][d]).forEach(p=>{
-     if(!done&&grid[form][d][p]===null){
-      timetable.push({form,subject,teacher,day:d,period:p});
-      grid[form][d][p]=true;
-      usedDay[form][d][subject]=true;
-      remain--;done=true;
-     }
-    });
-   });
-   if(!done)break;
-  }
- });
-
- buildSelectors();
- renderMaster();
- document.getElementById("views").style.display="flex";
- document.getElementById("status").innerText="Timetable generated ✔";
-}
-
-/* ------------------ SELECTORS ------------------ */
-function buildSelectors(){
- document.getElementById("streamSel").innerHTML=
-  '<option value="">-- Stream --</option>'+
-  forms.map(f=>`<option>${f}</option>`).join("");
- document.getElementById("teacherSel").innerHTML=
-  '<option value="">-- Teacher --</option>'+
-  [...new Set(timetable.map(x=>x.teacher))].map(t=>`<option>${t}</option>`).join("");
-}
-
-/* ------------------ MASTER VIEW ------------------ */
-function renderMaster(){
- let s=document.getElementById("schoolName").value||"SCHOOL";
- let y=document.getElementById("year").value||"";
- let h=`<center><h1>${s}</h1><h3>${y}</h3></center>`;
- days.forEach(d=>{
-  h+=`<div class="day-title">${d}</div><table><tr><th>STREAM</th>`+
-     periods.map(p=>`<th>${p.p}<br><small>${p.t}</small></th>`).join("")+"</tr>";
-  forms.forEach(f=>{
-   h+=`<tr><td><b>${f}</b></td>`;
-   periods.forEach(p=>{
-    if(p.p==="BREAK")h+=`<td class="break">BREAK</td>`;
-    else if(fixed(d,p.p))h+=`<td class="fixed">${fixed(d,p.p)}</td>`;
-    else{
-     let l=timetable.find(x=>x.day===d&&x.form===f&&x.period===p.p);
-     h+=`<td>${l?l.subject:""}</td>`;
+    /* try double */
+    if(pickDouble(f,d,l.subject,p)){
+     let p2=periods[periods.indexOf(p)+1];
+     finalTT.push({
+      day:d,period:p2,form:f,
+      subject:l.subject,teacher:l.teacher
+     });
     }
    });
-   h+="</tr>";
   });
-  h+="</table>";
  });
- document.getElementById("output").innerHTML=h;
+
+ render();
 }
 
-/* ------------------ INDIVIDUAL VIEW ------------------ */
-function renderIndividual(type){
- let val=type==="stream"?streamSel.value:teacherSel.value;
- if(!val)return;
- let h=`<center><h2>${type.toUpperCase()} TIMETABLE: ${val}</h2></center>`;
- h+=`<table><tr><th>DAY</th>`+
-    periods.map(p=>`<th>${p.p}<br><small>${p.t}</small></th>`).join("")+"</tr>";
+/* ---------- PERIOD PICK ---------- */
+function pickPeriod(form,day,subject){
+ let usedToday=finalTT.filter(x=>
+  x.form===form && x.day===day &&
+  x.subject===subject
+ ).length;
+
+ if(usedToday>=1) return null;
+
+ let avoid=finalTT.filter(x=>
+  x.form===form && x.subject===subject
+ ).map(x=>x.period);
+
+ let free=periods.filter(p=>
+  !finalTT.find(x=>x.form===form && x.day===day && x.period===p) &&
+  !avoid.includes(p)
+ );
+
+ return free.length ? free[Math.floor(Math.random()*free.length)] : null;
+}
+
+/* ---------- DOUBLE CHECK ---------- */
+function pickDouble(form,day,subject,p){
+ let i=periods.indexOf(p);
+ if(i>=periods.length-1) return false;
+
+ let next=periods[i+1];
+ let count=finalTT.filter(x=>
+  x.form===form && x.day===day &&
+  x.subject===subject
+ ).length;
+
+ if(count!==1) return false;
+
+ if(finalTT.find(x=>x.form===form && x.day===day && x.period===next))
+  return false;
+
+ return Math.random()<0.6;
+}
+
+/* ---------- RENDER ---------- */
+function render(){
+ const t=document.getElementById("tt");
+ t.innerHTML="";
+
+ let head="<tr><th>Day</th>";
+ periods.forEach(p=>head+=`<th>${p}</th>`);
+ head+="</tr>";
+ t.innerHTML+=head;
+
  days.forEach(d=>{
-  h+=`<tr><td><b>${d}</b></td>`;
+  let r=`<tr><th>${d}</th>`;
   periods.forEach(p=>{
-   if(p.p==="BREAK")h+=`<td class="break">BREAK</td>`;
-   else if(fixed(d,p.p))h+=`<td class="fixed">${fixed(d,p.p)}</td>`;
-   else{
-    let l=timetable.find(x=>x.day===d&&(type==="stream"?x.form===val:x.teacher===val)&&x.period===p.p);
-    h+=`<td>${l?l.subject+"<br>"+(type==="stream"?l.teacher:l.form):""}</td>`;
-   }
+   let c=finalTT.find(x=>x.day===d && x.period===p);
+   r+=`<td>${c?c.subject:""}</td>`;
   });
-  h+="</tr>";
+  r+="</tr>";
+  t.innerHTML+=r;
  });
- h+="</table>";
- document.getElementById("output").innerHTML=h;
+}
+
+/* ---------- UTIL ---------- */
+function shuffle(a){
+ for(let i=a.length-1;i>0;i--){
+  let j=Math.floor(Math.random()*(i+1));
+  [a[i],a[j]]=[a[j],a[i]];
+ }
 }
 </script>
 

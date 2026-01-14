@@ -28,8 +28,8 @@
         .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
         
         .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
-        
         .fixed-block { background: #d1ecf1; color: #0c5460; font-weight: bold; font-style: italic; }
+        .unavailable-block { background: #ffcdd2; color: #b71c1c; font-weight: bold; font-size: 9px; }
         .separator { background: #ffd700 !important; height: 3px !important; line-height: 3px; }
         .separator td { height: 3px !important; padding: 0; border: none; }
 
@@ -37,12 +37,14 @@
         .settings-bar { margin-top: 10px; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; gap: 20px; font-size: 12px; font-weight: bold; }
         .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; }
         
+        .avail-panel { background: #fdfdfe; border: 1px dashed #ccc; padding: 10px; margin-top: 10px; display: none; }
+        
         button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-gen { background: #28a745; color: white; border: none; }
 
         @media print { 
             @page { margin: 0.8cm; } 
-            .panel, .view-bar, .settings-bar, #status, .school-info-inputs { display: none !important; } 
+            .panel, .view-bar, .settings-bar, #status, .school-info-inputs, .avail-panel { display: none !important; } 
             body { background: white; padding: 0; margin: 0; }
             .container { max-width: 100%; margin: 0; }
             .day-section { page-break-after: always; }
@@ -63,8 +65,18 @@
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
         <button class="btn-up" onclick="document.getElementById('csvFile').click()" style="background:#007bff; color:white; border:none;">Upload CSV</button>
+        <button onclick="toggleAvailPanel()" style="background:#17a2b8; color:white; border:none;">Set Teacher Off-Times</button>
         <button class="btn-gen" id="genBtn" onclick="startGeneration()" disabled>Generate Timetable</button>
         <button onclick="window.print()">Print</button>
+    </div>
+
+    <div id="availPanel" class="avail-panel">
+        <h4 style="margin-top:0">Teacher Unavailability (Off-Times)</h4>
+        <select id="availTeacher"></select>
+        <select id="availDay"></select>
+        <select id="availPeriod"></select>
+        <button onclick="addUnavailability()">Add Rule</button>
+        <div id="availList" style="margin-top:10px; font-size:11px; display:flex; gap:5px; flex-wrap:wrap;"></div>
     </div>
 
     <div class="settings-bar">
@@ -97,7 +109,7 @@ const PERIODS = [
     {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
 ];
 const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let rawData = [], timetable = [], logoSrc = "";
+let rawData = [], timetable = [], logoSrc = "", unavailabilities = [];
 
 function loadLogo(e) {
     const reader = new FileReader();
@@ -107,6 +119,7 @@ function loadLogo(e) {
 
 function toggleCompact(cb) { document.getElementById('mainBody').classList.toggle('compact-mode', cb.checked); }
 function adjustHeight(val) { document.documentElement.style.setProperty('--row-height', val + 'px'); }
+function toggleAvailPanel() { const p = document.getElementById('availPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
 
 function isFixed(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
@@ -125,8 +138,9 @@ function handleUpload(e) {
             });
             document.getElementById('genBtn').disabled = false;
             document.getElementById('status').style.color = "#28a745";
-            document.getElementById('status').innerText = `Data loaded: ${rawData.length} lessons. Ready to Generate.`;
+            document.getElementById('status').innerText = `Data loaded: ${rawData.length} lessons.`;
             populateFilters();
+            populateAvailDropdowns();
         } catch (err) {
             document.getElementById('status').innerText = "Error reading CSV format.";
         }
@@ -140,11 +154,35 @@ function populateFilters() {
     document.getElementById('streamSelect').innerHTML = '<option value="">-- View Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 
+function populateAvailDropdowns() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('availTeacher').innerHTML = teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('availDay').innerHTML = DAYS.map(d => `<option value="${d}">${d}</option>`).join('');
+    document.getElementById('availPeriod').innerHTML = PERIODS.filter(p=>p.p!=="BREAK").map(p => `<option value="${p.p}">${p.p}</option>`).join('');
+}
+
+function addUnavailability() {
+    const t = document.getElementById('availTeacher').value;
+    const d = document.getElementById('availDay').value;
+    const p = document.getElementById('availPeriod').value;
+    if(!unavailabilities.some(u => u.t === t && u.d === d && u.p === p)) {
+        unavailabilities.push({t, d, p});
+        updateAvailList();
+    }
+}
+
+function updateAvailList() {
+    const list = document.getElementById('availList');
+    list.innerHTML = unavailabilities.map((u, i) => 
+        `<span style="background:#eee; padding:3px 6px; border-radius:3px;">${u.t} (${u.d} ${u.p}) <b onclick="removeAvail(${i})" style="cursor:pointer; color:red">×</b></span>`
+    ).join('');
+}
+
+function removeAvail(i) { unavailabilities.splice(i, 1); updateAvailList(); }
+
 function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
-    
-    // Group lessons to process subject-by-subject
     const grouped = {};
     rawData.forEach(l => {
         const k = `${l.form}-${l.subject}`;
@@ -154,50 +192,45 @@ function startGeneration() {
 
     Object.values(grouped).forEach(lessons => {
         let rem = lessons.length;
-        
-        // Try Doubles First
         while(rem >= 2) {
             let placed = false;
             for(let att = 0; att < 300; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const idx = Math.floor(Math.random()*8);
                 const p1 = vp[idx], p2 = vp[idx+1];
-                
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-
+                
                 if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !isFixed(day, p1) && !isFixed(day, p2) && dayC === 0) {
                     timetable.push({...lessons[0], day, period: p1});
                     timetable.push({...lessons[0], day, period: p2});
                     rem -= 2; placed = true; break;
                 }
             }
-            if(!placed) break; // If no double spot, move to singles
+            if(!placed) break;
         }
-        
-        // Try Singles
         while(rem > 0) {
             let placedSingle = false;
             for(let att = 0; att < 300; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const per = vp[Math.floor(Math.random()*9)];
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-
                 if(canPlace(day, per, lessons[0]) && !isFixed(day, per) && dayC < 2) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; placedSingle = true; break;
                 }
             }
-            if(!placedSingle) rem--; // Safety break to prevent infinite loop
+            if(!placedSingle) rem--;
         }
     });
-
     document.getElementById('viewBar').style.display = 'block';
     renderMaster();
-    document.getElementById('status').innerText = "TIMETABLE GENERATED SUCCESSFULLY";
 }
 
 function canPlace(d, p, l) {
-    return !timetable.some(t => t.day === d && t.period === p && (t.form === l.form || t.teacher === l.teacher));
+    const isTeacherBusy = timetable.some(t => t.day === d && t.period === p && t.teacher === l.teacher);
+    const isFormBusy = timetable.some(t => t.day === d && t.period === p && t.form === l.form);
+    const isTeacherOff = unavailabilities.some(u => u.t === l.teacher && u.d === d && u.p === p);
+    return !isTeacherBusy && !isFormBusy && !isTeacherOff;
 }
 
 function getHeaderHTML(sub = "MASTER TIMETABLE") {
@@ -241,8 +274,10 @@ function renderIndividual(type) {
     DAYS.forEach(day => {
         html += `<tr><td style="font-weight:bold">${day}</td>`;
         PERIODS.forEach(p => {
+            const isOff = type === 'teacher' && unavailabilities.some(u => u.t === val && u.d === day && u.p === p.p);
             if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
             else if(isFixed(day, p.p)) html += `<td class="fixed-block">${isFixed(day, p.p)}</td>`;
+            else if(isOff) html += `<td class="unavailable-block">UNAVAILABLE</td>`;
             else {
                 const m = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
                 html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;

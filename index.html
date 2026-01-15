@@ -36,60 +36,53 @@
         .mosque-strips { background: repeating-linear-gradient(45deg, #fff9c4, #fff9c4 10px, #fffde7 10px, #fffde7 20px); }
 
         .unavailable-block { background: #ffcdd2; color: #b71c1c; font-weight: bold; font-size: 9px; }
-        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; border: 1px solid #ddd; }
+        .load-table { table-layout: auto !important; max-width: 800px; margin: 20px auto; }
         
-        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
-        .settings-bar { margin-top: 10px; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; gap: 20px; font-size: 12px; font-weight: bold; }
-        
-        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
+        /* VIEW BAR */
+        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; }
+        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
 
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 8px; width: 320px; text-align: center; }
-        .login-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
-        .login-btn { width: 100%; padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
+        .login-box input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
 
         @media print { 
-            .panel, .view-bar, .settings-bar, #status, #loginOverlay { display: none !important; } 
+            .panel, .view-bar, #loginOverlay { display: none !important; } 
             .day-section { page-break-after: always; }
         }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
 <div id="loginOverlay">
     <div class="login-box">
         <h3>School Admin Login</h3>
         <input type="email" id="loginEmail" placeholder="Email Address">
         <input type="password" id="loginPassword" placeholder="Password">
-        <button class="login-btn" onclick="handleLogin()">Sign In</button>
+        <button onclick="handleLogin()" style="width:100%; background:#28a745; color:white; border:none; padding:10px;">Sign In</button>
         <p id="loginMsg" style="color: red; font-size: 12px; margin-top: 10px;"></p>
     </div>
 </div>
 
 <div class="panel container">
     <div class="school-info-inputs">
-        <input type="text" id="schoolNameInput" placeholder="SCHOOL NAME" oninput="syncHeader()">
-        <input type="text" id="academicYearInput" placeholder="YEAR" oninput="syncHeader()">
-        <button onclick="handleLogout()" style="background:#dc3545; color:white;">Logout</button>
+        <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME" style="width: 350px;" oninput="syncHeader()">
+        <input type="text" id="academicYearInput" placeholder="ACADEMIC YEAR" style="width: 200px;" oninput="syncHeader()">
+        <button onclick="handleLogout()" style="background:#dc3545; color:white; margin-left: auto;">Logout</button>
     </div>
 
-    <div class="controls">
-        <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#fd7e14; color:white; display:none;">Sync to Cloud</button>
-        <button onclick="window.print()">Print Current View</button>
-    </div>
-
-    <div class="settings-bar">
-        <label><input type="checkbox" onchange="toggleCompact(this)"> Compact</label> |
+    <div class="settings-bar" style="text-align:center; margin-bottom:10px;">
+        <label><input type="checkbox" onchange="toggleCompact(this)"> Compact Mode</label> |
         <label>Row Height: <input type="range" min="30" max="60" value="45" oninput="adjustHeight(this.value)"></label>
     </div>
     
-    <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; font-size: 12px;"></div>
-
+    <div id="status" style="text-align:center; font-weight:bold; color:#d9534f; font-size: 12px;">Waiting for Login...</div>
+    
     <div class="view-bar" id="viewBar">
-        <button onclick="renderMaster()" style="background:white;">Master Timetable</button>
+        <button onclick="renderMaster()">Full School View</button>
         <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
         <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
-        <button onclick="renderLoadSummary()" style="background:#6f42c1; color:white; border:none;">Teacher Load</button>
+        <button onclick="renderLoadSummary()" style="background:#6f42c1; color:white; border:none;">Total Load Summary</button>
     </div>
 </div>
 
@@ -108,6 +101,15 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+
+const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+const PERIODS = [
+    {p:"P1", t:"8:00-8:40"}, {p:"P2", t:"8:40-9:20"}, {p:"P3", t:"9:20-10:00"}, {p:"P4", t:"10:00-10:40"},
+    {p:"BREAK", t:"10:40-11:10"},
+    {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
+];
+const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
+let rawData = [], timetable = [];
 
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
@@ -129,33 +131,22 @@ auth.onAuthStateChanged(user => {
 });
 
 async function loadFromCloud() {
-    document.getElementById('status').innerText = "Fetching timetable from Firebase...";
+    document.getElementById('status').innerText = "Fetching saved timetable...";
     const doc = await db.collection("timetable_data").doc("active").get();
     if (doc.exists) {
         const data = doc.data();
         rawData = data.rawData || [];
-        // Assuming the generated timetable structure was saved in 'timetable' field
-        timetable = data.timetable || []; 
+        timetable = data.timetable || []; // Loads the GENERATED timetable
         document.getElementById('schoolNameInput').value = data.schoolName || "";
         document.getElementById('academicYearInput').value = data.academicYear || "";
         
-        document.getElementById('status').innerText = "✅ Timetable Loaded.";
+        document.getElementById('status').style.color = "#28a745";
+        document.getElementById('status').innerText = "✅ Timetable Loaded from Cloud.";
         document.getElementById('viewBar').style.display = 'block';
         populateFilters();
         renderMaster();
-    } else {
-        document.getElementById('status').innerText = "No saved timetable found.";
     }
 }
-
-const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-const PERIODS = [
-    {p:"P1", t:"8:00-8:40"}, {p:"P2", t:"8:40-9:20"}, {p:"P3", t:"9:20-10:00"}, {p:"P4", t:"10:00-10:40"},
-    {p:"BREAK", t:"10:40-11:10"},
-    {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
-];
-const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let rawData = [], timetable = [];
 
 function populateFilters() {
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
@@ -164,13 +155,13 @@ function populateFilters() {
 }
 
 function renderMaster() {
-    let html = `<h2>MASTER TIMETABLE</h2>`;
+    let html = `<h2>MASTER VIEW</h2>`;
     DAYS.forEach(day => {
         html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>`;
         PERIODS.forEach(p => html += `<th>${p.p}</th>`);
         html += `</tr>`;
         FORMS.forEach(f => {
-            html += `<tr><td><b>${f}</b></td>`;
+            html += `<tr><td>${f}</td>`;
             PERIODS.forEach(p => {
                 if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
                 else {
@@ -192,7 +183,7 @@ function renderIndividual(type) {
     PERIODS.forEach(p => html += `<th>${p.p}</th>`);
     html += `</tr>`;
     DAYS.forEach(day => {
-        html += `<tr><td><b>${day}</b></td>`;
+        html += `<tr><td>${day}</td>`;
         PERIODS.forEach(p => {
             if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
             else {
@@ -205,8 +196,20 @@ function renderIndividual(type) {
     document.getElementById('output').innerHTML = html + `</table>`;
 }
 
-function toggleCompact(cb) { document.body.classList.toggle('compact-mode', cb.checked); }
+function renderLoadSummary() {
+    let html = `<h2>TOTAL TEACHER LOAD SUMMARY</h2>`;
+    const load = {};
+    rawData.forEach(r => load[r.teacher] = (load[r.teacher] || 0) + 1);
+    html += `<table class="load-table"><tr><th>Teacher</th><th>Total Periods</th></tr>`;
+    Object.keys(load).sort().forEach(t => {
+        html += `<tr><td>${t}</td><td>${load[t]}</td></tr>`;
+    });
+    document.getElementById('output').innerHTML = html + `</table>`;
+}
+
+function toggleCompact(cb) { document.getElementById('mainBody').classList.toggle('compact-mode', cb.checked); }
 function adjustHeight(v) { document.documentElement.style.setProperty('--row-height', v + 'px'); }
+function syncHeader() { /* Refresh header names without reloading data */ }
 </script>
 </body>
 </html>

@@ -35,7 +35,6 @@
         .separator { background: #ffd700 !important; height: 3px !important; line-height: 3px; }
         .separator td { height: 3px !important; padding: 0; border: none; }
         
-        /* Load Summary Specifics */
         .load-table { table-layout: auto !important; max-width: 800px; margin: 20px auto; }
         .load-table th, .load-table td { height: auto !important; padding: 8px; }
         .overload { color: #d9534f; font-weight: bold; background: #fff5f5; }
@@ -201,10 +200,14 @@ function startGeneration() {
         let rem = lessons.length;
         while(rem >= 2) {
             let placed = false;
-            for(let att = 0; att < 300; att++) {
+            for(let att = 0; att < 400; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const idx = Math.floor(Math.random()*8);
                 const p1 = vp[idx], p2 = vp[idx+1];
+                
+                // NO DOUBLE PERIODS SEPARATED BY TEA BREAK (P4 & P5)
+                if ((p1 === "P4" && p2 === "P5") || (p1 === "P5" && p2 === "P4")) continue;
+
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
                 if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2) && dayC === 0) {
                     timetable.push({...lessons[0], day, period: p1});
@@ -219,8 +222,14 @@ function startGeneration() {
             for(let att = 0; att < 300; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const per = vp[Math.floor(Math.random()*9)];
+                
+                // PREVENT SINGLE PERIOD SPLIT (If P4 is the same subject, don't allow P5)
+                const isAdjacentToBreak = (per === "P4" || per === "P5");
+                const otherSide = per === "P4" ? "P5" : "P4";
+                const hasSubjectOnOtherSide = timetable.some(x => x.day === day && x.period === otherSide && x.form === lessons[0].form && x.subject === lessons[0].subject);
+
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && dayC < 2) {
+                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && dayC < 2 && !hasSubjectOnOtherSide) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; placedSingle = true; break;
                 }
@@ -298,40 +307,29 @@ function renderIndividual(type) {
 
 function renderLoadSummary() {
     let html = getHeaderHTML("TEACHER LOAD SUMMARY");
-    
-    // Summary by Stream
     html += `<h3 style="text-align:center;">LOAD PER CLASS (STREAM)</h3>`;
     FORMS.forEach(f => {
         const lessons = rawData.filter(r => r.form === f);
         if(lessons.length === 0) return;
-        
         const teacherLoads = {};
         lessons.forEach(l => {
             const key = `${l.teacher} (${l.subject})`;
             teacherLoads[key] = (teacherLoads[key] || 0) + 1;
         });
-
         const totalFormLoad = lessons.length;
         html += `<table class="load-table">
             <thead><tr><th colspan="2" style="background:#34495e;">CLASS: ${f} (Total Lessons: ${totalFormLoad})</th></tr>
             <tr style="background:#eee; color:black;"><th>Teacher (Subject)</th><th>Periods/Week</th></tr></thead><tbody>`;
-        
         for (const [t, count] of Object.entries(teacherLoads)) {
             html += `<tr><td>${t}</td><td>${count}</td></tr>`;
         }
-        
         const rowClass = totalFormLoad > 40 ? 'overload' : '';
         html += `<tr class="${rowClass}"><td style="text-align:right"><b>FORM TOTAL:</b></td><td><b>${totalFormLoad} / 40</b></td></tr>`;
         html += `</tbody></table>`;
     });
-
-    // Total Teacher Load
     html += `<hr><h3 style="text-align:center;">TOTAL WORKLOAD PER TEACHER (ALL CLASSES)</h3>`;
     const totalTeacherLoad = {};
-    rawData.forEach(r => {
-        totalTeacherLoad[r.teacher] = (totalTeacherLoad[r.teacher] || 0) + 1;
-    });
-
+    rawData.forEach(r => { totalTeacherLoad[r.teacher] = (totalTeacherLoad[r.teacher] || 0) + 1; });
     html += `<table class="load-table"><thead><tr style="background:#34495e;"><th>Teacher Name</th><th>Total Weekly Periods</th></tr></thead><tbody>`;
     Object.keys(totalTeacherLoad).sort().forEach(t => {
         const count = totalTeacherLoad[t];
@@ -339,7 +337,6 @@ function renderLoadSummary() {
         html += `<tr class="${rowClass}"><td>${t}</td><td>${count} / 40</td></tr>`;
     });
     html += `</tbody></table>`;
-
     document.getElementById('output').innerHTML = html;
 }
 

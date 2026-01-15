@@ -6,79 +6,80 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; }
         .compact-mode { --row-height: 32px; --font-size: 9.5px; --cell-padding: 2px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 1500px; margin: 0 auto; }
+        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .view-bar { background: #fff; padding: 15px; border-radius: 8px; display: none; margin-top: 15px; text-align: center; border: 1px solid #dfe3e8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        
+        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #bdc3c7; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); overflow: hidden; }
+        th { background: #2c3e50; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .day-title { background: #34495e; color: white; padding: 10px; font-size: 18px; text-align: center; margin: 20px 0 0; border-radius: 6px 6px 0 0; font-weight: bold; }
+        .break-cell { background: #ecf0f1; font-weight: bold; color: #7f8c8d; width: 30px !important; font-size: 9px; writing-mode: vertical-rl; text-orientation: mixed; }
+        .unavailable-block { background: #fab1a0; color: #d63031; font-weight: bold; cursor: pointer; }
+        
+        button, select { padding: 10px 16px; border-radius: 6px; border: 1px solid #ced4da; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-gen { background: #27ae60; color: white; border: none; }
+        .btn-unavail { background: #e74c3c; color: white; border: none; }
+        .btn-excel { background: #1f7244; color: white; border: none; }
 
-        body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 10px; }
-        .container { max-width: 1450px; margin: 0 auto; }
-        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        
-        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
-        
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 25px; }
-        th, td { border: 1px solid #444; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); overflow: hidden; }
-        th { background: #2c3e50; color: white; }
-        
-        .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
-        .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
-        .unavailable-block { background: #ffcdd2; color: #b71c1c; font-weight: bold; font-size: 9px; cursor: pointer; }
-        
-        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; border: 1px solid #ddd; }
-        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .btn-gen { background: #28a745; color: white; border: none; }
-        .btn-unavail { background: #dc3545; color: white; border: none; }
-        .display-opt { background: #fff; border: 2px solid #2c3e50; padding: 6px; border-radius: 4px; font-weight: bold; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
 
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 30px; border-radius: 8px; width: 320px; text-align: center; }
-
-        @media print { 
-            .panel, .view-bar, #loginOverlay, .controls { display: none !important; } 
-        }
+        @media print { .panel, .view-bar, #loginOverlay, .controls { display: none !important; } .day-title { background: #eee !important; color: #000 !important; border: 1px solid #000; } }
     </style>
 </head>
 <body id="mainBody">
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h3>School Admin Login</h3>
-        <input type="email" id="loginEmail" placeholder="Email Address" style="width:100%; margin-bottom:10px; padding:8px;">
-        <input type="password" id="loginPassword" placeholder="Password" style="width:100%; margin-bottom:15px; padding:8px;">
-        <button onclick="handleLogin()" style="width:100%; background:#28a745; color:white; border:none; padding:10px;">Sign In</button>
-        <p id="loginMsg" style="color: red; font-size: 12px; margin-top: 10px;"></p>
+        <h2 style="margin-top:0; color:#2c3e50;">Admin Access</h2>
+        <input type="email" id="loginEmail" placeholder="Email Address">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="handleLogin()" style="width:100%; background:#27ae60; color:white; border:none; padding:12px;">Sign In</button>
+        <p id="loginMsg" style="color: #e74c3c; font-size: 13px; margin-top: 15px;"></p>
     </div>
 </div>
 
 <div class="panel container">
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button onclick="document.getElementById('csvFile').click()" style="background:#007bff; color:white;">Upload CSV</button>
-        <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
-        
-        <select id="displayMode" class="display-opt" onchange="renderMaster()">
-            <option value="both">Display: Subj + Teacher</option>
-            <option value="subject">Display: Subject Only</option>
+        <button onclick="document.getElementById('csvFile').click()" style="background:#3498db; color:white;">1. Upload CSV</button>
+        <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">2. Set Unavailability</button>
+        <select id="displayMode" onchange="renderMaster()" style="border: 2px solid #2c3e50;">
+            <option value="both">View: Subj + Teacher</option>
+            <option value="subject">View: Subject Only</option>
         </select>
-
-        <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>Generate Timetable</button>
-        <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#fd7e14; color:white; display:none;">Sync to Cloud</button>
+        <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>3. Generate Timetable</button>
+        <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#f39c12; color:white; display:none;">4. Sync to Cloud</button>
+        <button onclick="exportToExcel()" class="btn-excel">Download Excel</button>
+        <button onclick="handleLogout()" style="background:#95a5a6; color:white; margin-left:auto;">Logout</button>
     </div>
 
     <div class="view-bar" id="viewBar">
-        <button onclick="renderMaster()">Full School View</button>
-        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Class --</option></select>
-        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Teacher --</option></select>
-        <button onclick="renderLoadSummary()" style="background:#6f42c1; color:white; border:none;">Teacher Load Summary</button>
+        <button onclick="renderMaster()" style="background:#2c3e50; color:white;">Master Timetable</button>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Select Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Select Teacher --</option></select>
+        <button onclick="renderLoadSummary()" style="background:#8e44ad; color:white;">Teacher Load Summary</button>
     </div>
     
-    <div id="status" style="text-align:center; font-weight:bold; color:#d9534f; font-size: 12px; margin-top:5px;">Waiting for Login...</div>
+    <div id="status" style="text-align:center; font-weight:bold; font-size: 13px; margin-top:10px; color:#2c3e50;"></div>
 </div>
 
 <div id="output" class="container"></div>
 
 <script>
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDgbYVR98RE4ZLvkh6vb_dXvkmBRnvFf0w",
   authDomain: "school-timetable-6310b.firebaseapp.com",
@@ -98,25 +99,19 @@ const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D"
 let rawData = [], timetable = [], unavailableSlots = [];
 let isUnavailMode = false;
 
-// --- LOGIN/LOGOUT ---
+// --- Authentication ---
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
-    auth.signInWithEmailAndPassword(email, pass).catch(err => {
-        document.getElementById('loginMsg').innerText = "Login: " + err.message;
-    });
+    auth.signInWithEmailAndPassword(email, pass).catch(e => document.getElementById('loginMsg').innerText = e.message);
 }
 function handleLogout() { auth.signOut(); }
 auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        loadFromCloud();
-    } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
-    }
+    if (user) { document.getElementById('loginOverlay').style.display = 'none'; loadFromCloud(); }
+    else { document.getElementById('loginOverlay').style.display = 'flex'; }
 });
 
-// --- CORE ---
+// --- Data Management ---
 function handleUpload(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -126,21 +121,19 @@ function handleUpload(e) {
             return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() };
         });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = "CSV Uploaded.";
+        document.getElementById('status').innerText = "✅ CSV Loaded. You can now Generate.";
     };
     reader.readAsText(e.target.files[0]);
 }
 
 async function saveToCloud() {
-    document.getElementById('status').innerText = "Saving...";
-    await db.collection("timetable_data").doc("active").set({
-        rawData, timetable, unavailableSlots,
-        schoolName: "School", academicYear: "2026"
-    });
-    document.getElementById('status').innerText = "✅ Saved Successfully.";
+    document.getElementById('status').innerText = "Saving to Firebase...";
+    await db.collection("timetable_data").doc("active").set({ rawData, timetable, unavailableSlots });
+    document.getElementById('status').innerText = "✅ Synchronized with Cloud.";
 }
 
 async function loadFromCloud() {
+    document.getElementById('status').innerText = "Fetching Cloud Data...";
     const doc = await db.collection("timetable_data").doc("active").get();
     if (doc.exists) {
         const data = doc.data();
@@ -149,73 +142,93 @@ async function loadFromCloud() {
         unavailableSlots = data.unavailableSlots || [];
         document.getElementById('viewBar').style.display = 'block';
         document.getElementById('saveCloudBtn').style.display = 'inline-block';
-        document.getElementById('genBtn').disabled = false;
+        document.getElementById('genBtn').disabled = (rawData.length === 0);
         populateFilters();
         renderMaster();
-        document.getElementById('status').innerText = "✅ Cloud Data Active.";
+        document.getElementById('status').innerText = "✅ Data successfully loaded.";
     }
 }
 
-function toggleUnavailabilityMode() {
-    isUnavailMode = !isUnavailMode;
-    document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT UNAVAIL" : "SET UNAVAILABILITY";
-    renderMaster();
-}
-
-function markUnavailable(day, period, form) {
-    if (!isUnavailMode) return;
-    const key = `${day}-${period}-${form}`;
-    const idx = unavailableSlots.indexOf(key);
-    if (idx > -1) unavailableSlots.splice(idx, 1);
-    else unavailableSlots.push(key);
-    renderMaster();
-}
-
+// --- Generator Logic (Updated with Break Constraint) ---
 function startGeneration() {
     timetable = [];
-    const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
+    const validSlots = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
+    
+    // Group lessons to identify double period candidates
+    let groups = {};
     rawData.forEach(item => {
-        let placed = false;
-        for(let a=0; a<100; a++) {
-            let d = DAYS[Math.floor(Math.random()*5)];
-            let p = vp[Math.floor(Math.random()*9)];
-            if(!unavailableSlots.includes(`${d}-${p}-${item.form}`) && 
-               !timetable.some(x => x.day===d && x.period===p && (x.teacher===item.teacher || x.form===item.form))) {
-                timetable.push({...item, day: d, period: p});
-                placed = true; break;
+        let key = `${item.form}-${item.subject}`;
+        if(!groups[key]) groups[key] = [];
+        groups[key].push(item);
+    });
+
+    Object.values(groups).forEach(lessons => {
+        let remaining = lessons.length;
+        while(remaining > 0) {
+            let placed = false;
+            let isDouble = remaining >= 2;
+            
+            for(let attempt=0; attempt<400; attempt++) {
+                let d = DAYS[Math.floor(Math.random()*5)];
+                
+                // PRIORITY 1: Subject only appears ONCE per day (single or double)
+                if(timetable.some(x => x.day === d && x.form === lessons[0].form && x.subject === lessons[0].subject)) continue;
+
+                let pIdx = Math.floor(Math.random() * validSlots.length);
+                let p1 = validSlots[pIdx];
+
+                if(isDouble) {
+                    let p2 = validSlots[pIdx + 1];
+                    // PRIORITY 2: Doubles must be consecutive AND not split by BREAK
+                    if(p2 && p1 !== "BREAK" && p2 !== "BREAK" && 
+                       !unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && 
+                       !unavailableSlots.includes(`${d}-${p2}-${lessons[0].form}`) &&
+                       !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form)) &&
+                       !timetable.some(x => x.day===d && x.period===p2 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
+                        
+                        // PRIORITY 3: No allocation before (P4) and after (P5) break
+                        if((p1 === "P4" && p2 === "P5") || (p2 === "P4" && p1 === "P5")) continue;
+
+                        timetable.push({...lessons[0], day: d, period: p1}, {...lessons[0], day: d, period: p2});
+                        remaining -= 2; placed = true; break;
+                    }
+                } else {
+                    if(!unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && 
+                       !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
+                        
+                        // PRIORITY 3 for singles: Check neighbor slot across break
+                        let forbiddenNeighbor = p1 === "P4" ? "P5" : (p1 === "P5" ? "P4" : null);
+                        if(forbiddenNeighbor && timetable.some(x => x.day === d && x.form === lessons[0].form && x.period === forbiddenNeighbor && x.subject === lessons[0].subject)) continue;
+
+                        timetable.push({...lessons[0], day: d, period: p1});
+                        remaining -= 1; placed = true; break;
+                    }
+                }
             }
+            if(!placed) remaining--; // Anti-stuck
         }
     });
     renderMaster();
+    document.getElementById('status').innerText = "✅ Timetable Generated Successfully.";
 }
 
-function populateFilters() {
-    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
-}
-
-// --- RENDERING ---
+// --- View Rendering ---
 function renderMaster() {
     const mode = document.getElementById('displayMode').value;
-    let html = `<h2>MASTER VIEW ${isUnavailMode ? '(EDITING)' : ''}</h2>`;
+    let html = "";
     DAYS.forEach(day => {
-        html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>`;
+        html += `<div class="day-title">${day}</div><table><tr><th style="width:100px;">STREAM</th>`;
         PERIODS.forEach(p => html += `<th>${p}</th>`);
         html += `</tr>`;
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
-                if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+                if(p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
                 else {
                     const key = `${day}-${p}-${f}`;
                     const isUn = unavailableSlots.includes(key);
                     const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
-                    let content = "";
-                    if(isUn) content = "UNAVAILABLE";
-                    else if(m) {
-                        content = mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`;
-                    }
+                    let content = isUn ? 'BLOCKED' : (m ? (mode === 'both' ? `<b>${m.subject}</b><br><small>${m.teacher}</small>` : `<b>${m.subject}</b>`) : '');
                     html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}','${f}')">${content}</td>`;
                 }
             });
@@ -228,8 +241,9 @@ function renderMaster() {
 
 function renderIndividual(type) {
     const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
+    if(!val) return;
     const mode = document.getElementById('displayMode').value;
-    let html = `<h2>${val} Schedule</h2><table><tr><th>DAY</th>`;
+    let html = `<h2 style="text-align:center;">${val} PERSONAL TIMETABLE</h2><table><tr><th>DAY</th>`;
     PERIODS.forEach(p => html += `<th>${p}</th>`);
     html += `</tr>`;
     DAYS.forEach(day => {
@@ -240,11 +254,9 @@ function renderIndividual(type) {
                 const m = timetable.find(x => x.day === day && x.period === p && (type === 'stream' ? x.form === val : x.teacher === val));
                 let content = "";
                 if(m) {
-                    if(type === 'stream') {
-                        content = mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`;
-                    } else {
-                        content = `<b>${m.subject}</b><br>Form: ${m.form}`;
-                    }
+                    content = (type === 'stream') ? 
+                        (mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`) :
+                        `<b>${m.subject}</b><br>Form: ${m.form}`;
                 }
                 html += `<td>${content}</td>`;
             }
@@ -257,9 +269,51 @@ function renderIndividual(type) {
 function renderLoadSummary() {
     const load = {};
     rawData.forEach(r => load[r.teacher] = (load[r.teacher] || 0) + 1);
-    let html = `<h2>TEACHER LOAD</h2><table style="max-width:400px; margin:auto;"><tr><th>Teacher</th><th>Lessons</th></tr>`;
-    Object.keys(load).sort().forEach(t => html += `<tr><td>${t}</td><td>${load[t]}</td></tr>`);
+    let html = `<h2 style="text-align:center;">TEACHER WEEKLY LOAD</h2><table style="max-width:500px; margin:20px auto;"><tr><th>TEACHER NAME</th><th>TOTAL LESSONS</th></tr>`;
+    Object.keys(load).sort().forEach(t => html += `<tr><td>${t}</td><td><b>${load[t]}</b></td></tr>`);
     document.getElementById('output').innerHTML = html + `</table>`;
+}
+
+function toggleUnavailabilityMode() {
+    isUnavailMode = !isUnavailMode;
+    document.getElementById('unavailBtn').style.background = isUnavailMode ? "#2c3e50" : "#e74c3c";
+    document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT EDIT MODE" : "2. Set Unavailability";
+    renderMaster();
+}
+
+function markUnavailable(d, p, f) {
+    if(!isUnavailMode) return;
+    const key = `${d}-${p}-${f}`;
+    const idx = unavailableSlots.indexOf(key);
+    if(idx > -1) unavailableSlots.splice(idx, 1); else unavailableSlots.push(key);
+    renderMaster();
+}
+
+function populateFilters() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Select Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- Select Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+function exportToExcel() {
+    const wb = XLSX.utils.book_new();
+    DAYS.forEach(day => {
+        const rows = [["STREAM", ...PERIODS]];
+        FORMS.forEach(f => {
+            const row = [f];
+            PERIODS.forEach(p => {
+                if(p === "BREAK") row.push("TEA");
+                else {
+                    const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
+                    row.push(m ? `${m.subject} (${m.teacher})` : "");
+                }
+            });
+            rows.push(row);
+        });
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, day);
+    });
+    XLSX.writeFile(wb, "School_Timetable_2026.xlsx");
 }
 </script>
 </body>

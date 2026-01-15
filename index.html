@@ -17,7 +17,7 @@
         .header-info { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
         .header-info input { border: none; border-bottom: 2px solid #2c3e50; font-weight: bold; font-size: 18px; text-align: center; width: 300px; outline: none; background: transparent; }
         
-        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
+        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
         .view-bar { background: #fff; padding: 12px; border-radius: 8px; display: none; text-align: center; border: 1px solid #ddd; margin-top:10px; }
         
         table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
@@ -25,14 +25,12 @@
         th { background: #2c3e50; color: white; line-height: 1.2; }
         th small { display: block; font-size: 9px; color: #ecf0f1; font-weight: normal; }
         
-        /* Narrow Form Separator */
         .form-separator { background: #2c3e50 !important; height: 4px !important; padding: 0 !important; border: none !important; }
-        
         .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 20px 0 0; font-weight: bold; border-radius: 4px 4px 0 0; }
         .break-cell { background: #dfe6e9; font-weight: bold; color: #636e72; width: 22px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; padding: 0; }
         .religion-cell { background: #dff9fb; color: #0984e3; font-weight: bold; font-size: 10px; }
         .friday-strip { background: #636e72 !important; padding: 0; pointer-events: none; }
-        .unavailable-block { background: #fab1a0; color: #d63031; font-weight: bold; }
+        .unavailable-block { background: #fab1a0 !important; color: #d63031 !important; font-weight: bold; cursor: pointer; }
         
         button, select { padding: 8px 14px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: 600; font-size: 12px; }
         .btn-gen { background: #27ae60; color: white; border: none; }
@@ -42,7 +40,6 @@
         @media print { 
             .panel, .view-bar, #loginOverlay, .controls { display: none !important; } 
             .day-title { background: #eee !important; color: #000 !important; border: 1px solid #000; }
-            .form-separator { background: #000 !important; height: 2px !important; }
         }
     </style>
 </head>
@@ -67,7 +64,14 @@
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
         <button onclick="document.getElementById('csvFile').click()" style="background:#3498db; color:white;">Upload CSV</button>
-        <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
+        
+        <div id="unavailSection" style="display: flex; gap: 5px; align-items: center;">
+            <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
+            <select id="unavailTeacherSelect" style="display:none;" onchange="renderMaster()">
+                <option value="">-- Select Teacher --</option>
+            </select>
+        </div>
+
         <select id="displayMode" onchange="renderMaster()"><option value="both">Subj + Teacher</option><option value="subject">Subject Only</option></select>
         <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>Generate</button>
         <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#f39c12; color:white; display:none;">Sync Cloud</button>
@@ -105,7 +109,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-let rawData = [], timetable = [], unavailableSlots = [];
+let rawData = [], timetable = [], unavailableSlots = []; 
 let isUnavailMode = false;
 
 function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(e => document.getElementById('loginMsg').innerText = e.message); }
@@ -117,6 +121,7 @@ function handleUpload(e) {
     reader.onload = (event) => {
         const lines = event.target.result.split('\n').slice(1).filter(l => l.trim());
         rawData = lines.map(l => { const p = l.split(','); return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() }; });
+        populateFilters();
         document.getElementById('genBtn').disabled = false;
     };
     reader.readAsText(e.target.files[0]);
@@ -160,7 +165,7 @@ function startGeneration() {
         while(remaining > 0) {
             let placed = false;
             let isDouble = remaining >= 2;
-            for(let a=0; a<500; a++) {
+            for(let a=0; a<600; a++) {
                 let d = DAYS[Math.floor(Math.random()*5)];
                 if(timetable.some(x => x.day === d && x.form === lessons[0].form && x.subject === lessons[0].subject)) continue;
                 let pIdx = Math.floor(Math.random() * slots.length);
@@ -173,7 +178,8 @@ function startGeneration() {
                     let p2 = slots[pIdx + 1];
                     if(!p2 || p1 === "BREAK" || p2 === "BREAK") continue;
                     if(d === "WEDNESDAY" && (p2 === "P8" || p2 === "P9")) continue;
-                    if(!unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && !unavailableSlots.includes(`${d}-${p2}-${lessons[0].form}`) &&
+                    
+                    if(!unavailableSlots.includes(`${d}-${p1}-${lessons[0].teacher}`) && !unavailableSlots.includes(`${d}-${p2}-${lessons[0].teacher}`) &&
                        !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form)) &&
                        !timetable.some(x => x.day===d && x.period===p2 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
                         if((p1 === "P4" && p2 === "P5") || (p2 === "P4" && p1 === "P5")) continue;
@@ -181,7 +187,7 @@ function startGeneration() {
                         remaining -= 2; placed = true; break;
                     }
                 } else {
-                    if(!unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
+                    if(!unavailableSlots.includes(`${d}-${p1}-${lessons[0].teacher}`) && !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
                         let forbidden = p1 === "P4" ? "P5" : (p1 === "P5" ? "P4" : null);
                         if(forbidden && timetable.some(x => x.day === d && x.form === lessons[0].form && x.period === forbidden && x.subject === lessons[0].subject)) continue;
                         timetable.push({...lessons[0], day: d, period: p1});
@@ -197,6 +203,7 @@ function startGeneration() {
 
 function renderMaster() {
     const mode = document.getElementById('displayMode').value;
+    const targetTeacher = document.getElementById('unavailTeacherSelect').value;
     let html = `<h2 style="text-align:center">${document.getElementById('schoolName').value} - ${document.getElementById('calendarYear').value}</h2>`;
     
     DAYS.forEach(day => {
@@ -205,7 +212,6 @@ function renderMaster() {
         html += `</tr>`;
         
         FORMS.forEach((f, index) => {
-            // Add Narrow Separator if the current Form prefix (e.g., F1) differs from the next
             let nextForm = FORMS[index + 1];
             let currentPrefix = f.substring(0, 2);
             let nextPrefix = nextForm ? nextForm.substring(0, 2) : null;
@@ -217,14 +223,19 @@ function renderMaster() {
                 else if(day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) { html += `<td class="friday-strip"></td>`; }
                 else {
                     const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
-                    const isUn = unavailableSlots.includes(`${day}-${p}-${f}`);
+                    
+                    let isUn = false;
+                    if(isUnavailMode && targetTeacher) {
+                        isUn = unavailableSlots.includes(`${day}-${p}-${targetTeacher}`);
+                    } else if (m) {
+                        isUn = unavailableSlots.includes(`${day}-${p}-${m.teacher}`);
+                    }
+
                     let content = isUn ? 'BLOCKED' : (m ? (mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`) : '');
-                    html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}','${f}')">${content}</td>`;
+                    html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}')">${content}</td>`;
                 }
             });
             html += `</tr>`;
-            
-            // Render the separator row if the Form level changes
             if (nextPrefix && currentPrefix !== nextPrefix) {
                 html += `<tr><td colspan="${PERIODS.length + 1}" class="form-separator"></td></tr>`;
             }
@@ -234,11 +245,30 @@ function renderMaster() {
     document.getElementById('output').innerHTML = html;
 }
 
-function toggleUnavailabilityMode() { isUnavailMode = !isUnavailMode; document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT EDIT" : "Set Unavailability"; renderMaster(); }
-function markUnavailable(d, p, f) { if(isUnavailMode) { const key = `${d}-${p}-${f}`; const idx = unavailableSlots.indexOf(key); if(idx > -1) unavailableSlots.splice(idx, 1); else unavailableSlots.push(key); renderMaster(); } }
+function toggleUnavailabilityMode() { 
+    isUnavailMode = !isUnavailMode; 
+    document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT EDIT" : "Set Unavailability"; 
+    document.getElementById('unavailTeacherSelect').style.display = isUnavailMode ? "inline-block" : "none";
+    renderMaster(); 
+}
+
+function markUnavailable(d, p) { 
+    const t = document.getElementById('unavailTeacherSelect').value;
+    if(isUnavailMode && t) { 
+        const key = `${d}-${p}-${t}`; 
+        const idx = unavailableSlots.indexOf(key); 
+        if(idx > -1) unavailableSlots.splice(idx, 1); else unavailableSlots.push(key); 
+        renderMaster(); 
+    } else if (isUnavailMode) {
+        alert("Please select a teacher first.");
+    }
+}
+
 function populateFilters() {
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    const tOptions = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('teacherSelect').innerHTML = tOptions;
+    document.getElementById('unavailTeacherSelect').innerHTML = tOptions;
     document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 

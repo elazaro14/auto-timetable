@@ -30,17 +30,15 @@
         .break-cell { background: #dfe6e9; font-weight: bold; color: #636e72; width: 22px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; padding: 0; }
         .religion-cell { background: #dff9fb; color: #0984e3; font-weight: bold; font-size: 10px; }
         .friday-strip { background: #636e72 !important; padding: 0; pointer-events: none; }
-        .unavailable-block { background: #fab1a0 !important; color: #d63031 !important; font-weight: bold; cursor: pointer; }
+        .unavailable-block { background: #fab1a0 !important; color: #d63031 !important; font-weight: bold; }
         
         button, select { padding: 8px 14px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: 600; font-size: 12px; }
         .btn-gen { background: #27ae60; color: white; border: none; }
         .btn-unavail { background: #e74c3c; color: white; border: none; }
         .btn-excel { background: #1f7244; color: white; border: none; }
+        .unavail-controls { background: #fdf2f2; border: 1px solid #f8d7da; padding: 10px; border-radius: 6px; display: none; margin-top: 10px; justify-content: center; gap: 10px; }
 
-        @media print { 
-            .panel, .view-bar, #loginOverlay, .controls { display: none !important; } 
-            .day-title { background: #eee !important; color: #000 !important; border: 1px solid #000; }
-        }
+        @media print { .panel, .view-bar, #loginOverlay, .controls, .unavail-controls { display: none !important; } }
     </style>
 </head>
 <body>
@@ -64,20 +62,28 @@
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
         <button onclick="document.getElementById('csvFile').click()" style="background:#3498db; color:white;">Upload CSV</button>
-        
-        <div id="unavailSection" style="display: flex; gap: 5px; align-items: center;">
-            <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
-            <select id="unavailTeacherSelect" style="display:none;" onchange="renderMaster()">
-                <option value="">-- Select Teacher --</option>
-            </select>
-        </div>
-
+        <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
         <select id="displayMode" onchange="renderMaster()"><option value="both">Subj + Teacher</option><option value="subject">Subject Only</option></select>
         <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>Generate</button>
         <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#f39c12; color:white; display:none;">Sync Cloud</button>
         <button onclick="exportToExcel()" class="btn-excel">Excel</button>
         <button onclick="window.print()" style="background:#2c3e50; color:white;">Print</button>
         <button onclick="handleLogout()" style="background:#95a5a6; color:white; margin-left:auto;">Logout</button>
+    </div>
+
+    <div id="unavailControls" class="unavail-controls">
+        <select id="uTeacher"><option value="">-- Select Teacher --</option></select>
+        <select id="uDay">
+            <option value="MONDAY">MONDAY</option><option value="TUESDAY">TUESDAY</option>
+            <option value="WEDNESDAY">WEDNESDAY</option><option value="THURSDAY">THURSDAY</option>
+            <option value="FRIDAY">FRIDAY</option>
+        </select>
+        <select id="uPeriod">
+            <option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option><option value="P4">P4</option>
+            <option value="P5">P5</option><option value="P6">P6</option><option value="P7">P7</option><option value="P8">P8</option><option value="P9">P9</option>
+        </select>
+        <button onclick="addUnavailability()" style="background:#e74c3c; color:white; border:none;">Block Slot</button>
+        <button onclick="clearUnavailability()" style="background:#95a5a6; color:white; border:none;">Clear All Blocks</button>
     </div>
 
     <div class="view-bar" id="viewBar">
@@ -152,7 +158,7 @@ async function saveToCloud() {
 
 function startGeneration() {
     timetable = [];
-    const slots = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
+    const validSlots = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
     let groups = {};
     rawData.forEach(item => {
         let key = `${item.form}-${item.subject}`;
@@ -165,17 +171,17 @@ function startGeneration() {
         while(remaining > 0) {
             let placed = false;
             let isDouble = remaining >= 2;
-            for(let a=0; a<600; a++) {
+            for(let a=0; a<800; a++) {
                 let d = DAYS[Math.floor(Math.random()*5)];
                 if(timetable.some(x => x.day === d && x.form === lessons[0].form && x.subject === lessons[0].subject)) continue;
-                let pIdx = Math.floor(Math.random() * slots.length);
-                let p1 = slots[pIdx];
+                let pIdx = Math.floor(Math.random() * validSlots.length);
+                let p1 = validSlots[pIdx];
 
                 if(d === "WEDNESDAY" && (p1 === "P8" || p1 === "P9")) continue;
                 if(d === "FRIDAY" && (p1 === "P7" || p1 === "P8" || p1 === "P9")) continue;
 
                 if(isDouble) {
-                    let p2 = slots[pIdx + 1];
+                    let p2 = validSlots[pIdx + 1];
                     if(!p2 || p1 === "BREAK" || p2 === "BREAK") continue;
                     if(d === "WEDNESDAY" && (p2 === "P8" || p2 === "P9")) continue;
                     
@@ -203,19 +209,15 @@ function startGeneration() {
 
 function renderMaster() {
     const mode = document.getElementById('displayMode').value;
-    const targetTeacher = document.getElementById('unavailTeacherSelect').value;
     let html = `<h2 style="text-align:center">${document.getElementById('schoolName').value} - ${document.getElementById('calendarYear').value}</h2>`;
-    
     DAYS.forEach(day => {
         html += `<div class="day-title">${day}</div><table><tr><th style="width:70px">STREAM</th>`;
         PERIODS.forEach((p, i) => html += `<th>${p}<small>${TIMES[i]}</small></th>`);
         html += `</tr>`;
-        
         FORMS.forEach((f, index) => {
             let nextForm = FORMS[index + 1];
             let currentPrefix = f.substring(0, 2);
             let nextPrefix = nextForm ? nextForm.substring(0, 2) : null;
-
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
                 if(p === "BREAK") { html += `<td class="break-cell">BREAK</td>`; }
@@ -223,22 +225,13 @@ function renderMaster() {
                 else if(day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) { html += `<td class="friday-strip"></td>`; }
                 else {
                     const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
-                    
-                    let isUn = false;
-                    if(isUnavailMode && targetTeacher) {
-                        isUn = unavailableSlots.includes(`${day}-${p}-${targetTeacher}`);
-                    } else if (m) {
-                        isUn = unavailableSlots.includes(`${day}-${p}-${m.teacher}`);
-                    }
-
+                    let isUn = m && unavailableSlots.includes(`${day}-${p}-${m.teacher}`);
                     let content = isUn ? 'BLOCKED' : (m ? (mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`) : '');
-                    html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}')">${content}</td>`;
+                    html += `<td class="${isUn ? 'unavailable-block' : ''}">${content}</td>`;
                 }
             });
             html += `</tr>`;
-            if (nextPrefix && currentPrefix !== nextPrefix) {
-                html += `<tr><td colspan="${PERIODS.length + 1}" class="form-separator"></td></tr>`;
-            }
+            if (nextPrefix && currentPrefix !== nextPrefix) html += `<tr><td colspan="${PERIODS.length + 1}" class="form-separator"></td></tr>`;
         });
         html += `</table>`;
     });
@@ -248,27 +241,27 @@ function renderMaster() {
 function toggleUnavailabilityMode() { 
     isUnavailMode = !isUnavailMode; 
     document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT EDIT" : "Set Unavailability"; 
-    document.getElementById('unavailTeacherSelect').style.display = isUnavailMode ? "inline-block" : "none";
-    renderMaster(); 
+    document.getElementById('unavailControls').style.display = isUnavailMode ? "flex" : "none";
 }
 
-function markUnavailable(d, p) { 
-    const t = document.getElementById('unavailTeacherSelect').value;
-    if(isUnavailMode && t) { 
-        const key = `${d}-${p}-${t}`; 
-        const idx = unavailableSlots.indexOf(key); 
-        if(idx > -1) unavailableSlots.splice(idx, 1); else unavailableSlots.push(key); 
-        renderMaster(); 
-    } else if (isUnavailMode) {
-        alert("Please select a teacher first.");
-    }
+function addUnavailability() {
+    const t = document.getElementById('uTeacher').value;
+    const d = document.getElementById('uDay').value;
+    const p = document.getElementById('uPeriod').value;
+    if(!t) return alert("Select Teacher");
+    const key = `${d}-${p}-${t}`;
+    if(!unavailableSlots.includes(key)) unavailableSlots.push(key);
+    renderMaster();
+    document.getElementById('status').innerText = `Added Block: ${t} - ${d} ${p}`;
 }
+
+function clearUnavailability() { if(confirm("Clear all teacher blocks?")) { unavailableSlots = []; renderMaster(); } }
 
 function populateFilters() {
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
     const tOptions = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
     document.getElementById('teacherSelect').innerHTML = tOptions;
-    document.getElementById('unavailTeacherSelect').innerHTML = tOptions;
+    document.getElementById('uTeacher').innerHTML = tOptions;
     document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 

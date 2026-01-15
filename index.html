@@ -16,27 +16,31 @@
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
         .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .view-bar { background: #fff; padding: 15px; border-radius: 8px; display: none; margin-top: 15px; text-align: center; border: 1px solid #dfe3e8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .view-bar { background: #fff; padding: 15px; border-radius: 8px; display: none; margin-top: 15px; text-align: center; border: 1px solid #dfe3e8; }
         
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 30px; }
         th, td { border: 1px solid #bdc3c7; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); overflow: hidden; }
-        th { background: #2c3e50; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        th { background: #2c3e50; color: white; text-transform: uppercase; }
         
         .day-title { background: #34495e; color: white; padding: 10px; font-size: 18px; text-align: center; margin: 20px 0 0; border-radius: 6px 6px 0 0; font-weight: bold; }
         .break-cell { background: #ecf0f1; font-weight: bold; color: #7f8c8d; width: 30px !important; font-size: 9px; writing-mode: vertical-rl; text-orientation: mixed; }
         .unavailable-block { background: #fab1a0; color: #d63031; font-weight: bold; cursor: pointer; }
         
-        button, select { padding: 10px 16px; border-radius: 6px; border: 1px solid #ced4da; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button, select { padding: 10px 16px; border-radius: 6px; border: 1px solid #ced4da; cursor: pointer; font-weight: 600; }
         .btn-gen { background: #27ae60; color: white; border: none; }
         .btn-unavail { background: #e74c3c; color: white; border: none; }
         .btn-excel { background: #1f7244; color: white; border: none; }
+        .btn-print { background: #34495e; color: white; border: none; }
 
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); display: flex; justify-content: center; align-items: center; z-index: 10000; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
 
-        @media print { .panel, .view-bar, #loginOverlay, .controls { display: none !important; } .day-title { background: #eee !important; color: #000 !important; border: 1px solid #000; } }
+        @media print { 
+            .panel, .view-bar, #loginOverlay, .controls { display: none !important; } 
+            .day-title { background: #eee !important; color: #000 !important; border: 1px solid #000; }
+            table { page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body id="mainBody">
@@ -54,32 +58,32 @@
 <div class="panel container">
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button onclick="document.getElementById('csvFile').click()" style="background:#3498db; color:white;">1. Upload CSV</button>
-        <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">2. Set Unavailability</button>
-        <select id="displayMode" onchange="renderMaster()" style="border: 2px solid #2c3e50;">
-            <option value="both">View: Subj + Teacher</option>
-            <option value="subject">View: Subject Only</option>
+        <button onclick="document.getElementById('csvFile').click()" style="background:#3498db; color:white;">Upload CSV</button>
+        <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
+        <select id="displayMode" onchange="renderMaster()">
+            <option value="both">Subj + Teacher</option>
+            <option value="subject">Subject Only</option>
         </select>
-        <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>3. Generate Timetable</button>
-        <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#f39c12; color:white; display:none;">4. Sync to Cloud</button>
-        <button onclick="exportToExcel()" class="btn-excel">Download Excel</button>
+        <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>Generate</button>
+        <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#f39c12; color:white; display:none;">Sync Cloud</button>
+        <button onclick="exportToExcel()" class="btn-excel">Excel Download</button>
+        <button onclick="window.print()" class="btn-print">Print PDF</button>
         <button onclick="handleLogout()" style="background:#95a5a6; color:white; margin-left:auto;">Logout</button>
     </div>
 
     <div class="view-bar" id="viewBar">
-        <button onclick="renderMaster()" style="background:#2c3e50; color:white;">Master Timetable</button>
-        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Select Class --</option></select>
-        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Select Teacher --</option></select>
-        <button onclick="renderLoadSummary()" style="background:#8e44ad; color:white;">Teacher Load Summary</button>
+        <button onclick="renderMaster()">Master View</button>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Teacher --</option></select>
+        <button onclick="renderLoadSummary()">Load Summary</button>
     </div>
     
-    <div id="status" style="text-align:center; font-weight:bold; font-size: 13px; margin-top:10px; color:#2c3e50;"></div>
+    <div id="status" style="text-align:center; font-weight:bold; font-size: 13px; margin-top:10px;"></div>
 </div>
 
 <div id="output" class="container"></div>
 
 <script>
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDgbYVR98RE4ZLvkh6vb_dXvkmBRnvFf0w",
   authDomain: "school-timetable-6310b.firebaseapp.com",
@@ -99,11 +103,8 @@ const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D"
 let rawData = [], timetable = [], unavailableSlots = [];
 let isUnavailMode = false;
 
-// --- Authentication ---
 function handleLogin() {
-    const email = document.getElementById('loginEmail').value;
-    const pass = document.getElementById('loginPassword').value;
-    auth.signInWithEmailAndPassword(email, pass).catch(e => document.getElementById('loginMsg').innerText = e.message);
+    auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(e => document.getElementById('loginMsg').innerText = e.message);
 }
 function handleLogout() { auth.signOut(); }
 auth.onAuthStateChanged(user => {
@@ -111,7 +112,6 @@ auth.onAuthStateChanged(user => {
     else { document.getElementById('loginOverlay').style.display = 'flex'; }
 });
 
-// --- Data Management ---
 function handleUpload(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -121,19 +121,11 @@ function handleUpload(e) {
             return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() };
         });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = "✅ CSV Loaded. You can now Generate.";
     };
     reader.readAsText(e.target.files[0]);
 }
 
-async function saveToCloud() {
-    document.getElementById('status').innerText = "Saving to Firebase...";
-    await db.collection("timetable_data").doc("active").set({ rawData, timetable, unavailableSlots });
-    document.getElementById('status').innerText = "✅ Synchronized with Cloud.";
-}
-
 async function loadFromCloud() {
-    document.getElementById('status').innerText = "Fetching Cloud Data...";
     const doc = await db.collection("timetable_data").doc("active").get();
     if (doc.exists) {
         const data = doc.data();
@@ -145,16 +137,17 @@ async function loadFromCloud() {
         document.getElementById('genBtn').disabled = (rawData.length === 0);
         populateFilters();
         renderMaster();
-        document.getElementById('status').innerText = "✅ Data successfully loaded.";
     }
 }
 
-// --- Generator Logic (Updated with Break Constraint) ---
+async function saveToCloud() {
+    await db.collection("timetable_data").doc("active").set({ rawData, timetable, unavailableSlots });
+    document.getElementById('status').innerText = "✅ Saved to Cloud.";
+}
+
 function startGeneration() {
     timetable = [];
-    const validSlots = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
-    
-    // Group lessons to identify double period candidates
+    const slots = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"];
     let groups = {};
     rawData.forEach(item => {
         let key = `${item.form}-${item.subject}`;
@@ -167,68 +160,50 @@ function startGeneration() {
         while(remaining > 0) {
             let placed = false;
             let isDouble = remaining >= 2;
-            
-            for(let attempt=0; attempt<400; attempt++) {
+            for(let a=0; a<400; a++) {
                 let d = DAYS[Math.floor(Math.random()*5)];
-                
-                // PRIORITY 1: Subject only appears ONCE per day (single or double)
                 if(timetable.some(x => x.day === d && x.form === lessons[0].form && x.subject === lessons[0].subject)) continue;
-
-                let pIdx = Math.floor(Math.random() * validSlots.length);
-                let p1 = validSlots[pIdx];
-
+                let pIdx = Math.floor(Math.random() * slots.length);
+                let p1 = slots[pIdx];
                 if(isDouble) {
-                    let p2 = validSlots[pIdx + 1];
-                    // PRIORITY 2: Doubles must be consecutive AND not split by BREAK
-                    if(p2 && p1 !== "BREAK" && p2 !== "BREAK" && 
-                       !unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && 
-                       !unavailableSlots.includes(`${d}-${p2}-${lessons[0].form}`) &&
+                    let p2 = slots[pIdx + 1];
+                    if(p2 && p1 !== "BREAK" && p2 !== "BREAK" && !unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && !unavailableSlots.includes(`${d}-${p2}-${lessons[0].form}`) &&
                        !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form)) &&
                        !timetable.some(x => x.day===d && x.period===p2 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
-                        
-                        // PRIORITY 3: No allocation before (P4) and after (P5) break
                         if((p1 === "P4" && p2 === "P5") || (p2 === "P4" && p1 === "P5")) continue;
-
                         timetable.push({...lessons[0], day: d, period: p1}, {...lessons[0], day: d, period: p2});
                         remaining -= 2; placed = true; break;
                     }
                 } else {
-                    if(!unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && 
-                       !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
-                        
-                        // PRIORITY 3 for singles: Check neighbor slot across break
-                        let forbiddenNeighbor = p1 === "P4" ? "P5" : (p1 === "P5" ? "P4" : null);
-                        if(forbiddenNeighbor && timetable.some(x => x.day === d && x.form === lessons[0].form && x.period === forbiddenNeighbor && x.subject === lessons[0].subject)) continue;
-
+                    if(!unavailableSlots.includes(`${d}-${p1}-${lessons[0].form}`) && !timetable.some(x => x.day===d && x.period===p1 && (x.teacher===lessons[0].teacher || x.form===lessons[0].form))) {
+                        let forbidden = p1 === "P4" ? "P5" : (p1 === "P5" ? "P4" : null);
+                        if(forbidden && timetable.some(x => x.day === d && x.form === lessons[0].form && x.period === forbidden && x.subject === lessons[0].subject)) continue;
                         timetable.push({...lessons[0], day: d, period: p1});
                         remaining -= 1; placed = true; break;
                     }
                 }
             }
-            if(!placed) remaining--; // Anti-stuck
+            if(!placed) remaining--;
         }
     });
     renderMaster();
-    document.getElementById('status').innerText = "✅ Timetable Generated Successfully.";
 }
 
-// --- View Rendering ---
 function renderMaster() {
     const mode = document.getElementById('displayMode').value;
     let html = "";
     DAYS.forEach(day => {
-        html += `<div class="day-title">${day}</div><table><tr><th style="width:100px;">STREAM</th>`;
+        html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>`;
         PERIODS.forEach(p => html += `<th>${p}</th>`);
         html += `</tr>`;
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
-                if(p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
+                if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
                 else {
-                    const key = `${day}-${p}-${f}`;
-                    const isUn = unavailableSlots.includes(key);
                     const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
-                    let content = isUn ? 'BLOCKED' : (m ? (mode === 'both' ? `<b>${m.subject}</b><br><small>${m.teacher}</small>` : `<b>${m.subject}</b>`) : '');
+                    const isUn = unavailableSlots.includes(`${day}-${p}-${f}`);
+                    let content = isUn ? 'BLOCKED' : (m ? (mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`) : '');
                     html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}','${f}')">${content}</td>`;
                 }
             });
@@ -239,60 +214,12 @@ function renderMaster() {
     document.getElementById('output').innerHTML = html;
 }
 
-function renderIndividual(type) {
-    const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
-    if(!val) return;
-    const mode = document.getElementById('displayMode').value;
-    let html = `<h2 style="text-align:center;">${val} PERSONAL TIMETABLE</h2><table><tr><th>DAY</th>`;
-    PERIODS.forEach(p => html += `<th>${p}</th>`);
-    html += `</tr>`;
-    DAYS.forEach(day => {
-        html += `<tr><td><b>${day}</b></td>`;
-        PERIODS.forEach(p => {
-            if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
-            else {
-                const m = timetable.find(x => x.day === day && x.period === p && (type === 'stream' ? x.form === val : x.teacher === val));
-                let content = "";
-                if(m) {
-                    content = (type === 'stream') ? 
-                        (mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`) :
-                        `<b>${m.subject}</b><br>Form: ${m.form}`;
-                }
-                html += `<td>${content}</td>`;
-            }
-        });
-        html += `</tr>`;
-    });
-    document.getElementById('output').innerHTML = html + `</table>`;
-}
-
-function renderLoadSummary() {
-    const load = {};
-    rawData.forEach(r => load[r.teacher] = (load[r.teacher] || 0) + 1);
-    let html = `<h2 style="text-align:center;">TEACHER WEEKLY LOAD</h2><table style="max-width:500px; margin:20px auto;"><tr><th>TEACHER NAME</th><th>TOTAL LESSONS</th></tr>`;
-    Object.keys(load).sort().forEach(t => html += `<tr><td>${t}</td><td><b>${load[t]}</b></td></tr>`);
-    document.getElementById('output').innerHTML = html + `</table>`;
-}
-
-function toggleUnavailabilityMode() {
-    isUnavailMode = !isUnavailMode;
-    document.getElementById('unavailBtn').style.background = isUnavailMode ? "#2c3e50" : "#e74c3c";
-    document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT EDIT MODE" : "2. Set Unavailability";
-    renderMaster();
-}
-
-function markUnavailable(d, p, f) {
-    if(!isUnavailMode) return;
-    const key = `${d}-${p}-${f}`;
-    const idx = unavailableSlots.indexOf(key);
-    if(idx > -1) unavailableSlots.splice(idx, 1); else unavailableSlots.push(key);
-    renderMaster();
-}
-
+function toggleUnavailabilityMode() { isUnavailMode = !isUnavailMode; renderMaster(); }
+function markUnavailable(d, p, f) { if(isUnavailMode) { const key = `${d}-${p}-${f}`; const idx = unavailableSlots.indexOf(key); if(idx > -1) unavailableSlots.splice(idx, 1); else unavailableSlots.push(key); renderMaster(); } }
 function populateFilters() {
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Select Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-    document.getElementById('streamSelect').innerHTML = '<option value="">-- Select Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 
 function exportToExcel() {
@@ -310,10 +237,37 @@ function exportToExcel() {
             });
             rows.push(row);
         });
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        XLSX.utils.book_append_sheet(wb, ws, day);
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), day);
     });
     XLSX.writeFile(wb, "School_Timetable_2026.xlsx");
+}
+
+function renderIndividual(type) {
+    const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
+    if(!val) return;
+    let html = `<h2>${val} Schedule</h2><table><tr><th>DAY</th>`;
+    PERIODS.forEach(p => html += `<th>${p}</th>`);
+    html += `</tr>`;
+    DAYS.forEach(day => {
+        html += `<tr><td><b>${day}</b></td>`;
+        PERIODS.forEach(p => {
+            if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+            else {
+                const m = timetable.find(x => x.day === day && x.period === p && (type === 'stream' ? x.form === val : x.teacher === val));
+                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;
+            }
+        });
+        html += `</tr>`;
+    });
+    document.getElementById('output').innerHTML = html + `</table>`;
+}
+
+function renderLoadSummary() {
+    const load = {};
+    rawData.forEach(r => load[r.teacher] = (load[r.teacher] || 0) + 1);
+    let html = `<h2>TEACHER LOAD</h2><table style="max-width:400px; margin:auto;"><tr><th>Teacher</th><th>Lessons</th></tr>`;
+    Object.keys(load).sort().forEach(t => html += `<tr><td>${t}</td><td>${load[t]}</td></tr>`);
+    document.getElementById('output').innerHTML = html + `</table>`;
 }
 </script>
 </body>

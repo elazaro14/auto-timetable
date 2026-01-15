@@ -29,6 +29,7 @@
         button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-gen { background: #28a745; color: white; border: none; }
         .btn-unavail { background: #dc3545; color: white; border: none; }
+        .display-opt { background: #fff; border: 2px solid #2c3e50; padding: 6px; border-radius: 4px; font-weight: bold; }
 
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 8px; width: 320px; text-align: center; }
@@ -38,7 +39,7 @@
         }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
 <div id="loginOverlay">
     <div class="login-box">
@@ -55,14 +56,20 @@
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
         <button onclick="document.getElementById('csvFile').click()" style="background:#007bff; color:white;">Upload CSV</button>
         <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
+        
+        <select id="displayMode" class="display-opt" onchange="renderMaster()">
+            <option value="both">Display: Subj + Teacher</option>
+            <option value="subject">Display: Subject Only</option>
+        </select>
+
         <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>Generate Timetable</button>
         <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#fd7e14; color:white; display:none;">Sync to Cloud</button>
     </div>
 
     <div class="view-bar" id="viewBar">
         <button onclick="renderMaster()">Full School View</button>
-        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
-        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Teacher --</option></select>
         <button onclick="renderLoadSummary()" style="background:#6f42c1; color:white; border:none;">Teacher Load Summary</button>
     </div>
     
@@ -91,7 +98,7 @@ const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D"
 let rawData = [], timetable = [], unavailableSlots = [];
 let isUnavailMode = false;
 
-// --- AUTH ---
+// --- LOGIN/LOGOUT ---
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
@@ -109,23 +116,7 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-// --- CORE FUNCTIONS ---
-function toggleUnavailabilityMode() {
-    isUnavailMode = !isUnavailMode;
-    document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT UNAVAILABILITY" : "SET UNAVAILABILITY";
-    document.getElementById('unavailBtn').style.background = isUnavailMode ? "#000" : "#dc3545";
-    renderMaster();
-}
-
-function markUnavailable(day, period, form) {
-    if (!isUnavailMode) return;
-    const key = `${day}-${period}-${form}`;
-    const index = unavailableSlots.indexOf(key);
-    if (index > -1) unavailableSlots.splice(index, 1);
-    else unavailableSlots.push(key);
-    renderMaster();
-}
-
+// --- CORE ---
 function handleUpload(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -135,18 +126,18 @@ function handleUpload(e) {
             return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() };
         });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = "CSV Ready.";
+        document.getElementById('status').innerText = "CSV Uploaded.";
     };
     reader.readAsText(e.target.files[0]);
 }
 
 async function saveToCloud() {
-    document.getElementById('status').innerText = "Syncing...";
+    document.getElementById('status').innerText = "Saving...";
     await db.collection("timetable_data").doc("active").set({
         rawData, timetable, unavailableSlots,
-        schoolName: "Your School", academicYear: "2026"
+        schoolName: "School", academicYear: "2026"
     });
-    document.getElementById('status').innerText = "✅ Cloud Sync Complete.";
+    document.getElementById('status').innerText = "✅ Saved Successfully.";
 }
 
 async function loadFromCloud() {
@@ -161,8 +152,23 @@ async function loadFromCloud() {
         document.getElementById('genBtn').disabled = false;
         populateFilters();
         renderMaster();
-        document.getElementById('status').innerText = "✅ Data Loaded.";
+        document.getElementById('status').innerText = "✅ Cloud Data Active.";
     }
+}
+
+function toggleUnavailabilityMode() {
+    isUnavailMode = !isUnavailMode;
+    document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT UNAVAIL" : "SET UNAVAILABILITY";
+    renderMaster();
+}
+
+function markUnavailable(day, period, form) {
+    if (!isUnavailMode) return;
+    const key = `${day}-${period}-${form}`;
+    const idx = unavailableSlots.indexOf(key);
+    if (idx > -1) unavailableSlots.splice(idx, 1);
+    else unavailableSlots.push(key);
+    renderMaster();
 }
 
 function startGeneration() {
@@ -189,8 +195,10 @@ function populateFilters() {
     document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 
+// --- RENDERING ---
 function renderMaster() {
-    let html = `<h2>MASTER VIEW ${isUnavailMode ? '(EDITING UNAVAILABILITY)' : ''}</h2>`;
+    const mode = document.getElementById('displayMode').value;
+    let html = `<h2>MASTER VIEW ${isUnavailMode ? '(EDITING)' : ''}</h2>`;
     DAYS.forEach(day => {
         html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>`;
         PERIODS.forEach(p => html += `<th>${p}</th>`);
@@ -198,15 +206,17 @@ function renderMaster() {
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
-                if(p === "BREAK") {
-                    html += `<td class="break-cell">TEA</td>`;
-                } else {
+                if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+                else {
                     const key = `${day}-${p}-${f}`;
                     const isUn = unavailableSlots.includes(key);
                     const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
-                    html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}','${f}')">
-                        ${isUn ? 'UNAVAILABLE' : (m ? `<b>${m.subject}</b><br>${m.teacher}` : '')}
-                    </td>`;
+                    let content = "";
+                    if(isUn) content = "UNAVAILABLE";
+                    else if(m) {
+                        content = mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`;
+                    }
+                    html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}','${f}')">${content}</td>`;
                 }
             });
             html += `</tr>`;
@@ -218,6 +228,7 @@ function renderMaster() {
 
 function renderIndividual(type) {
     const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
+    const mode = document.getElementById('displayMode').value;
     let html = `<h2>${val} Schedule</h2><table><tr><th>DAY</th>`;
     PERIODS.forEach(p => html += `<th>${p}</th>`);
     html += `</tr>`;
@@ -227,7 +238,15 @@ function renderIndividual(type) {
             if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
             else {
                 const m = timetable.find(x => x.day === day && x.period === p && (type === 'stream' ? x.form === val : x.teacher === val));
-                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;
+                let content = "";
+                if(m) {
+                    if(type === 'stream') {
+                        content = mode === 'both' ? `<b>${m.subject}</b><br>${m.teacher}` : `<b>${m.subject}</b>`;
+                    } else {
+                        content = `<b>${m.subject}</b><br>Form: ${m.form}`;
+                    }
+                }
+                html += `<td>${content}</td>`;
             }
         });
         html += `</tr>`;

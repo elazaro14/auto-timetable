@@ -15,9 +15,6 @@
         .container { max-width: 1450px; margin: 0 auto; }
         .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
         
-        .school-info-inputs { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
-        .school-info-inputs input[type="text"] { border: none; border-bottom: 2px solid #2c3e50; font-weight: bold; font-size: 16px; text-align: center; padding: 5px; outline: none; background: transparent; }
-        
         .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
         
         table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 25px; }
@@ -26,21 +23,22 @@
         
         .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
         .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
+        .unavailable-block { background: #ffcdd2; color: #b71c1c; font-weight: bold; font-size: 9px; cursor: pointer; }
         
         .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; border: 1px solid #ddd; }
         button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-gen { background: #28a745; color: white; border: none; }
+        .btn-unavail { background: #dc3545; color: white; border: none; }
 
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 8px; width: 320px; text-align: center; }
 
         @media print { 
             .panel, .view-bar, #loginOverlay, .controls { display: none !important; } 
-            .day-section { page-break-after: always; }
         }
     </style>
 </head>
-<body id="mainBody">
+<body>
 
 <div id="loginOverlay">
     <div class="login-box">
@@ -53,18 +51,12 @@
 </div>
 
 <div class="panel container">
-    <div class="school-info-inputs">
-        <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME" style="width: 350px;">
-        <input type="text" id="academicYearInput" placeholder="YEAR" style="width: 150px;">
-        <button onclick="handleLogout()" style="background:#dc3545; color:white;">Logout</button>
-    </div>
-
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
         <button onclick="document.getElementById('csvFile').click()" style="background:#007bff; color:white;">Upload CSV</button>
+        <button onclick="toggleUnavailabilityMode()" id="unavailBtn" class="btn-unavail">Set Unavailability</button>
         <button onclick="startGeneration()" id="genBtn" class="btn-gen" disabled>Generate Timetable</button>
         <button onclick="saveToCloud()" id="saveCloudBtn" style="background:#fd7e14; color:white; display:none;">Sync to Cloud</button>
-        <button onclick="window.print()">Print</button>
     </div>
 
     <div class="view-bar" id="viewBar">
@@ -96,29 +88,44 @@ const auth = firebase.auth();
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 const PERIODS = ["P1", "P2", "P3", "P4", "BREAK", "P5", "P6", "P7", "P8", "P9"];
 const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let rawData = [], timetable = [];
+let rawData = [], timetable = [], unavailableSlots = [];
+let isUnavailMode = false;
 
-// --- LOGIN LOGIC ---
+// --- AUTH ---
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
     auth.signInWithEmailAndPassword(email, pass).catch(err => {
-        document.getElementById('loginMsg').innerText = "Login Failed: " + err.message;
+        document.getElementById('loginMsg').innerText = "Login: " + err.message;
     });
 }
 function handleLogout() { auth.signOut(); }
-
 auth.onAuthStateChanged(user => {
     if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
         loadFromCloud();
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('viewBar').style.display = 'none';
     }
 });
 
-// --- DATA HANDLING ---
+// --- CORE FUNCTIONS ---
+function toggleUnavailabilityMode() {
+    isUnavailMode = !isUnavailMode;
+    document.getElementById('unavailBtn').innerText = isUnavailMode ? "EXIT UNAVAILABILITY" : "SET UNAVAILABILITY";
+    document.getElementById('unavailBtn').style.background = isUnavailMode ? "#000" : "#dc3545";
+    renderMaster();
+}
+
+function markUnavailable(day, period, form) {
+    if (!isUnavailMode) return;
+    const key = `${day}-${period}-${form}`;
+    const index = unavailableSlots.indexOf(key);
+    if (index > -1) unavailableSlots.splice(index, 1);
+    else unavailableSlots.push(key);
+    renderMaster();
+}
+
 function handleUpload(e) {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -128,19 +135,18 @@ function handleUpload(e) {
             return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() };
         });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = "CSV Uploaded. Click Generate.";
+        document.getElementById('status').innerText = "CSV Ready.";
     };
     reader.readAsText(e.target.files[0]);
 }
 
 async function saveToCloud() {
-    document.getElementById('status').innerText = "Saving...";
+    document.getElementById('status').innerText = "Syncing...";
     await db.collection("timetable_data").doc("active").set({
-        rawData, timetable,
-        schoolName: document.getElementById('schoolNameInput').value,
-        academicYear: document.getElementById('academicYearInput').value
+        rawData, timetable, unavailableSlots,
+        schoolName: "Your School", academicYear: "2026"
     });
-    document.getElementById('status').innerText = "✅ Saved to Cloud.";
+    document.getElementById('status').innerText = "✅ Cloud Sync Complete.";
 }
 
 async function loadFromCloud() {
@@ -149,57 +155,58 @@ async function loadFromCloud() {
         const data = doc.data();
         rawData = data.rawData || [];
         timetable = data.timetable || [];
-        document.getElementById('schoolNameInput').value = data.schoolName || "";
-        document.getElementById('academicYearInput').value = data.academicYear || "";
+        unavailableSlots = data.unavailableSlots || [];
         document.getElementById('viewBar').style.display = 'block';
         document.getElementById('saveCloudBtn').style.display = 'inline-block';
         document.getElementById('genBtn').disabled = false;
         populateFilters();
         renderMaster();
-        document.getElementById('status').innerText = "✅ Cloud Data Loaded.";
+        document.getElementById('status').innerText = "✅ Data Loaded.";
     }
 }
 
-// --- GENERATION (RESTORED) ---
 function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
-    // Simplified logic for restoration
     rawData.forEach(item => {
         let placed = false;
-        for(let attempt=0; attempt<50; attempt++){
+        for(let a=0; a<100; a++) {
             let d = DAYS[Math.floor(Math.random()*5)];
             let p = vp[Math.floor(Math.random()*9)];
-            if(!timetable.some(x => x.day===d && x.period===p && (x.teacher===item.teacher || x.form===item.form))){
+            if(!unavailableSlots.includes(`${d}-${p}-${item.form}`) && 
+               !timetable.some(x => x.day===d && x.period===p && (x.teacher===item.teacher || x.form===item.form))) {
                 timetable.push({...item, day: d, period: p});
                 placed = true; break;
             }
         }
     });
-    document.getElementById('saveCloudBtn').style.display = 'inline-block';
     renderMaster();
 }
 
 function populateFilters() {
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- View Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-    document.getElementById('streamSelect').innerHTML = '<option value="">-- View Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 
-// --- DISPLAY RENDERERS ---
 function renderMaster() {
-    let html = `<h2>MASTER TIMETABLE</h2>`;
+    let html = `<h2>MASTER VIEW ${isUnavailMode ? '(EDITING UNAVAILABILITY)' : ''}</h2>`;
     DAYS.forEach(day => {
-        html += `<div class="day-title">${day}</div><table><tr><th style="width:80px">STREAM</th>`;
+        html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>`;
         PERIODS.forEach(p => html += `<th>${p}</th>`);
         html += `</tr>`;
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
-                if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
-                else {
+                if(p === "BREAK") {
+                    html += `<td class="break-cell">TEA</td>`;
+                } else {
+                    const key = `${day}-${p}-${f}`;
+                    const isUn = unavailableSlots.includes(key);
                     const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
-                    html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
+                    html += `<td class="${isUn ? 'unavailable-block' : ''}" onclick="markUnavailable('${day}','${p}','${f}')">
+                        ${isUn ? 'UNAVAILABLE' : (m ? `<b>${m.subject}</b><br>${m.teacher}` : '')}
+                    </td>`;
                 }
             });
             html += `</tr>`;
@@ -211,8 +218,7 @@ function renderMaster() {
 
 function renderIndividual(type) {
     const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
-    if(!val) return;
-    let html = `<h2>${type.toUpperCase()}: ${val}</h2><table><tr><th>DAY</th>`;
+    let html = `<h2>${val} Schedule</h2><table><tr><th>DAY</th>`;
     PERIODS.forEach(p => html += `<th>${p}</th>`);
     html += `</tr>`;
     DAYS.forEach(day => {
@@ -232,7 +238,7 @@ function renderIndividual(type) {
 function renderLoadSummary() {
     const load = {};
     rawData.forEach(r => load[r.teacher] = (load[r.teacher] || 0) + 1);
-    let html = `<h2>TEACHER LOAD</h2><table style="max-width:500px; margin:auto;"><tr><th>Teacher</th><th>Total Lessons</th></tr>`;
+    let html = `<h2>TEACHER LOAD</h2><table style="max-width:400px; margin:auto;"><tr><th>Teacher</th><th>Lessons</th></tr>`;
     Object.keys(load).sort().forEach(t => html += `<tr><td>${t}</td><td>${load[t]}</td></tr>`);
     document.getElementById('output').innerHTML = html + `</table>`;
 }

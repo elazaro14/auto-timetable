@@ -2,181 +2,210 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Official School Timetable 2026 - Rule Strict Mode</title>
+    <title>Official School Timetable 2026</title>
     <style>
         :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; }
-        .compact-mode { --row-height: 30px; --font-size: 9px; --cell-padding: 2px; }
+        .compact-mode { --row-height: 32px; --font-size: 9.5px; --cell-padding: 2px; }
 
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .container { max-width: 1500px; margin: 0 auto; }
-        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 10px; }
+        .container { max-width: 1450px; margin: 0 auto; }
+        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
         
-        .day-title { background: #2c3e50; color: white; padding: 8px; font-size: 14px; text-align: center; margin-top: 20px; border-radius: 4px 4px 0 0; }
+        .school-info-inputs { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
+        .school-info-inputs input[type="text"] { border: none; border-bottom: 2px solid #2c3e50; font-weight: bold; font-size: 16px; text-align: center; padding: 5px; outline: none; background: transparent; }
+        
         table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 25px; }
-        th, td { border: 1px solid #ccc; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); }
-        th { background: #34495e; color: white; }
+        th, td { border: 1px solid #444; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); overflow: hidden; }
+        th { background: #2c3e50; color: white; }
         
-        .break-cell { background: #eee !important; font-weight: bold; width: 25px !important; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; }
-        .fixed-block { background: #d1ecf1 !important; color: #0c5460; font-weight: bold; }
-        .mosque-strips { background: repeating-linear-gradient(45deg, #fff9c4, #fff9c4 10px, #fffde7 10px, #fffde7 20px) !important; }
+        .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
+        .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
+        .fixed-block { background: #d1ecf1; color: #0c5460; font-weight: bold; font-style: italic; }
+        .mosque-strips { background: repeating-linear-gradient(45deg, #fff9c4, #fff9c4 10px, #fffde7 10px, #fffde7 20px); }
 
-        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-        .entry-panel { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; display: none; border-radius: 8px; }
-        .entry-grid { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px; }
+        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
+        .entry-panel { background: #eef2f7; border: 1px solid #ccc; padding: 15px; margin-top: 10px; display: none; border-radius: 8px; }
+        .entry-grid { display: grid; grid-template-columns: 2fr 2fr 1.5fr 1fr auto; gap: 10px; margin-bottom: 10px; }
         
-        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
-        .btn-gen { background: #198754; color: white; border: none; }
+        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-gen { background: #28a745; color: white; border: none; }
+        
+        @media print { 
+            .panel, .view-bar, .settings-bar, #status, .entry-panel { display: none !important; } 
+            body { background: white; padding: 0; }
+        }
     </style>
 </head>
 <body id="mainBody">
 
 <div class="panel container">
+    <div class="school-info-inputs">
+        <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME">
+        <input type="text" id="academicYearInput" placeholder="ACADEMIC YEAR">
+    </div>
+
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button onclick="document.getElementById('csvFile').click()" style="background:#0d6efd; color:white;">Upload CSV</button>
-        <button onclick="toggleEntryPanel()" style="background:#ffc107;">Direct Entry</button>
-        <button onclick="toggleAvailPanel()" style="background:#0dcaf0;">Off-Times</button>
+        <button onclick="document.getElementById('csvFile').click()" style="background:#007bff; color:white;">Upload CSV</button>
+        <button onclick="toggleEntryPanel()" style="background:#ffc107; border:none;">Direct Entry Window</button>
         <button class="btn-gen" id="genBtn" onclick="startGeneration()" disabled>Generate Timetable</button>
         <button onclick="window.print()">Print</button>
     </div>
 
     <div id="entryPanel" class="entry-panel">
+        <h4 style="margin-top:0">Manual Lesson Entry</h4>
         <div class="entry-grid">
-            <input type="text" id="manSub" placeholder="Subject">
-            <input type="text" id="manTea" placeholder="Teacher">
+            <input type="text" id="manSub" placeholder="Subject (e.g. MATH)">
+            <input type="text" id="manTea" placeholder="Teacher (e.g. MR. JUMA)">
             <select id="manForm"></select>
-            <input type="number" id="manQty" placeholder="Total Pds" min="1" value="1">
-            <button onclick="addManualLesson()" style="background:#198754; color:white;">Add Entry</button>
+            <input type="number" id="manQty" placeholder="Total Periods" min="1" value="1">
+            <button onclick="addManualLesson()" style="background:#28a745; color:white;">Add Entry</button>
         </div>
-        <div id="manualList" style="max-height:100px; overflow-y:auto; font-size:11px; background:white; padding:5px; border:1px solid #ddd;"></div>
+        <div id="manualList" style="max-height:150px; overflow-y:auto; background:white; padding:10px; border:1px solid #ccc; font-size:12px;">
+            No entries added yet.
+        </div>
     </div>
 
-    <div class="settings-bar" style="text-align:center; margin-top:10px;">
-        <label><input type="checkbox" onchange="toggleCompact(this)"> Compact Mode</label>
+    <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#d9534f;">Waiting for Data...</div>
+    
+    <div class="view-bar" id="viewBar" style="display:none; text-align:center; margin-top:10px;">
+        <button onclick="renderMaster()">Full School View</button>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
     </div>
-
-    <div id="status" style="text-align:center; margin-top:10px; font-weight:bold;">Ready for Allocation...</div>
 </div>
 
 <div id="output" class="container"></div>
 
 <script>
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-const PERIODS = ["P1","P2","P3","P4","BREAK","P5","P6","P7","P8","P9"];
+const PERIODS = [
+    {p:"P1", t:"8:00-8:40"}, {p:"P2", t:"8:40-9:20"}, {p:"P3", t:"9:20-10:00"}, {p:"P4", t:"10:00-10:40"},
+    {p:"BREAK", t:"10:40-11:10"},
+    {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
+];
 const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let rawData = [], timetable = [], unavailabilities = [];
+let rawData = [], timetable = [];
 
 window.onload = () => {
     const fSel = document.getElementById('manForm');
     FORMS.forEach(f => fSel.add(new Option(f, f)));
 };
 
-function toggleEntryPanel() { const p = document.getElementById('entryPanel'); p.style.display = p.style.display==='block'?'none':'block'; }
-function toggleCompact(cb) { document.getElementById('mainBody').classList.toggle('compact-mode', cb.checked); }
+function toggleEntryPanel() { 
+    const p = document.getElementById('entryPanel'); 
+    p.style.display = p.style.display === 'block' ? 'none' : 'block'; 
+}
 
 function addManualLesson() {
     const s = document.getElementById('manSub').value.toUpperCase().trim();
     const t = document.getElementById('manTea').value.toUpperCase().trim();
     const f = document.getElementById('manForm').value;
-    const q = parseInt(document.getElementById('manQty').value) || 1;
+    const qty = parseInt(document.getElementById('manQty').value) || 1;
+    
     if(s && t) {
-        for(let i=0; i<q; i++) rawData.push({ subject: s, teacher: t, form: f });
-        document.getElementById('genBtn').disabled = false;
+        for(let i=0; i<qty; i++) {
+            rawData.push({ subject: s, teacher: t, form: f });
+        }
         updateManualList();
+        document.getElementById('genBtn').disabled = false;
+        document.getElementById('status').innerText = `Data Ready: ${rawData.length} lessons.`;
+        populateFilters();
     }
 }
 
 function updateManualList() {
     const list = document.getElementById('manualList');
     const counts = {};
-    rawData.forEach(l => { const k = `${l.form} | ${l.subject}`; counts[k] = (counts[k]||0)+1; });
-    list.innerHTML = Object.entries(counts).map(([t, c]) => `<div>${t}: ${c} periods</div>`).join('');
+    rawData.forEach(l => {
+        const key = `${l.form} | ${l.subject} (${l.teacher})`;
+        counts[key] = (counts[key] || 0) + 1;
+    });
+    list.innerHTML = Object.entries(counts).map(([label, count]) => 
+        `<div><b>${label}</b>: ${count} periods/week</div>`
+    ).join('') || "No entries added yet.";
 }
 
-function getSpecial(day, p) {
-    if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
-    if (day === "THURSDAY" && (p === "P8" || p === "P9")) return "DEBATE";
-    if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
-    return null;
+function handleUpload(e) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const lines = event.target.result.split('\n').slice(1).filter(l => l.trim());
+        rawData = lines.map(l => {
+            const p = l.split(',');
+            return { subject: p[0].trim().toUpperCase(), teacher: p[1].trim().toUpperCase(), form: p[3].trim().toUpperCase() };
+        });
+        document.getElementById('genBtn').disabled = false;
+        document.getElementById('status').innerText = `CSV Loaded: ${rawData.length} lessons.`;
+        populateFilters();
+    };
+    reader.readAsText(e.target.files[0]);
 }
 
 function startGeneration() {
     timetable = [];
+    const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
     const grouped = {};
-    rawData.forEach(l => { 
-        const k = `${l.form}-${l.subject}`; 
-        if(!grouped[k]) grouped[k] = []; 
-        grouped[k].push(l); 
+    rawData.forEach(l => {
+        const k = `${l.form}-${l.subject}`;
+        if(!grouped[k]) grouped[k] = [];
+        grouped[k].push(l);
     });
 
     Object.values(grouped).forEach(lessons => {
         let rem = lessons.length;
-        const isSciMath = lessons[0].subject.match(/MATH|PHYSIC/);
         
-        // RULE 1: Double Period First (Once per day/week priority)
-        if (rem >= 2) {
-            for (let att = 0; att < 2000; att++) {
-                const day = DAYS[Math.floor(Math.random() * 5)];
-                const idx = Math.floor(Math.random() * 8); 
-                const p1 = PERIODS[idx], p2 = PERIODS[idx+1];
-                
-                if (p1 === "BREAK" || p2 === "BREAK") continue;
-                if (isSciMath && ["P7","P8","P9"].includes(p1)) continue;
-                
-                if (canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecial(day, p1) && !getSpecial(day, p2)) {
+        // RULE: Try to place 2 consecutive periods (Double Period) first
+        if(rem >= 2) {
+            let placedDouble = false;
+            for(let att = 0; att < 500; att++) {
+                const day = DAYS[Math.floor(Math.random()*5)];
+                const idx = Math.floor(Math.random()*8); // 0-7 so idx+1 doesn't exceed 8
+                const p1 = vp[idx], p2 = vp[idx+1];
+
+                if ((p1 === "P4" && p2 === "P5")) continue; // Don't split across break
+
+                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0])) {
                     timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
-                    rem -= 2; break; 
+                    rem -= 2; placedDouble = true; break;
                 }
             }
         }
 
-        // RULE 2: Single Periods (Adhere to "Once per day" if possible)
-        while (rem > 0) {
-            for (let att = 0; att < 1000; att++) {
-                const day = DAYS[Math.floor(Math.random() * 5)];
-                const per = PERIODS[Math.floor(Math.random() * 10)];
-                if (per === "BREAK") continue;
-                if (isSciMath && ["P7","P8","P9"].includes(per)) continue;
-
-                // Check if subject already exists on this day (Allocation Rule)
-                const exists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
-                
-                if (!exists && canPlace(day, per, lessons[0]) && !getSpecial(day, per)) {
+        // Place remaining single periods
+        while(rem > 0) {
+            let placed = false;
+            for(let att = 0; att < 200; att++) {
+                const day = DAYS[Math.floor(Math.random()*5)];
+                const per = vp[Math.floor(Math.random()*9)];
+                if(canPlace(day, per, lessons[0])) {
                     timetable.push({...lessons[0], day, period: per});
-                    rem--; break;
-                }
-                if (att === 999) { // If impossible to place on new day, force place
-                    if (canPlace(day, per, lessons[0]) && !getSpecial(day, per)) {
-                        timetable.push({...lessons[0], day, period: per});
-                        rem--; break;
-                    }
+                    rem--; placed = true; break;
                 }
             }
+            if(!placed) rem--;
         }
     });
+    document.getElementById('viewBar').style.display = 'block';
     renderMaster();
 }
 
 function canPlace(d, p, l) {
     const tBusy = timetable.some(t => t.day === d && t.period === p && t.teacher === l.teacher);
     const fBusy = timetable.some(t => t.day === d && t.period === p && t.form === l.form);
-    const tOff = unavailabilities.some(u => u.t === l.teacher && u.d === d && u.p === p);
-    return !tBusy && !fBusy && !tOff;
+    return !tBusy && !fBusy;
 }
 
 function renderMaster() {
     let html = "";
     DAYS.forEach(day => {
         html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>` + 
-        PERIODS.map(p => `<th>${p}</th>`).join('') + `</tr>`;
+        PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
-                const spec = getSpecial(day, p);
-                if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
-                else if(spec) html += `<td class="fixed-block ${spec==='MOSQUE'?'mosque-strips':''}">${spec}</td>`;
+                if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
                 else {
-                    const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
+                    const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
                     html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
                 }
             });
@@ -185,6 +214,30 @@ function renderMaster() {
         html += `</table>`;
     });
     document.getElementById('output').innerHTML = html;
+}
+
+function populateFilters() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+function renderIndividual(type) {
+    const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
+    if(!val) return;
+    let html = `<h3>${val} Schedule</h3><table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
+    DAYS.forEach(day => {
+        html += `<tr><td><b>${day}</b></td>`;
+        PERIODS.forEach(p => {
+            if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+            else {
+                const m = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
+                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;
+            }
+        });
+        html += `</tr>`;
+    });
+    document.getElementById('output').innerHTML = html + "</table>";
 }
 </script>
 </body>

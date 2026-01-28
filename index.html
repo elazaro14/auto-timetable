@@ -28,24 +28,20 @@
         .break-cell { background: #eaedf0 !important; font-weight: bold; color: #555; width: 25px !important; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; }
         .fixed-block { background: #cfe2ff !important; color: #084298; font-weight: bold; }
         .mosque-strips { background: repeating-linear-gradient(45deg, #fff9c4, #fff9c4 10px, #fffde7 10px, #fffde7 20px) !important; }
+        .unavailable-block { background: #ffcdd2 !important; color: #b71c1c; font-weight: bold; font-size: 8px; }
 
         .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
         .entry-panel { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; display: none; border-radius: 8px; }
         .entry-grid { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px; }
         
         button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
         .btn-gen { background: #198754; color: white; border: none; }
         .btn-load { background: #6f42c1; color: white; border: none; }
         
-        .load-table { table-layout: auto !important; max-width: 800px; margin: 10px auto; }
-        .load-table th, .load-table td { height: auto !important; padding: 8px; border: 1px solid #dee2e6; }
-
         @media print { 
             .panel, .view-bar, .settings-bar, #status, .entry-panel, button { display: none !important; } 
             body { background: white; padding: 0; }
             .day-section { page-break-after: always; }
-            td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -55,8 +51,8 @@
     <div class="school-info-inputs">
         <input type="file" id="logoUpload" accept="image/*" hidden onchange="loadLogo(event)">
         <button onclick="document.getElementById('logoUpload').click()">Logo</button>
-        <input type="text" id="schoolNameInput" placeholder="SCHOOL NAME" style="width:300px;">
-        <input type="text" id="academicYearInput" placeholder="YEAR" style="width:120px;">
+        <input type="text" id="schoolNameInput" placeholder="SCHOOL NAME">
+        <input type="text" id="academicYearInput" placeholder="YEAR">
     </div>
 
     <div class="controls">
@@ -67,6 +63,17 @@
         <button class="btn-gen" id="genBtn" onclick="startGeneration()" disabled>Generate</button>
         <button class="btn-load" id="loadBtn" onclick="renderLoadSummary()" style="display:none;">Load Summary</button>
         <button onclick="window.print()">Print</button>
+    </div>
+
+    <div id="availPanel" class="entry-panel" style="background:#fff3cd;">
+        <h4 style="margin:0 0 10px 0">Teacher Off-Times (Unavailability)</h4>
+        <div class="entry-grid">
+            <select id="availTeacher"></select>
+            <select id="availDay"></select>
+            <select id="availPeriod"></select>
+            <button onclick="addUnavailability()" style="background:#1a2a3a; color:white;">Add Rule</button>
+        </div>
+        <div id="availList" style="display:flex; gap:5px; flex-wrap:wrap; margin-top:10px;"></div>
     </div>
 
     <div class="settings-bar" style="text-align:center; margin-top:10px; font-size:12px;">
@@ -87,8 +94,8 @@
 
     <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#666;">Ready for data...</div>
     
-    <div class="view-bar" id="viewBar" style="display:none; text-align:center; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
-        <button onclick="renderMaster()">Full School View</button>
+    <div class="view-bar" id="viewBar" style="display:none; text-align:center; margin-top:10px;">
+        <button onclick="renderMaster()">Full View</button>
         <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Class --</option></select>
         <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Teacher --</option></select>
     </div>
@@ -110,11 +117,16 @@ const subjectColors = {};
 window.onload = () => {
     const fSel = document.getElementById('manForm');
     FORMS.forEach(f => fSel.add(new Option(f, f)));
+    document.getElementById('availDay').innerHTML = DAYS.map(d => `<option value="${d}">${d}</option>`).join('');
+    document.getElementById('availPeriod').innerHTML = PERIODS.filter(p=>p.p!=="BREAK").map(p => `<option value="${p.p}">${p.p}</option>`).join('');
+    
+    const saved = localStorage.getItem('teacher_off_times');
+    if(saved) { unavailabilities = JSON.parse(saved); updateAvailList(); }
 };
 
+function toggleEntryPanel() { document.getElementById('entryPanel').style.display = document.getElementById('entryPanel').style.display==='block'?'none':'block'; }
+function toggleAvailPanel() { document.getElementById('availPanel').style.display = document.getElementById('availPanel').style.display==='block'?'none':'block'; }
 function toggleCompact(cb) { document.getElementById('mainBody').classList.toggle('compact-mode', cb.checked); }
-function toggleEntryPanel() { const p = document.getElementById('entryPanel'); p.style.display = p.style.display==='block'?'none':'block'; }
-function loadLogo(e) { const r = new FileReader(); r.onload=(ev)=>logoSrc=ev.target.result; r.readAsDataURL(e.target.files[0]); }
 
 function getSubColor(sub) {
     if (!subjectColors[sub]) {
@@ -132,8 +144,7 @@ function addManualLesson() {
     if(s && t) {
         for(let i=0; i<q; i++) rawData.push({ subject: s, teacher: t, form: f });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = `Added: ${s}. Total: ${rawData.length}`;
-        updateManualList(); populateFilters();
+        updateManualList(); populateFilters(); populateAvailDropdowns();
     }
 }
 
@@ -153,8 +164,7 @@ function handleUpload(e) {
             return { subject: p[0].trim().toUpperCase(), teacher: p[1].trim().toUpperCase(), form: p[3].trim().toUpperCase() };
         });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = `Loaded CSV: ${rawData.length} lessons.`;
-        populateFilters();
+        populateFilters(); populateAvailDropdowns();
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -175,23 +185,23 @@ function startGeneration() {
         let rem = lessons.length;
         const isSciMath = lessons[0].subject.includes("MATH") || lessons[0].subject.includes("PHYSIC");
         
-        // Priority Double (Once per week)
+        // Priority Double (2 consecutive)
         if (rem >= 2) {
-            for (let att = 0; att < 1000; att++) {
+            for (let att = 0; att < 1500; att++) {
                 const day = DAYS[Math.floor(Math.random() * 5)];
                 const idx = Math.floor(Math.random() * 8);
                 const p1 = PERIODS[idx].p, p2 = PERIODS[idx+1].p;
                 if (isSciMath && (p1 === "P7" || p1 === "P8" || p1 === "P9" || p2 === "P7" || p2 === "P8" || p2 === "P9")) continue;
-                if (p1 === "P4" && p2 === "P5") continue; // Break split
+                if (p1 === "P4" && p2 === "P5") continue;
                 if (canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
                     timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
                     rem -= 2; break;
                 }
             }
         }
-        // Fill remaining Singles
+        // Singles
         while (rem > 0) {
-            for (let att = 0; att < 500; att++) {
+            for (let att = 0; att < 800; att++) {
                 const day = DAYS[Math.floor(Math.random() * 5)];
                 const per = PERIODS[Math.floor(Math.random() * 10)].p;
                 if (per === "BREAK") continue;
@@ -201,7 +211,7 @@ function startGeneration() {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; break;
                 }
-                if (att === 499) rem--; // Emergency skip
+                if (att === 799) rem--; 
             }
         }
     });
@@ -210,17 +220,54 @@ function startGeneration() {
     renderMaster();
 }
 
+// CRITICAL: Checks for teacher busy, form busy, AND teacher off-times
 function canPlace(d, p, l) {
     const tBusy = timetable.some(t => t.day === d && t.period === p && t.teacher === l.teacher);
     const fBusy = timetable.some(t => t.day === d && t.period === p && t.form === l.form);
-    return !tBusy && !fBusy;
+    const tOff = unavailabilities.some(u => u.t === l.teacher && u.d === d && u.p === p);
+    return !tBusy && !fBusy && !tOff;
+}
+
+function addUnavailability() {
+    const t = document.getElementById('availTeacher').value;
+    const d = document.getElementById('availDay').value;
+    const p = document.getElementById('availPeriod').value;
+    if(t && !unavailabilities.some(u => u.t === t && u.d === d && u.p === p)) {
+        unavailabilities.push({t, d, p});
+        localStorage.setItem('teacher_off_times', JSON.stringify(unavailabilities));
+        updateAvailList();
+    }
+}
+
+function updateAvailList() {
+    const list = document.getElementById('availList');
+    list.innerHTML = unavailabilities.map((u, i) => 
+        `<span style="background:#444; color:white; padding:3px 8px; border-radius:15px; font-size:10px;">${u.t} (${u.d} ${u.p}) <b onclick="removeAvail(${i})" style="color:red; cursor:pointer">x</b></span>`
+    ).join('');
+}
+
+function removeAvail(i) {
+    unavailabilities.splice(i, 1);
+    localStorage.setItem('teacher_off_times', JSON.stringify(unavailabilities));
+    updateAvailList();
+}
+
+function populateFilters() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+function populateAvailDropdowns() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('availTeacher').innerHTML = teachers.map(t => `<option value="${t}">${t}</option>`).join('');
 }
 
 function renderMaster() {
     let html = "";
     DAYS.forEach(day => {
         html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>` + 
-        PERIODS.map(p => `<th>${p.p}${p.t ? `<br><small>${p.t}</small>` : ''}</th>`).join('') + `</tr>`;
+        PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
@@ -243,13 +290,15 @@ function renderMaster() {
 function renderIndividual(type) {
     const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
     if(!val) return;
-    let html = `<div class="day-title">${type.toUpperCase()}: ${val}</div><table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
+    let html = `<div class="day-title">${val} Schedule</div><table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
     DAYS.forEach(day => {
         html += `<tr><td><b>${day}</b></td>`;
         PERIODS.forEach(p => {
+            const isOff = type === 'teacher' && unavailabilities.some(u => u.t === val && u.d === day && u.p === p.p);
             const spec = getSpecialContent(day, p.p);
             if(p.p === "BREAK") html += `<td class="break-cell">BREAK</td>`;
             else if(spec) html += `<td class="${spec.class}">${spec.text}</td>`;
+            else if(isOff) html += `<td class="unavailable-block">OFF</td>`;
             else {
                 const m = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
                 const style = m ? `style="background-color:${getSubColor(m.subject)}"` : '';
@@ -262,17 +311,11 @@ function renderIndividual(type) {
 }
 
 function renderLoadSummary() {
-    let html = `<h2 style="text-align:center">TEACHER LOAD SUMMARY</h2><table class="load-table"><thead><tr><th>Teacher</th><th>Total Periods</th></tr></thead><tbody>`;
+    let html = `<h2 style="text-align:center">TEACHER LOAD SUMMARY</h2><table style="width:50%; margin:auto;"><thead><tr style="background:#2c3e50; color:white;"><th>Teacher</th><th>Total Periods</th></tr></thead><tbody>`;
     const load = {};
     rawData.forEach(r => load[r.teacher] = (load[r.teacher]||0)+1);
     Object.keys(load).sort().forEach(t => html += `<tr><td>${t}</td><td><b>${load[t]}</b></td></tr>`);
     document.getElementById('output').innerHTML = html + `</tbody></table>`;
-}
-
-function populateFilters() {
-    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 </script>
 </body>

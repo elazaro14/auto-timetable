@@ -61,7 +61,7 @@
             <input type="text" id="manSub" placeholder="Subject">
             <input type="text" id="manTea" placeholder="Teacher">
             <select id="manForm"></select>
-            <input type="number" id="manQty" placeholder="Periods" value="1">
+            <input type="number" id="manQty" placeholder="Total Pds" value="1">
             <button onclick="addManualLesson()" style="background:#28a745; color:white;">Add</button>
         </div>
         <div id="manualList" style="font-size:11px; max-height:80px; overflow:auto;"></div>
@@ -71,7 +71,7 @@
         <select id="availTeacher"></select>
         <select id="availDay"></select>
         <select id="availPeriod"></select>
-        <button onclick="addUnavailability()">Add Off-Time</button>
+        <button onclick="addUnavailability()">Add Rule</button>
         <div id="availList" style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;"></div>
     </div>
 
@@ -148,6 +148,13 @@ function handleUpload(e) {
     reader.readAsText(e.target.files[0]);
 }
 
+function getSpecial(day, p) {
+    if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
+    if (day === "THURSDAY" && (p === "P8" || p === "P9")) return "DEBATE";
+    if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
+    return null;
+}
+
 function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
@@ -160,28 +167,45 @@ function startGeneration() {
 
     Object.values(grouped).forEach(lessons => {
         let rem = lessons.length;
-        // PRIORITY: Place 1 double period (2 consecutive) per subject/day
-        if(rem >= 2) {
-            for(let att = 0; att < 1000; att++) {
-                const day = DAYS[Math.floor(Math.random()*5)];
-                const idx = Math.floor(Math.random()*8);
+        const isSciMath = lessons[0].subject.match(/MATH|PHYSIC/);
+        
+        // RULE 1: Double Period First (Once per day priority)
+        if (rem >= 2) {
+            for (let att = 0; att < 2000; att++) {
+                const day = DAYS[Math.floor(Math.random() * 5)];
+                const idx = Math.floor(Math.random() * 8); 
                 const p1 = vp[idx], p2 = vp[idx+1];
-                if (p1 === "P4" && p2 === "P5") continue;
-                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0])) {
+                
+                if (p1 === "P4" && p2 === "P5") continue; // Split by break
+                if (isSciMath && ["P7","P8","P9"].includes(p1)) continue;
+                
+                if (canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecial(day, p1) && !getSpecial(day, p2)) {
                     timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
-                    rem -= 2; break;
+                    rem -= 2; break; 
                 }
             }
         }
-        while(rem > 0) {
-            for(let att = 0; att < 500; att++) {
-                const day = DAYS[Math.floor(Math.random()*5)];
-                const per = vp[Math.floor(Math.random()*9)];
-                if(canPlace(day, per, lessons[0])) {
+
+        // RULE 2: Single Periods (Adhere to "Once per day" rule)
+        while (rem > 0) {
+            for (let att = 0; att < 1000; att++) {
+                const day = DAYS[Math.floor(Math.random() * 5)];
+                const per = vp[Math.floor(Math.random() * 9)];
+                if (isSciMath && ["P7","P8","P9"].includes(per)) continue;
+
+                // Check if subject already exists on this day
+                const exists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
+                
+                if (!exists && canPlace(day, per, lessons[0]) && !getSpecial(day, per)) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; break;
                 }
-                if(att === 499) rem--;
+                if (att === 999) { // Emergency placement
+                    if (canPlace(day, per, lessons[0]) && !getSpecial(day, per)) {
+                        timetable.push({...lessons[0], day, period: per});
+                        rem--; break;
+                    }
+                }
             }
         }
     });
@@ -205,7 +229,9 @@ function renderMaster() {
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
+                const spec = getSpecial(day, p.p);
                 if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+                else if(spec) html += `<td class="fixed-block ${spec==='MOSQUE'?'mosque-strips':''}">${spec}</td>`;
                 else {
                     const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
                     const style = m ? `style="background-color:${getSubColor(m.subject)}"` : '';
@@ -249,8 +275,10 @@ function renderIndividual(type) {
     DAYS.forEach(day => {
         html += `<tr><td><b>${day}</b></td>`;
         PERIODS.forEach(p => {
+            const spec = getSpecial(day, p.p);
             const isOff = type === 'teacher' && unavailabilities.some(u => u.t === val && u.d === day && u.p === p.p);
             if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+            else if(spec) html += `<td class="fixed-block ${spec==='MOSQUE'?'mosque-strips':''}">${spec}</td>`;
             else if(isOff) html += `<td class="unavailable-block">OFF</td>`;
             else {
                 const m = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));

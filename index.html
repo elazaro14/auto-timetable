@@ -37,7 +37,7 @@
         
         .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
         .entry-panel { background: #eef2f7; border: 1px solid #ccc; padding: 15px; margin-top: 10px; display: none; border-radius: 8px; }
-        .entry-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px; }
+        .entry-grid { display: grid; grid-template-columns: 2fr 2fr 1.5fr 1fr auto; gap: 10px; margin-bottom: 10px; }
         
         button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-gen { background: #28a745; color: white; border: none; }
@@ -47,6 +47,7 @@
             .panel, .view-bar, .settings-bar, #status, .school-info-inputs, .avail-panel, .entry-panel { display: none !important; } 
             body { background: white; padding: 0; }
             .day-section { page-break-after: always; }
+            .mosque-strips { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -75,10 +76,11 @@
             <input type="text" id="manSub" placeholder="Subject (e.g. MATH)">
             <input type="text" id="manTea" placeholder="Teacher (e.g. MR. JUMA)">
             <select id="manForm"></select>
-            <button onclick="addManualLesson()" style="background:#28a745; color:white;">Add Lesson</button>
+            <input type="number" id="manQty" placeholder="Total Periods" min="1" max="12" value="1">
+            <button onclick="addManualLesson()" style="background:#28a745; color:white;">Add Entry</button>
         </div>
-        <div id="manualList" style="max-height:150px; overflow-y:auto; background:white; padding:5px; border:1px solid #ccc; font-size:11px;">
-            No manual entries yet.
+        <div id="manualList" style="max-height:180px; overflow-y:auto; background:white; padding:10px; border:1px solid #ccc; font-size:12px; border-radius:4px;">
+            No entries added yet.
         </div>
     </div>
 
@@ -88,15 +90,15 @@
         <select id="availDay"></select>
         <select id="availPeriod"></select>
         <button onclick="addUnavailability()">Add Rule</button>
-        <div id="availList"></div>
+        <div id="availList" style="display:flex; gap:5px; flex-wrap:wrap; margin-top:10px;"></div>
     </div>
 
     <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#d9534f;">Waiting for Data...</div>
     
     <div class="view-bar" id="viewBar" style="display:none; text-align:center; margin-top:10px;">
-        <button onclick="renderMaster()">Full View</button>
-        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Class --</option></select>
-        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Teacher --</option></select>
+        <button onclick="renderMaster()">Full School View</button>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
     </div>
 </div>
 
@@ -110,7 +112,7 @@ const PERIODS = [
     {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
 ];
 const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let rawData = [], timetable = [], unavailabilities = [];
+let rawData = [], timetable = [], unavailabilities = [], logoSrc = "";
 
 window.onload = () => {
     const fSel = document.getElementById('manForm');
@@ -119,35 +121,66 @@ window.onload = () => {
     if(saved) { unavailabilities = JSON.parse(saved); updateAvailList(); }
 };
 
+function loadLogo(e) {
+    const reader = new FileReader();
+    reader.onload = (event) => { logoSrc = event.target.result; };
+    reader.readAsDataURL(e.target.files[0]);
+}
+
 function toggleEntryPanel() { 
     const p = document.getElementById('entryPanel'); 
     p.style.display = p.style.display === 'block' ? 'none' : 'block'; 
 }
 
+function toggleAvailPanel() {
+    const p = document.getElementById('availPanel');
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+}
+
 function addManualLesson() {
-    const s = document.getElementById('manSub').value.toUpperCase();
-    const t = document.getElementById('manTea').value.toUpperCase();
+    const s = document.getElementById('manSub').value.toUpperCase().trim();
+    const t = document.getElementById('manTea').value.toUpperCase().trim();
     const f = document.getElementById('manForm').value;
+    const qty = parseInt(document.getElementById('manQty').value) || 1;
+    
     if(s && t) {
-        rawData.push({ subject: s, teacher: t, form: f });
+        for(let i=0; i<qty; i++) {
+            rawData.push({ subject: s, teacher: t, form: f });
+        }
         updateManualList();
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = `Total Lessons: ${rawData.length}`;
+        document.getElementById('status').innerText = `Total Lessons in Database: ${rawData.length}`;
         populateFilters();
+        populateAvailDropdowns();
+        // Clear inputs for next entry
+        document.getElementById('manSub').value = "";
+        document.getElementById('manTea').value = "";
     }
 }
 
 function updateManualList() {
     const list = document.getElementById('manualList');
-    list.innerHTML = rawData.map((l, i) => 
-        `<div>${l.form} | ${l.subject} (${l.teacher}) <b onclick="removeLesson(${i})" style="color:red; cursor:pointer;">[x]</b></div>`
-    ).join('');
+    const counts = {};
+    rawData.forEach(l => {
+        const key = `${l.form} | ${l.subject} (${l.teacher})`;
+        counts[key] = (counts[key] || 0) + 1;
+    });
+    
+    list.innerHTML = Object.entries(counts).map(([label, count]) => 
+        `<div style="padding:4px; border-bottom:1px solid #eee;">
+            <b>${label}</b>: ${count} periods/week 
+            <button onclick="removeGroup('${label}')" style="padding:2px 5px; color:red; float:right;">Remove</button>
+        </div>`
+    ).join('') || "No entries added yet.";
 }
 
-function removeLesson(i) {
-    rawData.splice(i, 1);
+function removeGroup(label) {
+    const [form, rest] = label.split(' | ');
+    const [sub, tea] = rest.replace(')', '').split(' (');
+    rawData = rawData.filter(l => !(l.form === form && l.subject === sub && l.teacher === tea));
     updateManualList();
     if(rawData.length === 0) document.getElementById('genBtn').disabled = true;
+    populateFilters();
 }
 
 function handleUpload(e) {
@@ -162,6 +195,7 @@ function handleUpload(e) {
         document.getElementById('status').innerText = `CSV Loaded: ${rawData.length} lessons.`;
         updateManualList();
         populateFilters();
+        populateAvailDropdowns();
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -188,10 +222,10 @@ function startGeneration() {
         const subj = lessons[0].subject;
         const isSciMath = subj.includes("MATH") || subj.includes("PHYSIC");
 
-        // PRIORITY 1: Double periods (once a day)
-        while(rem >= 2) {
-            let placed = false;
-            for(let att = 0; att < 800; att++) {
+        // Priority 1: One Double Period per day (only once per week per subject-form)
+        if(rem >= 2) {
+            let placedDouble = false;
+            for(let att = 0; att < 1000; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const idx = Math.floor(Math.random()*8);
                 const p1 = vp[idx], p2 = vp[idx+1];
@@ -199,23 +233,23 @@ function startGeneration() {
                 if (isSciMath && (p1 === "P7" || p1 === "P8" || p1 === "P9" || p2 === "P7" || p2 === "P8" || p2 === "P9")) continue;
                 if ((p1 === "P4" && p2 === "P5") || (p1 === "P5" && p2 === "P4")) continue;
 
-                const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2) && dayC === 0) {
+                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
                     timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
-                    rem -= 2; placed = true; break;
+                    rem -= 2; placedDouble = true; break;
                 }
             }
-            if(!placed) break;
         }
-        // PRIORITY 2: Single periods
+
+        // Priority 2: Remaining Single periods (max 2 per day total including double)
         while(rem > 0) {
             let placed = false;
-            for(let att = 0; att < 400; att++) {
+            for(let att = 0; att < 500; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const per = vp[Math.floor(Math.random()*9)];
                 if (isSciMath && (per === "P7" || per === "P8" || per === "P9")) continue;
-                const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && dayC < 2) {
+                
+                const countOnDay = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
+                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && countOnDay < 2) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; placed = true; break;
                 }
@@ -224,6 +258,7 @@ function startGeneration() {
         }
     });
     document.getElementById('viewBar').style.display = 'block';
+    document.getElementById('status').innerText = "✅ Timetable Generated Successfully!";
     renderMaster();
 }
 
@@ -257,10 +292,61 @@ function renderMaster() {
     document.getElementById('output').innerHTML = html;
 }
 
+function renderIndividual(type) {
+    const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
+    if(!val) return;
+    let html = `<div class="day-title">${type.toUpperCase()}: ${val}</div><table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
+    DAYS.forEach(day => {
+        html += `<tr><td><b>${day}</b></td>`;
+        PERIODS.forEach(p => {
+            const spec = getSpecialContent(day, p.p);
+            if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+            else if(spec) html += `<td class="${spec.class}">${spec.text}</td>`;
+            else {
+                const m = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
+                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;
+            }
+        });
+        html += `</tr>`;
+    });
+    document.getElementById('output').innerHTML = html + "</table>";
+}
+
 function populateFilters() {
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
     document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
     document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
+}
+
+function populateAvailDropdowns() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('availTeacher').innerHTML = teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('availDay').innerHTML = DAYS.map(d => `<option value="${d}">${d}</option>`).join('');
+    document.getElementById('availPeriod').innerHTML = PERIODS.filter(p=>p.p!=="BREAK").map(p => `<option value="${p.p}">${p.p}</option>`).join('');
+}
+
+function addUnavailability() {
+    const t = document.getElementById('availTeacher').value;
+    const d = document.getElementById('availDay').value;
+    const p = document.getElementById('availPeriod').value;
+    if(!unavailabilities.some(u => u.t === t && u.d === d && u.p === p)) {
+        unavailabilities.push({t, d, p});
+        localStorage.setItem('teacher_off_times', JSON.stringify(unavailabilities));
+        updateAvailList();
+    }
+}
+
+function updateAvailList() {
+    const list = document.getElementById('availList');
+    list.innerHTML = unavailabilities.map((u, i) => 
+        `<span style="background:#eee; padding:3px 8px; border-radius:15px; font-size:10px;">${u.t} (${u.d} ${u.p}) <b onclick="removeAvail(${i})" style="color:red; cursor:pointer">x</b></span>`
+    ).join('');
+}
+
+function removeAvail(i) {
+    unavailabilities.splice(i, 1);
+    localStorage.setItem('teacher_off_times', JSON.stringify(unavailabilities));
+    updateAvailList();
 }
 </script>
 </body>

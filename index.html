@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Official School Timetable 2026 - Rule Enforcement</title>
+    <title>Official School Timetable 2026</title>
     <style>
         :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; }
         .compact-mode { --row-height: 32px; --font-size: 9.5px; --cell-padding: 2px; }
@@ -21,7 +21,6 @@
         .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
         .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
         .fixed-block { background: #d1ecf1; color: #0c5460; font-weight: bold; font-style: italic; }
-        .mosque-strips { background: repeating-linear-gradient(45deg, #fff9c4, #fff9c4 10px, #fffde7 10px, #fffde7 20px); }
 
         .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
         .btn-gen { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -54,11 +53,7 @@
 
 <script>
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-const PERIODS = [
-    {p:"P1", t:"8:00"}, {p:"P2", t:"8:40"}, {p:"P3", t:"9:20"}, {p:"P4", t:"10:00"},
-    {p:"BREAK", t:""},
-    {p:"P5", t:"11:10"}, {p:"P6", t:"11:50"}, {p:"P7", t:"12:30"}, {p:"P8", t:"13:10"}, {p:"P9", t:"13:50"}
-];
+const PERIODS = ["P1","P2","P3","P4","BREAK","P5","P6","P7","P8","P9"];
 const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
 let rawData = [], timetable = [];
 
@@ -71,7 +66,7 @@ function handleUpload(e) {
             return { subject: p[0].trim().toUpperCase(), teacher: p[1].trim().toUpperCase(), form: p[3].trim().toUpperCase() };
         });
         document.getElementById('genBtn').disabled = false;
-        document.getElementById('status').innerText = `Data Loaded: ${rawData.length} lessons. Ready to Allocate.`;
+        document.getElementById('status').innerText = "Data Ready.";
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -79,7 +74,6 @@ function handleUpload(e) {
 function getSpecial(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
     if (day === "THURSDAY" && (p === "P8" || p === "P9")) return "DEBATE";
-    if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
     return null;
 }
 
@@ -87,7 +81,6 @@ function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
     
-    // Group lessons by Form + Subject
     const grouped = {};
     rawData.forEach(l => {
         const k = `${l.form}-${l.subject}`;
@@ -98,14 +91,14 @@ function startGeneration() {
     Object.values(grouped).forEach(lessons => {
         let rem = lessons.length;
         
-        // RULE 1: Double Period First (Once per day/week priority)
+        // PRIORITY: Find and place the Double Period (2 consecutive) first
         if (rem >= 2) {
             for (let att = 0; att < 1000; att++) {
                 const day = DAYS[Math.floor(Math.random() * 5)];
                 const idx = Math.floor(Math.random() * 8); 
                 const p1 = vp[idx], p2 = vp[idx+1];
                 
-                if (p1 === "P4" && p2 === "P5") continue; // Split by BREAK
+                if (p1 === "P4" && p2 === "P5") continue; // Prevent break split
                 
                 if (canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecial(day, p1) && !getSpecial(day, p2)) {
                     timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
@@ -114,20 +107,19 @@ function startGeneration() {
             }
         }
 
-        // RULE 2: Single Periods (Adhere to "Once per day" rule)
+        // Place remaining single periods on separate days (Subject appears once per day)
         while (rem > 0) {
             for (let att = 0; att < 500; att++) {
                 const day = DAYS[Math.floor(Math.random() * 5)];
                 const per = vp[Math.floor(Math.random() * 9)];
-
-                // Check if subject already exists on this day (Strict Allocation Rule)
-                const exists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
                 
-                if (!exists && canPlace(day, per, lessons[0]) && !getSpecial(day, per)) {
+                const dayExists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
+                
+                if (!dayExists && canPlace(day, per, lessons[0]) && !getSpecial(day, per)) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; break;
                 }
-                if (att === 499) { // Emergency placement if no single day left
+                if (att === 499) { // Emergency fallback
                     if (canPlace(day, per, lessons[0]) && !getSpecial(day, per)) {
                         timetable.push({...lessons[0], day, period: per});
                         rem--; break;
@@ -149,15 +141,15 @@ function renderMaster() {
     let html = "";
     DAYS.forEach(day => {
         html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>` + 
-        PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
+        PERIODS.map(p => `<th>${p}</th>`).join('') + `</tr>`;
         FORMS.forEach(f => {
             html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
-                const spec = getSpecial(day, p.p);
-                if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
-                else if(spec) html += `<td class="fixed-block ${spec==='MOSQUE'?'mosque-strips':''}">${spec}</td>`;
+                const spec = getSpecial(day, p);
+                if(p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+                else if(spec) html += `<td class="fixed-block">${spec}</td>`;
                 else {
-                    const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
+                    const m = timetable.find(x => x.day === day && x.period === p && x.form === f);
                     html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
                 }
             });

@@ -35,26 +35,18 @@
         .separator { background: #2c3e50 !important; height: 4px !important; }
         .separator td { height: 4px !important; padding: 0; border: none; }
         
-        .load-table { table-layout: auto !important; max-width: 800px; margin: 20px auto; }
-        .load-table th, .load-table td { height: auto !important; padding: 8px; }
-
         .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
-        .settings-bar { margin-top: 10px; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: center; gap: 20px; font-size: 12px; font-weight: bold; }
-        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; }
-        
-        .avail-panel { background: #fdfdfe; border: 1px dashed #ccc; padding: 10px; margin-top: 10px; display: none; }
+        .entry-panel { background: #eef2f7; border: 1px solid #ccc; padding: 15px; margin-top: 10px; display: none; border-radius: 8px; }
+        .entry-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px; }
         
         button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-gen { background: #28a745; color: white; border: none; }
+        .btn-manual { background: #ffc107; color: black; border: none; }
 
         @media print { 
-            @page { margin: 0.8cm; } 
-            .panel, .view-bar, .settings-bar, #status, .school-info-inputs, .avail-panel { display: none !important; } 
-            body { background: white; padding: 0; margin: 0; }
-            .container { max-width: 100%; margin: 0; }
+            .panel, .view-bar, .settings-bar, #status, .school-info-inputs, .avail-panel, .entry-panel { display: none !important; } 
+            body { background: white; padding: 0; }
             .day-section { page-break-after: always; }
-            .mosque-strips { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .separator { background: #000 !important; }
         }
     </style>
 </head>
@@ -63,46 +55,48 @@
 <div class="panel container">
     <div class="school-info-inputs">
         <input type="file" id="logoUpload" accept="image/*" hidden onchange="loadLogo(event)">
-        <button onclick="document.getElementById('logoUpload').click()" style="background:#6c757d; color:white;">Add Logo</button>
-        <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME" style="width: 350px;" oninput="syncHeader()">
-        <input type="text" id="academicYearInput" placeholder="ACADEMIC YEAR" style="width: 200px;" oninput="syncHeader()">
+        <button onclick="document.getElementById('logoUpload').click()">Add Logo</button>
+        <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME">
+        <input type="text" id="academicYearInput" placeholder="ACADEMIC YEAR">
     </div>
 
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button class="btn-up" onclick="document.getElementById('csvFile').click()" style="background:#007bff; color:white; border:none;">Upload CSV</button>
-        <button onclick="toggleAvailPanel()" style="background:#17a2b8; color:white; border:none;">Set Teacher Off-Times</button>
+        <button onclick="document.getElementById('csvFile').click()" style="background:#007bff; color:white;">Option 1: Upload CSV</button>
+        <button class="btn-manual" onclick="toggleEntryPanel()">Option 2: Direct Entry Window</button>
+        <button onclick="toggleAvailPanel()" style="background:#17a2b8; color:white;">Teacher Off-Times</button>
         <button class="btn-gen" id="genBtn" onclick="startGeneration()" disabled>Generate Timetable</button>
         <button onclick="window.print()">Print</button>
     </div>
 
-    <div id="availPanel" class="avail-panel">
-        <h4 style="margin-top:0">Teacher Unavailability (Off-Times)</h4>
+    <div id="entryPanel" class="entry-panel">
+        <h4 style="margin-top:0">Manual Lesson Entry</h4>
+        <div class="entry-grid">
+            <input type="text" id="manSub" placeholder="Subject (e.g. MATH)">
+            <input type="text" id="manTea" placeholder="Teacher (e.g. MR. JUMA)">
+            <select id="manForm"></select>
+            <button onclick="addManualLesson()" style="background:#28a745; color:white;">Add Lesson</button>
+        </div>
+        <div id="manualList" style="max-height:150px; overflow-y:auto; background:white; padding:5px; border:1px solid #ccc; font-size:11px;">
+            No manual entries yet.
+        </div>
+    </div>
+
+    <div id="availPanel" class="avail-panel" style="display:none; background:#fff3cd; padding:10px; margin-top:10px; border-radius:5px;">
+        <h4>Teacher Unavailability</h4>
         <select id="availTeacher"></select>
         <select id="availDay"></select>
         <select id="availPeriod"></select>
         <button onclick="addUnavailability()">Add Rule</button>
-        <button onclick="clearAllUnavailability()" style="background:#dc3545; color:white; border:none; margin-left:10px;">Clear All</button>
-        <div id="availList" style="margin-top:10px; font-size:11px; gap:5px; flex-wrap:wrap; display:flex;"></div>
+        <div id="availList"></div>
     </div>
 
-    <div class="settings-bar">
-        <label><input type="checkbox" onchange="toggleCompact(this)"> Compact Mode</label> |
-        <label>Display: 
-            <select id="displayType" onchange="syncHeader()">
-                <option value="both">Subject & Teacher</option>
-                <option value="subOnly">Subject Only</option>
-            </select>
-        </label>
-    </div>
+    <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#d9534f;">Waiting for Data...</div>
     
-    <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#d9534f; font-size: 12px;">Waiting for CSV...</div>
-    
-    <div class="view-bar" id="viewBar">
-        <button onclick="renderMaster()">Full School View</button>
-        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
-        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
-        <button onclick="renderLoadSummary()" style="background:#6f42c1; color:white; border:none;">Load Summary</button>
+    <div class="view-bar" id="viewBar" style="display:none; text-align:center; margin-top:10px;">
+        <button onclick="renderMaster()">Full View</button>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Teacher --</option></select>
     </div>
 </div>
 
@@ -116,23 +110,62 @@ const PERIODS = [
     {p:"P5", t:"11:10-11:50"}, {p:"P6", t:"11:50-12:30"}, {p:"P7", t:"12:30-13:10"}, {p:"P8", t:"13:10-13:50"}, {p:"P9", t:"13:50-14:30"}
 ];
 const FORMS = ["F1A","F1B","F1C","F1D","F1E","F1F","F1G","F2A","F2B","F2C","F2D","F3A","F3B","F3C","F3D","F4A","F4B","F4C"];
-let rawData = [], timetable = [], logoSrc = "", unavailabilities = [];
+let rawData = [], timetable = [], unavailabilities = [];
 
 window.onload = () => {
+    const fSel = document.getElementById('manForm');
+    FORMS.forEach(f => fSel.add(new Option(f, f)));
     const saved = localStorage.getItem('teacher_off_times');
     if(saved) { unavailabilities = JSON.parse(saved); updateAvailList(); }
 };
 
-function loadLogo(e) {
-    const reader = new FileReader();
-    reader.onload = (event) => { logoSrc = event.target.result; syncHeader(); };
-    reader.readAsDataURL(e.target.files[0]);
+function toggleEntryPanel() { 
+    const p = document.getElementById('entryPanel'); 
+    p.style.display = p.style.display === 'block' ? 'none' : 'block'; 
 }
 
-function toggleCompact(cb) { document.getElementById('mainBody').classList.toggle('compact-mode', cb.checked); }
-function toggleAvailPanel() { const p = document.getElementById('availPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
+function addManualLesson() {
+    const s = document.getElementById('manSub').value.toUpperCase();
+    const t = document.getElementById('manTea').value.toUpperCase();
+    const f = document.getElementById('manForm').value;
+    if(s && t) {
+        rawData.push({ subject: s, teacher: t, form: f });
+        updateManualList();
+        document.getElementById('genBtn').disabled = false;
+        document.getElementById('status').innerText = `Total Lessons: ${rawData.length}`;
+        populateFilters();
+    }
+}
 
-// RULE: Wednesday Religion & Thursday Debate
+function updateManualList() {
+    const list = document.getElementById('manualList');
+    list.innerHTML = rawData.map((l, i) => 
+        `<div>${l.form} | ${l.subject} (${l.teacher}) <b onclick="removeLesson(${i})" style="color:red; cursor:pointer;">[x]</b></div>`
+    ).join('');
+}
+
+function removeLesson(i) {
+    rawData.splice(i, 1);
+    updateManualList();
+    if(rawData.length === 0) document.getElementById('genBtn').disabled = true;
+}
+
+function handleUpload(e) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const lines = event.target.result.split('\n').slice(1).filter(l => l.trim());
+        rawData = lines.map(l => {
+            const p = l.split(',');
+            return { subject: p[0].trim().toUpperCase(), teacher: p[1].trim().toUpperCase(), form: p[3].trim().toUpperCase() };
+        });
+        document.getElementById('genBtn').disabled = false;
+        document.getElementById('status').innerText = `CSV Loaded: ${rawData.length} lessons.`;
+        updateManualList();
+        populateFilters();
+    };
+    reader.readAsText(e.target.files[0]);
+}
+
 function getSpecialContent(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return { text: "RELIGION", class: "fixed-block" };
     if (day === "THURSDAY" && (p === "P8" || p === "P9")) return { text: "DEBATE", class: "fixed-block" };
@@ -140,76 +173,10 @@ function getSpecialContent(day, p) {
     return null;
 }
 
-function handleUpload(e) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        try {
-            const lines = event.target.result.split('\n').slice(1).filter(l => l.trim());
-            rawData = lines.map(l => {
-                const p = l.split(',');
-                return { subject: p[0].trim(), teacher: p[1].trim(), form: p[3].trim() };
-            });
-            document.getElementById('genBtn').disabled = false;
-            document.getElementById('status').style.color = "#28a745";
-            document.getElementById('status').innerText = `Data loaded: ${rawData.length} lessons.`;
-            populateFilters();
-            populateAvailDropdowns();
-        } catch (err) { document.getElementById('status').innerText = "Error reading CSV format."; }
-    };
-    reader.readAsText(e.target.files[0]);
-}
-
-function populateFilters() {
-    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- View Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-    document.getElementById('streamSelect').innerHTML = '<option value="">-- View Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
-}
-
-function populateAvailDropdowns() {
-    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    document.getElementById('availTeacher').innerHTML = teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-    document.getElementById('availDay').innerHTML = DAYS.map(d => `<option value="${d}">${d}</option>`).join('');
-    document.getElementById('availPeriod').innerHTML = PERIODS.filter(p=>p.p!=="BREAK").map(p => `<option value="${p.p}">${p.p}</option>`).join('');
-}
-
-function addUnavailability() {
-    const t = document.getElementById('availTeacher').value;
-    const d = document.getElementById('availDay').value;
-    const p = document.getElementById('availPeriod').value;
-    if(!unavailabilities.some(u => u.t === t && u.d === d && u.p === p)) {
-        unavailabilities.push({t, d, p});
-        localStorage.setItem('teacher_off_times', JSON.stringify(unavailabilities));
-        updateAvailList();
-    }
-}
-
-function clearAllUnavailability() {
-    if(confirm("Clear all teacher off-times?")) {
-        unavailabilities = [];
-        localStorage.removeItem('teacher_off_times');
-        updateAvailList();
-    }
-}
-
-function removeAvail(i) { 
-    unavailabilities.splice(i, 1); 
-    localStorage.setItem('teacher_off_times', JSON.stringify(unavailabilities));
-    updateAvailList(); 
-}
-
-function updateAvailList() {
-    const list = document.getElementById('availList');
-    list.innerHTML = unavailabilities.map((u, i) => 
-        `<span style="background:#eee; padding:3px 6px; border-radius:3px;">${u.t} (${u.d} ${u.p}) <b onclick="removeAvail(${i})" style="cursor:pointer; color:red">×</b></span>`
-    ).join('');
-}
-
 function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
     const grouped = {};
-    let failedScienceCount = 0;
-
     rawData.forEach(l => {
         const k = `${l.form}-${l.subject}`;
         if(!grouped[k]) grouped[k] = [];
@@ -218,10 +185,10 @@ function startGeneration() {
 
     Object.values(grouped).forEach(lessons => {
         let rem = lessons.length;
-        const subjName = lessons[0].subject.toUpperCase();
-        const isScienceMath = subjName.includes("MATH") || subjName.includes("PHYSIC");
+        const subj = lessons[0].subject;
+        const isSciMath = subj.includes("MATH") || subj.includes("PHYSIC");
 
-        // Pass 1: Doubles (Priority: No break split, no afternoon for Math/Phys)
+        // PRIORITY 1: Double periods (once a day)
         while(rem >= 2) {
             let placed = false;
             for(let att = 0; att < 800; att++) {
@@ -229,37 +196,33 @@ function startGeneration() {
                 const idx = Math.floor(Math.random()*8);
                 const p1 = vp[idx], p2 = vp[idx+1];
                 
-                if (isScienceMath && (p1 === "P7" || p1 === "P8" || p1 === "P9" || p2 === "P7" || p2 === "P8" || p2 === "P9")) continue;
+                if (isSciMath && (p1 === "P7" || p1 === "P8" || p1 === "P9" || p2 === "P7" || p2 === "P8" || p2 === "P9")) continue;
                 if ((p1 === "P4" && p2 === "P5") || (p1 === "P5" && p2 === "P4")) continue;
 
-                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
+                const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
+                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2) && dayC === 0) {
                     timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
                     rem -= 2; placed = true; break;
                 }
             }
-            if(!placed) { if(isScienceMath) failedScienceCount++; break; }
+            if(!placed) break;
         }
-        // Pass 2: Singles
+        // PRIORITY 2: Single periods
         while(rem > 0) {
-            let placedSingle = false;
-            for(let att = 0; att < 500; att++) {
+            let placed = false;
+            for(let att = 0; att < 400; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const per = vp[Math.floor(Math.random()*9)];
-                if (isScienceMath && (per === "P7" || per === "P8" || per === "P9")) continue;
-
-                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per)) {
+                if (isSciMath && (per === "P7" || per === "P8" || per === "P9")) continue;
+                const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
+                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && dayC < 2) {
                     timetable.push({...lessons[0], day, period: per});
-                    rem--; placedSingle = true; break;
+                    rem--; placed = true; break;
                 }
             }
-            if(!placedSingle) { if(isScienceMath) failedScienceCount++; rem--; }
+            if(!placed) rem--;
         }
     });
-
-    const statusEl = document.getElementById('status');
-    statusEl.innerText = failedScienceCount > 0 ? `⚠️ Conflict: ${failedScienceCount} Math/Phys lessons pushed to afternoon.` : "✅ Timetable Generated Successfully!";
-    statusEl.style.color = failedScienceCount > 0 ? "#d9534f" : "#28a745";
-
     document.getElementById('viewBar').style.display = 'block';
     renderMaster();
 }
@@ -271,80 +234,33 @@ function canPlace(d, p, l) {
     return !tBusy && !fBusy && !tOff;
 }
 
-function getHeaderHTML(sub = "MASTER TIMETABLE") {
-    const sName = document.getElementById('schoolNameInput').value || "SCHOOL NAME";
-    const aYear = document.getElementById('academicYearInput').value || "ACADEMIC YEAR";
-    const imgTag = logoSrc ? `<img src="${logoSrc}" class="school-logo">` : '<div style="width:80px"></div>';
-    return `<div class="print-header">${imgTag}<div class="header-text"><h1>${sName}</h1><h2>${sub} - ${aYear}</h2></div><div style="width:80px"></div></div>`;
-}
-
 function renderMaster() {
-    let html = getHeaderHTML("MASTER TIMETABLE"), dType = document.getElementById('displayType').value;
+    let html = "";
     DAYS.forEach(day => {
-        html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th>STREAM</th>` + 
-        PERIODS.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
-        let lastP = "";
+        html += `<div class="day-title">${day}</div><table><tr><th>STREAM</th>` + 
+        PERIODS.map(p => `<th>${p.p}<br><small>${p.t}</small></th>`).join('') + `</tr>`;
         FORMS.forEach(f => {
-            if(lastP && f.substring(0,2) !== lastP.substring(0,2)) html += `<tr class="separator"><td colspan="11"></td></tr>`;
-            lastP = f; 
-            html += `<tr><td style="font-weight:bold">${f}</td>`;
+            html += `<tr><td><b>${f}</b></td>`;
             PERIODS.forEach(p => {
-                const special = getSpecialContent(day, p.p);
-                if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
-                else if(special) html += `<td class="${special.class}">${special.text}</td>`;
+                const spec = getSpecialContent(day, p.p);
+                if(p.p === "BREAK") html += `<td class="break-cell">TEA</td>`;
+                else if(spec) html += `<td class="${spec.class}">${spec.text}</td>`;
                 else {
                     const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
-                    html += `<td>${m ? `<b>${m.subject}</b>${dType === 'both' ? '<br>'+m.teacher : ''}` : ''}</td>`;
+                    html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
                 }
             });
             html += `</tr>`;
         });
-        html += `</table></div>`;
+        html += `</table>`;
     });
     document.getElementById('output').innerHTML = html;
 }
 
-function renderIndividual(type) {
-    const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
-    if(!val) return;
-    let html = getHeaderHTML(`${type.toUpperCase()} VIEW: ${val}`);
-    html += `<table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
-    DAYS.forEach(day => {
-        html += `<tr><td style="font-weight:bold">${day}</td>`;
-        PERIODS.forEach(p => {
-            const isOff = type === 'teacher' && unavailabilities.some(u => u.t === val && u.d === day && u.p === p.p);
-            const special = getSpecialContent(day, p.p);
-            if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
-            else if(special) html += `<td class="${special.class}">${special.text}</td>`;
-            else if(isOff) html += `<td class="unavailable-block">UNAVAILABLE</td>`;
-            else {
-                const m = timetable.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
-                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;
-            }
-        });
-        html += `</tr>`;
-    });
-    document.getElementById('output').innerHTML = html + `</table>`;
-}
-
-function renderLoadSummary() {
-    let html = getHeaderHTML("TEACHER LOAD SUMMARY");
-    const totalTeacherLoad = {};
-    rawData.forEach(r => { totalTeacherLoad[r.teacher] = (totalTeacherLoad[r.teacher] || 0) + 1; });
-    html += `<table class="load-table"><thead><tr style="background:#34495e; color:white;"><th>Teacher Name</th><th>Total Weekly Periods</th></tr></thead><tbody>`;
-    Object.keys(totalTeacherLoad).sort().forEach(t => {
-        const count = totalTeacherLoad[t];
-        html += `<tr><td>${t}</td><td><b>${count}</b></td></tr>`;
-    });
-    html += `</tbody></table>`;
-    document.getElementById('output').innerHTML = html;
-}
-
-function syncHeader() {
-    if (document.getElementById('viewBar').style.display === 'block') {
-        const s = document.getElementById('streamSelect').value, t = document.getElementById('teacherSelect').value;
-        if (s) renderIndividual('stream'); else if (t) renderIndividual('teacher'); else renderMaster();
-    }
+function populateFilters() {
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + FORMS.map(f => `<option value="${f}">${f}</option>`).join('');
 }
 </script>
 </body>

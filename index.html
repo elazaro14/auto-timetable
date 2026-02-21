@@ -98,6 +98,7 @@ function handleUpload(e) {
 
 function getSpecialContent(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return { text: "RELIGION", class: "fixed-block" };
+    if (day === "THURSDAY" && (p === "P8" || p === "P9")) return { text: "DEBATE", class: "fixed-block" };
     if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return { text: "", class: "mosque-strips" };
     return null;
 }
@@ -141,25 +142,25 @@ function startGeneration() {
         grouped[k].push(l);
     });
 
-    const sortedKeys = Object.keys(grouped).sort((a, b) => a.includes("MATH") ? -1 : 1);
+    const sortedKeys = Object.keys(grouped).sort((a, b) => a.toUpperCase().includes("MATH") ? -1 : 1);
 
     sortedKeys.forEach(key => {
         const lessons = grouped[key];
         const isMath = key.toUpperCase().includes("MATH");
         let rem = lessons.length;
 
-        // RULE: SUBJECT ALLOCATION DOUBLE PERIODS FIRST
+        // PHASE 1: DOUBLE CONSECUTIVE PERIODS
         while(rem >= 2) {
             let placed = false;
-            for(let att = 0; att < 800; att++) {
+            for(let att = 0; att < 1000; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
-                const maxIdx = isMath ? 4 : 7; // MATHS P1-P6 PRIORITY
+                const maxIdx = isMath ? 4 : 7; 
                 const idx = Math.floor(Math.random() * (maxIdx + 1));
                 const p1 = vp[idx], p2 = vp[idx+1];
                 
-                if (p1 === "P4" && p2 === "P5") continue; // Tea Break Split Rule
+                if (p1 === "P4" && p2 === "P5") continue; // Tea Break Rule
                 
-                // Rule: DOUBLE CONSECUTIVE OR SINGLE A DAY (Check if day is empty)
+                // Rule: DOUBLE CONSECUTIVE OR SINGLE A DAY
                 const dayExists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
                 
                 if(!dayExists && canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
@@ -171,9 +172,10 @@ function startGeneration() {
             if(!placed) break; 
         }
 
+        // PHASE 2: SINGLE PERIODS
         while(rem > 0) {
             let placedS = false;
-            for(let att = 0; att < 600; att++) {
+            for(let att = 0; att < 800; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const maxP = isMath ? 6 : 9;
                 const perIdx = Math.floor(Math.random() * maxP);

@@ -12,12 +12,12 @@
         .container { max-width: 100%; margin: 0 auto; }
         .panel { background: white; padding: 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
         
-        /* SLIM HEADER */
+        /* UPDATED: MINIMIZED SCHOOL INFO SPACE */
         .print-header { display: flex; align-items: center; border-bottom: 2px solid var(--primary); padding: 2px 10px; margin-bottom: 5px; background: white; height: 50px; justify-content: space-between; }
         .logo-container { height: 45px; width: 45px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
         .logo-container img { max-height: 100%; max-width: 100%; }
-        .header-text h1 { margin: 0; font-size: 18px; text-transform: uppercase; color: var(--primary); }
-        .header-text h2 { margin: 0; font-size: 12px; color: #666; }
+        .header-text h1 { margin: 0; font-size: 18px; text-transform: uppercase; color: var(--primary); line-height: 1; }
+        .header-text h2 { margin: 0; font-size: 11px; color: #666; }
 
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
         .input-group { display: flex; flex-direction: column; gap: 2px; }
@@ -29,13 +29,12 @@
         
         .day-title { background: #2c3e50; color: white; padding: 4px; font-size: 13px; text-align: center; font-weight: bold; }
         
-        /* NARROW MERGED BREAK */
-        .break-cell { background: #f0f0f0 !important; font-weight: bold; width: 22px !important; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; border: 1px solid #000; }
-        .break-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; }
+        /* UPDATED: NARROW MERGED BREAK COLUMN */
+        .break-cell { background: #f0f0f0 !important; font-weight: bold; width: 22px !important; font-size: 10px; border: 1px solid #000; padding: 0 !important; }
+        .break-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
 
         .fixed-block { background: #e3f2fd !important; font-weight: bold; font-size: 9px; }
         .mosque-strips { background: repeating-linear-gradient(45deg, #eee, #eee 5px, #fff 5px, #fff 10px) !important; }
-        .unavail-cell { background: #ffebee !important; color: #c62828; font-size: 8px; }
 
         .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px; border-top: 1px solid #eee; }
         button, select { padding: 6px 12px; border-radius: 3px; border: 1px solid #ccc; cursor: pointer; font-size: 11px; font-weight: bold; }
@@ -47,7 +46,7 @@
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } body { padding: 0; } }
     </style>
 </head>
-<body id="masterBody">
+<body id="masterBody" class="compact-mode">
 
 <div class="panel container no-print">
     <div class="print-header" style="border: none;">
@@ -62,16 +61,15 @@
     <div class="config-grid">
         <div class="input-group"><label>Start</label><input type="time" id="cfgStartTime" value="08:00"></div>
         <div class="input-group"><label>Mins</label><input type="number" id="cfgDur" value="40"></div>
-        <div class="input-group"><label>Count</label><input type="number" id="cfgCount" value="9"></div>
-        <div class="input-group"><label>Compact</label><select id="cfgCompact" onchange="toggleCompact()"><option value="yes">YES</option><option value="no">NO</option></select></div>
-        <div class="input-group"><label>Break After</label><input type="number" id="cfgBreakAfter" value="4"></div>
-        <div class="input-group"><label>Unavail Teacher</label><select id="unavailNameDropdown"><option value="">--Select--</option></select></div>
+        <div class="input-group"><label>Total Periods</label><input type="number" id="cfgCount" value="9"></div>
+        <div class="input-group"><label>Break After P.</label><input type="number" id="cfgBreakAfter" value="4"></div>
+        <div class="input-group"><label>Teacher Off</label><select id="unavailNameDropdown"><option value="">--Select--</option></select></div>
     </div>
 
     <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button onclick="document.getElementById('csvFile').click()">1. CSV</button>
-        <button class="btn-main" onclick="startGeneration()">2. GENERATE</button>
+        <button onclick="document.getElementById('csvFile').click()">UPLOAD CSV</button>
+        <button class="btn-main" onclick="startGeneration()">GENERATE</button>
         <button onclick="window.print()" style="background:#555; color:white;">PRINT</button>
         <select id="saveOption"><option value="master">Master</option><option value="teachers">Teachers</option><option value="streams">Streams</option></select>
         <button class="btn-sub" onclick="saveAsPDF()">SAVE PDF</button>
@@ -79,7 +77,7 @@
 </div>
 
 <div id="viewBar" class="no-print">
-    <button onclick="renderMaster()">Master</button> | 
+    <button onclick="renderMaster()">Full Master</button> | 
     <select id="streamSelect" onchange="renderIndividual('stream')"></select>
     <select id="teacherSelect" onchange="renderIndividual('teacher')"></select>
 </div>
@@ -89,11 +87,6 @@
 <script>
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 let rawData = [], timetable = [], timeline = [], unavailRules = [], logoData = null;
-
-function toggleCompact() {
-    document.getElementById('masterBody').classList.toggle('compact-mode', document.getElementById('cfgCompact').value === 'yes');
-}
-toggleCompact();
 
 function loadLogo(e) {
     const reader = new FileReader();
@@ -111,7 +104,6 @@ function handleUpload(e) {
         });
         const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
         document.getElementById('unavailNameDropdown').innerHTML = '<option value="">--Select--</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-        alert("Loaded.");
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -149,10 +141,9 @@ function startGeneration() {
         let rem = lessons.length;
         const isMath = key.includes("MATH");
 
-        // Simple double/single logic with Daily Limit
         while(rem > 0) {
             let placed = false;
-            let size = (rem >= 2 && Math.random() > 0.3) ? 2 : 1;
+            let size = (rem >= 2) ? 2 : 1;
             
             for(let att=0; att<500; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
@@ -202,7 +193,8 @@ function renderMaster() {
     DAYS.forEach(day => {
         html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:60px">STRM</th>`;
         timeline.forEach(p => {
-            html += p.isBreak ? `<th class="break-cell"></th>` : `<th>${p.p}<br><small>${p.t}</small></th>`;
+            if(p.isBreak) html += `<th class="break-cell"></th>`;
+            else html += `<th>${p.p}<br><small>${p.t}</small></th>`;
         });
         html += `</tr>`;
 
@@ -210,9 +202,7 @@ function renderMaster() {
             html += `<tr><td><b>${f}</b></td>`;
             timeline.forEach(p => {
                 if(p.isBreak) {
-                    // Only show BREAK word in the middle row of the break column
-                    if(fIdx === Math.floor(forms.length/2)) html += `<td class="break-cell" rowspan="1"><span class="break-text">BREAK</span></td>`;
-                    else html += `<td class="break-cell"></td>`;
+                    if(fIdx === 0) html += `<td class="break-cell" rowspan="${forms.length}"><span class="break-text">BREAK</span></td>`;
                 } else {
                     const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
                     const spec = getSpecialContent(day, p.p);

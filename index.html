@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Official School Timetable 2026 - Advanced View</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; --primary: #2c3e50; }
         .compact-mode { --row-height: 28px !important; --font-size: 9px !important; --cell-padding: 2px !important; }
-        .compact-mode .time-hdr { font-size: 7.5px; }
-
+        
         body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 10px; }
         .container { max-width: 1450px; margin: 0 auto; }
         .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
         
-        .print-header { display: flex; align-items: center; justify-content: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
+        /* Header & Logo Styles */
+        .print-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
+        .logo-container { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; border: 1px dashed #ccc; border-radius: 4px; overflow: hidden; }
+        .logo-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .header-text { flex-grow: 1; text-align: center; }
         .header-text h1 { margin: 0; font-size: 24px; text-transform: uppercase; color: var(--primary); }
 
         .config-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 15px; background: #f1f3f5; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; }
@@ -28,9 +32,10 @@
         .fixed-block { background: #d1ecf1 !important; color: #0c5460; font-weight: bold; font-style: italic; }
         .mosque-strips { background: repeating-linear-gradient(45deg, #fff9c4, #fff9c4 10px, #fffde7 10px, #fffde7 20px) !important; }
 
-        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; gap: 10px; }
+        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; gap: 10px; align-items: center; justify-content: center;}
         button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
         .btn-gen { background: #28a745; color: white; border: none; }
+        .btn-save { background: #007bff; color: white; border: none; }
 
         @media print { 
             .no-print, .panel, .view-bar { display: none !important; } 
@@ -41,7 +46,11 @@
 <body id="mainBody">
 
 <div class="panel container no-print">
-    <div style="text-align: center; margin-bottom: 15px;">
+    <div style="display: flex; align-items: center; gap: 20px; justify-content: center; margin-bottom: 15px;">
+        <div class="logo-container" id="logoPreview" onclick="document.getElementById('logoInput').click()" title="Click to upload logo">
+            <span style="font-size: 10px; color: #999;">UPLOAD LOGO</span>
+        </div>
+        <input type="file" id="logoInput" accept="image/*" hidden onchange="loadLogo(event)">
         <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME" style="width: 400px; font-size: 20px; border:none; border-bottom: 2px solid #333; text-align:center;">
     </div>
 
@@ -58,15 +67,22 @@
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
         <button onclick="document.getElementById('csvFile').click()" style="background:#6c757d; color:white;">Upload CSV</button>
         <button class="btn-gen" onclick="startGeneration()">Generate Timetable</button>
-        <button onclick="window.print()" style="background:#333; color:white;">Print</button>
+        
+        <select id="saveOption" class="btn-save" style="margin-left:10px;">
+            <option value="master">SAVE MASTER PDF</option>
+            <option value="teachers">SAVE ALL TEACHERS PDF</option>
+            <option value="streams">SAVE ALL STREAMS PDF</option>
+        </select>
+        <button class="btn-save" onclick="saveAsPDF()">Download</button>
+        <button onclick="window.print()" style="background:#333; color:white;">Print View</button>
     </div>
     
     <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#d9534f;">Waiting for CSV...</div>
 
     <div class="view-bar" id="viewBar">
-        <button onclick="renderMaster()">Full View</button>
-        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Class --</option></select>
-        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Teacher --</option></select>
+        <button onclick="renderMaster()">Full Master View</button>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
     </div>
 </div>
 
@@ -74,12 +90,16 @@
 
 <script>
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-let rawData = [], timetable = [], timeline = [];
+let rawData = [], timetable = [], timeline = [], logoData = null;
 
-function getSubjectColor(subject) {
-    let hash = 0;
-    for (let i = 0; i < subject.length; i++) hash = subject.charCodeAt(i) + ((hash << 5) - hash);
-    return `hsl(${Math.abs(hash % 360)}, 70%, 94%)`;
+function loadLogo(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        logoData = event.target.result;
+        document.getElementById('logoPreview').innerHTML = `<img src="${logoData}">`;
+    };
+    reader.readAsDataURL(file);
 }
 
 function handleUpload(e) {
@@ -113,7 +133,7 @@ function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
     
-    // Setup Timeline
+    // Timeline Settings
     const cfgStart = document.getElementById('cfgStartTime').value;
     const cfgDur = parseInt(document.getElementById('cfgDur').value);
     const cfgCount = parseInt(document.getElementById('cfgCount').value);
@@ -149,7 +169,7 @@ function startGeneration() {
         const isMath = key.toUpperCase().includes("MATH");
         let rem = lessons.length;
 
-        // PHASE 1: DOUBLE CONSECUTIVE PERIODS
+        // Double periods first
         while(rem >= 2) {
             let placed = false;
             for(let att = 0; att < 1000; att++) {
@@ -157,12 +177,8 @@ function startGeneration() {
                 const maxIdx = isMath ? 4 : 7; 
                 const idx = Math.floor(Math.random() * (maxIdx + 1));
                 const p1 = vp[idx], p2 = vp[idx+1];
-                
-                if (p1 === "P4" && p2 === "P5") continue; // Tea Break Rule
-                
-                // Rule: DOUBLE CONSECUTIVE OR SINGLE A DAY
+                if (p1 === "P4" && p2 === "P5") continue;
                 const dayExists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
-                
                 if(!dayExists && canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
                     timetable.push({...lessons[0], day, period: p1});
                     timetable.push({...lessons[0], day, period: p2});
@@ -172,7 +188,7 @@ function startGeneration() {
             if(!placed) break; 
         }
 
-        // PHASE 2: SINGLE PERIODS
+        // Single periods
         while(rem > 0) {
             let placedS = false;
             for(let att = 0; att < 800; att++) {
@@ -180,9 +196,7 @@ function startGeneration() {
                 const maxP = isMath ? 6 : 9;
                 const perIdx = Math.floor(Math.random() * maxP);
                 const per = vp[perIdx];
-                
                 const dayExists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
-                
                 if(!dayExists && canPlace(day, per, lessons[0]) && !getSpecialContent(day, per)) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; placedS = true; break;
@@ -193,18 +207,25 @@ function startGeneration() {
     });
 
     document.getElementById('viewBar').style.display = 'flex';
-    populateFilters([...new Set(timetable.map(x => x.form))].sort());
+    populateFilters();
     renderMaster();
 }
 
-function populateFilters(forms) {
+function populateFilters() {
+    const forms = [...new Set(timetable.map(x => x.form))].sort();
     const teachers = [...new Set(timetable.map(x => x.teacher))].sort();
-    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + forms.map(f => `<option value="${f}">${f}</option>`).join('');
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- View Class --</option>' + forms.map(f => `<option value="${f}">${f}</option>`).join('');
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- View Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function getHeaderHTML() {
+    const sName = document.getElementById('schoolNameInput').value || 'SCHOOL TIMETABLE';
+    const logoImg = logoData ? `<img src="${logoData}" style="max-height:80px">` : '<div></div>';
+    return `<div class="print-header">${logoImg}<div class="header-text"><h1>${sName}</h1></div><div style="width:80px"></div></div>`;
 }
 
 function renderMaster() {
-    let html = `<div class="print-header"><h1>${document.getElementById('schoolNameInput').value || 'SCHOOL TIMETABLE'}</h1></div>`;
+    let html = getHeaderHTML();
     const forms = [...new Set(timetable.map(x => x.form))].sort();
     DAYS.forEach(day => {
         html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th>STREAM</th>` + timeline.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
@@ -216,7 +237,7 @@ function renderMaster() {
                 else if(spec) html += `<td class="${spec.class}">${spec.text}</td>`;
                 else {
                     const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
-                    html += `<td style="background:${m ? getSubjectColor(m.subject) : '#fff'}">${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
+                    html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
                 }
             });
             html += `</tr>`;
@@ -226,10 +247,10 @@ function renderMaster() {
     document.getElementById('output').innerHTML = html;
 }
 
-function renderIndividual(type) {
-    const val = type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value;
+function renderIndividual(type, value = null) {
+    const val = value || (type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value);
     if(!val) return;
-    let html = `<div class="day-title">${val} - Personalized View</div>`;
+    let html = getHeaderHTML() + `<div class="day-title">${val} - Personalized View</div>`;
     html += `<table><tr><th>DAY</th>` + timeline.map(p => `<th>${p.p}<br>${p.t}</th>`).join('') + `</tr>`;
     DAYS.forEach(day => {
         html += `<tr><td style="font-weight:bold">${day}</td>`;
@@ -239,12 +260,48 @@ function renderIndividual(type) {
             else if(spec) html += `<td class="${spec.class}">${spec.text}</td>`;
             else {
                 const m = timetable.find(x => x.day === day && x.period === p.p && (type==='stream'? x.form===val : x.teacher===val));
-                html += `<td style="background:${m ? getSubjectColor(m.subject) : '#fff'}">${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:m.form}` : ''}</td>`;
+                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:m.form}` : ''}</td>`;
             }
         });
         html += `</tr>`;
     });
     document.getElementById('output').innerHTML = html + "</table>";
+}
+
+// PDF SAVE LOGIC
+function saveAsPDF() {
+    const opt = document.getElementById('saveOption').value;
+    const element = document.getElementById('output');
+    const schoolName = document.getElementById('schoolNameInput').value || 'Timetable';
+    
+    if (opt === 'master') {
+        renderMaster();
+        downloadPDF(`${schoolName}_Master.pdf`);
+    } else if (opt === 'teachers') {
+        const teachers = [...new Set(timetable.map(x => x.teacher))].sort();
+        let fullHtml = '';
+        teachers.forEach(t => {
+            renderIndividual('teacher', t);
+            fullHtml += document.getElementById('output').innerHTML + '<div style="page-break-after: always;"></div>';
+        });
+        element.innerHTML = fullHtml;
+        downloadPDF(`${schoolName}_Teachers.pdf`);
+    } else if (opt === 'streams') {
+        const forms = [...new Set(timetable.map(x => x.form))].sort();
+        let fullHtml = '';
+        forms.forEach(f => {
+            renderIndividual('stream', f);
+            fullHtml += document.getElementById('output').innerHTML + '<div style="page-break-after: always;"></div>';
+        });
+        element.innerHTML = fullHtml;
+        downloadPDF(`${schoolName}_Classes.pdf`);
+    }
+}
+
+function downloadPDF(filename) {
+    const element = document.getElementById('output');
+    const options = { margin: 10, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
+    html2pdf().set(options).from(element).save();
 }
 </script>
 </body>

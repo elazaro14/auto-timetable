@@ -129,8 +129,10 @@ function toggleCompact(cb) { document.getElementById('mainBody').classList.toggl
 function adjustHeight(val) { document.documentElement.style.setProperty('--row-height', val + 'px'); }
 function toggleAvailPanel() { const p = document.getElementById('availPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
 
+// UPDATED: Added Thursday Debate reservation
 function getSpecialContent(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return { text: "RELIGION", class: "fixed-block" };
+    if (day === "THURSDAY" && (p === "P8" || p === "P9")) return { text: "DEBATE", class: "fixed-block" };
     if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return { text: "", class: "mosque-strips" };
     return null;
 }

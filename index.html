@@ -2,87 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Official School Timetable 2026 - Advanced View</title>
+    <title>Official School Timetable 2026 - Ultra Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; --primary: #2c3e50; }
-        .compact-mode { --row-height: 28px !important; --font-size: 9px !important; --cell-padding: 2px !important; }
-        
-        body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 10px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .container { max-width: 1450px; margin: 0 auto; }
-        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 15px; }
         
-        /* Header & Logo Styles */
-        .print-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
-        .logo-container { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; border: 1px dashed #ccc; border-radius: 4px; overflow: hidden; }
-        .logo-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .header-text { flex-grow: 1; text-align: center; }
-        .header-text h1 { margin: 0; font-size: 24px; text-transform: uppercase; color: var(--primary); }
-
-        .config-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 15px; background: #f1f3f5; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; }
+        /* Header */
+        .print-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; background: white; }
+        .logo-container { width: 100px; height: 100px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .logo-container img { max-width: 100%; max-height: 100%; }
+        
+        /* Layout */
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px; }
         .input-group { display: flex; flex-direction: column; gap: 4px; }
-        .input-group label { font-size: 10px; font-weight: bold; color: #495057; text-transform: uppercase; }
+        .input-group label { font-size: 10px; font-weight: bold; color: #555; text-transform: uppercase; }
         
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 25px; }
-        th, td { border: 1px solid #444; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 30px; background: white; }
+        th, td { border: 1px solid #333; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); }
         th { background: var(--primary); color: white; }
         
-        .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
-        .break-cell { background: #e9ecef !important; font-weight: bold; color: #444; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
-        .fixed-block { background: #d1ecf1 !important; color: #0c5460; font-weight: bold; font-style: italic; }
+        .day-title { background: #34495e; color: white; padding: 10px; font-size: 16px; text-align: center; margin-top: 20px; border-radius: 4px 4px 0 0; }
+        .break-cell { background: #dfe6e9 !important; font-weight: bold; width: 30px !important; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; }
+        .fixed-block { background: #d1ecf1 !important; font-weight: bold; font-style: italic; }
         .mosque-strips { background: repeating-linear-gradient(45deg, #fff9c4, #fff9c4 10px, #fffde7 10px, #fffde7 20px) !important; }
+        .unavail-cell { background: #fab1a0 !important; color: #d63031; font-size: 8px; font-weight: bold; }
 
-        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; margin-top: 10px; text-align: center; gap: 10px; align-items: center; justify-content: center;}
-        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
-        .btn-gen { background: #28a745; color: white; border: none; }
-        .btn-save { background: #007bff; color: white; border: none; }
+        /* Controls */
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 15px; border-top: 1px solid #eee; }
+        button, select { padding: 10px 15px; border-radius: 5px; border: 1px solid #ddd; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-main { background: #2ecc71; color: white; border: none; }
+        .btn-main:hover { background: #27ae60; }
+        .btn-sub { background: #3498db; color: white; border: none; }
+        
+        #viewBar { display: none; background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        @media print { 
-            .no-print, .panel, .view-bar { display: none !important; } 
-            .day-section { page-break-after: always; }
-        }
+        @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } }
     </style>
 </head>
-<body id="mainBody">
+<body>
 
 <div class="panel container no-print">
-    <div style="display: flex; align-items: center; gap: 20px; justify-content: center; margin-bottom: 15px;">
-        <div class="logo-container" id="logoPreview" onclick="document.getElementById('logoInput').click()" title="Click to upload logo">
-            <span style="font-size: 10px; color: #999;">UPLOAD LOGO</span>
+    <div style="display: flex; align-items: center; gap: 30px; justify-content: center; margin-bottom: 20px;">
+        <div class="logo-container" id="logoPreview" onclick="document.getElementById('logoInput').click()">
+            <span style="font-size: 10px; text-align: center;">CLICK TO<br>UPLOAD LOGO</span>
         </div>
         <input type="file" id="logoInput" accept="image/*" hidden onchange="loadLogo(event)">
-        <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME" style="width: 400px; font-size: 20px; border:none; border-bottom: 2px solid #333; text-align:center;">
+        <input type="text" id="schoolNameInput" placeholder="ENTER SCHOOL NAME" style="width: 500px; font-size: 24px; border:none; border-bottom: 3px solid #2c3e50; text-align:center; font-weight: bold; outline: none;">
     </div>
 
-    <div class="config-section">
+    <div class="config-grid">
         <div class="input-group"><label>Start Time</label><input type="time" id="cfgStartTime" value="08:00"></div>
         <div class="input-group"><label>Period (min)</label><input type="number" id="cfgDur" value="40"></div>
         <div class="input-group"><label>Total Periods</label><input type="number" id="cfgCount" value="9"></div>
-        <div class="input-group"><label>Add Break?</label><select id="cfgShowBreak"><option value="yes">YES</option><option value="no">NO</option></select></div>
-        <div class="input-group"><label>Break After P.</label><input type="number" id="cfgBreakAfter" value="4"></div>
-        <div class="input-group"><label>Break Dur (min)</label><input type="number" id="cfgBreakDur" value="30"></div>
+        <div class="input-group"><label>Color Mode</label><select id="cfgColors"><option value="yes">Vibrant Colors</option><option value="no">Black & White</option></select></div>
+        <div class="input-group"><label>Break After</label><input type="number" id="cfgBreakAfter" value="4"></div>
+        <div class="input-group"><label>Break Mins</label><input type="number" id="cfgBreakDur" value="30"></div>
     </div>
 
-    <div class="controls" style="text-align:center;">
+    <div style="background: #fff9db; padding: 10px; border-radius: 5px; border: 1px solid #fab005; margin-bottom: 15px;">
+        <label style="font-weight:bold; font-size: 12px;">Add Teacher Unavailability (Off-Slots):</label>
+        <div style="display:flex; gap:10px; margin-top:5px;">
+            <input type="text" id="unavailName" placeholder="Teacher Name" style="flex:1; padding:5px;">
+            <select id="unavailDay"><option value="MONDAY">Mon</option><option value="TUESDAY">Tue</option><option value="WEDNESDAY">Wed</option><option value="THURSDAY">Thu</option><option value="FRIDAY">Fri</option></select>
+            <input type="text" id="unavailSlots" placeholder="e.g. P1, P2" style="width:100px; padding:5px;">
+            <button onclick="addUnavail()" style="background:#f08c00; color:white; padding:5px 10px;">Add Rule</button>
+        </div>
+        <div id="unavailList" style="font-size:10px; margin-top:5px; color:#555;"></div>
+    </div>
+
+    <div class="controls">
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button onclick="document.getElementById('csvFile').click()" style="background:#6c757d; color:white;">Upload CSV</button>
-        <button class="btn-gen" onclick="startGeneration()">Generate Timetable</button>
+        <button onclick="document.getElementById('csvFile').click()" style="background:#495057; color:white;">1. Upload CSV</button>
+        <button class="btn-main" onclick="startGeneration()">2. Generate Timetable</button>
         
-        <select id="saveOption" class="btn-save" style="margin-left:10px;">
-            <option value="master">SAVE MASTER PDF</option>
-            <option value="teachers">SAVE ALL TEACHERS PDF</option>
-            <option value="streams">SAVE ALL STREAMS PDF</option>
-        </select>
-        <button class="btn-save" onclick="saveAsPDF()">Download</button>
-        <button onclick="window.print()" style="background:#333; color:white;">Print View</button>
+        <div style="border-left: 2px solid #ddd; padding-left: 15px; display: flex; gap: 10px;">
+            <select id="saveOption" style="background:#f8f9fa;">
+                <option value="master">MASTER TIMETABLE</option>
+                <option value="teachers">ALL TEACHERS (INDIVIDUAL)</option>
+                <option value="streams">ALL STREAMS (INDIVIDUAL)</option>
+                <option value="loads">TEACHER LOAD REPORT</option>
+            </select>
+            <button class="btn-sub" onclick="saveAsPDF()">Download Selected PDF</button>
+        </div>
     </div>
-    
-    <div id="status" style="text-align:center; margin-top:10px; font-weight:bold; color:#d9534f;">Waiting for CSV...</div>
+</div>
 
-    <div class="view-bar" id="viewBar">
+<div id="viewBar" class="no-print container">
+    <div style="display:flex; gap:15px; align-items: center; justify-content: center;">
         <button onclick="renderMaster()">Full Master View</button>
-        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
-        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
+        <button onclick="renderLoads()">Teacher Loads</button>
+        <select id="streamSelect" onchange="renderIndividual('stream')"><option value="">-- Select Class --</option></select>
+        <select id="teacherSelect" onchange="renderIndividual('teacher')"><option value="">-- Select Teacher --</option></select>
     </div>
 </div>
 
@@ -90,30 +103,42 @@
 
 <script>
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-let rawData = [], timetable = [], timeline = [], logoData = null;
+let rawData = [], timetable = [], timeline = [], unavailRules = [], logoData = null;
 
 function loadLogo(e) {
-    const file = e.target.files[0];
     const reader = new FileReader();
-    reader.onload = (event) => {
-        logoData = event.target.result;
-        document.getElementById('logoPreview').innerHTML = `<img src="${logoData}">`;
-    };
-    reader.readAsDataURL(file);
+    reader.onload = (ev) => { logoData = ev.target.result; document.getElementById('logoPreview').innerHTML = `<img src="${logoData}">`; };
+    reader.readAsDataURL(e.target.files[0]);
+}
+
+function addUnavail() {
+    const name = document.getElementById('unavailName').value.trim();
+    const day = document.getElementById('unavailDay').value;
+    const slots = document.getElementById('unavailSlots').value.toUpperCase().split(',').map(s => s.trim());
+    if(name && slots.length) {
+        slots.forEach(s => unavailRules.push({t: name, d: day, p: s}));
+        document.getElementById('unavailList').innerHTML += `[${name}: ${day} ${slots.join(',')}] `;
+    }
 }
 
 function handleUpload(e) {
     const reader = new FileReader();
-    reader.onload = (event) => {
-        const lines = event.target.result.split('\n').slice(1).filter(l => l.trim());
+    reader.onload = (ev) => {
+        const lines = ev.target.result.split('\n').slice(1).filter(l => l.trim());
         rawData = lines.map(l => {
             const p = l.split(',');
             return { subject: p[0].trim().toUpperCase(), teacher: p[1].trim(), form: p[3].trim().toUpperCase() };
         });
-        document.getElementById('status').innerText = "CSV Loaded Successfully.";
-        document.getElementById('status').style.color = "#28a745";
+        alert("CSV Data Loaded!");
     };
     reader.readAsText(e.target.files[0]);
+}
+
+function getSubjectColor(subj) {
+    if(document.getElementById('cfgColors').value === 'no') return '#ffffff';
+    let hash = 0;
+    for (let i = 0; i < subj.length; i++) hash = subj.charCodeAt(i) + ((hash << 5) - hash);
+    return `hsl(${Math.abs(hash % 360)}, 75%, 93%)`;
 }
 
 function getSpecialContent(day, p) {
@@ -123,21 +148,14 @@ function getSpecialContent(day, p) {
     return null;
 }
 
-function canPlace(d, p, l) {
-    const tBusy = timetable.some(t => t.day === d && t.period === p && t.teacher === l.teacher);
-    const fBusy = timetable.some(t => t.day === d && t.period === p && t.form === l.form);
-    return !tBusy && !fBusy;
-}
-
 function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
     
-    // Timeline Settings
+    // Setup Timeline
     const cfgStart = document.getElementById('cfgStartTime').value;
     const cfgDur = parseInt(document.getElementById('cfgDur').value);
     const cfgCount = parseInt(document.getElementById('cfgCount').value);
-    const showBreak = document.getElementById('cfgShowBreak').value === 'yes';
     const breakAfter = parseInt(document.getElementById('cfgBreakAfter').value);
     const breakDur = parseInt(document.getElementById('cfgBreakDur').value);
 
@@ -148,7 +166,7 @@ function startGeneration() {
         curr.setMinutes(curr.getMinutes() + cfgDur);
         let eT = curr.toTimeString().substring(0,5);
         timeline.push({p: `P${i}`, t: `${sT}-${eT}`, isBreak: false});
-        if(showBreak && i === breakAfter) {
+        if(i === breakAfter) {
             let bEnd = new Date(curr); bEnd.setMinutes(bEnd.getMinutes() + breakDur);
             timeline.push({p: "BREAK", t: `${eT}-${bEnd.toTimeString().substring(0,5)}`, isBreak: true});
             curr = bEnd;
@@ -162,42 +180,43 @@ function startGeneration() {
         grouped[k].push(l);
     });
 
-    const sortedKeys = Object.keys(grouped).sort((a, b) => a.toUpperCase().includes("MATH") ? -1 : 1);
+    const sortedKeys = Object.keys(grouped).sort((a,b) => a.includes("MATH") ? -1 : 1);
 
     sortedKeys.forEach(key => {
         const lessons = grouped[key];
-        const isMath = key.toUpperCase().includes("MATH");
+        const isMath = key.includes("MATH");
         let rem = lessons.length;
 
-        // Double periods first
+        // Doubles
         while(rem >= 2) {
             let placed = false;
-            for(let att = 0; att < 1000; att++) {
+            for(let att=0; att<1000; att++){
                 const day = DAYS[Math.floor(Math.random()*5)];
-                const maxIdx = isMath ? 4 : 7; 
-                const idx = Math.floor(Math.random() * (maxIdx + 1));
+                const idx = Math.floor(Math.random() * (isMath ? 5 : 7));
                 const p1 = vp[idx], p2 = vp[idx+1];
-                if (p1 === "P4" && p2 === "P5") continue;
+                if(p1 === `P${breakAfter}`) continue;
+                
+                const isUnavail = unavailRules.some(r => r.t === lessons[0].teacher && r.d === day && (r.p === p1 || r.p === p2));
                 const dayExists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
-                if(!dayExists && canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
-                    timetable.push({...lessons[0], day, period: p1});
-                    timetable.push({...lessons[0], day, period: p2});
+                
+                if(!dayExists && !isUnavail && canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
+                    timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
                     rem -= 2; placed = true; break;
                 }
             }
-            if(!placed) break; 
+            if(!placed) break;
         }
 
-        // Single periods
+        // Singles
         while(rem > 0) {
             let placedS = false;
-            for(let att = 0; att < 800; att++) {
+            for(let att=0; att<800; att++){
                 const day = DAYS[Math.floor(Math.random()*5)];
-                const maxP = isMath ? 6 : 9;
-                const perIdx = Math.floor(Math.random() * maxP);
-                const per = vp[perIdx];
+                const pIdx = Math.floor(Math.random() * (isMath ? 6 : 9));
+                const per = vp[pIdx];
+                const isUnavail = unavailRules.some(r => r.t === lessons[0].teacher && r.d === day && r.p === per);
                 const dayExists = timetable.some(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject);
-                if(!dayExists && canPlace(day, per, lessons[0]) && !getSpecialContent(day, per)) {
+                if(!dayExists && !isUnavail && canPlace(day, per, lessons[0]) && !getSpecialContent(day, per)) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; placedS = true; break;
                 }
@@ -206,38 +225,43 @@ function startGeneration() {
         }
     });
 
-    document.getElementById('viewBar').style.display = 'flex';
+    document.getElementById('viewBar').style.display = 'block';
     populateFilters();
     renderMaster();
+}
+
+function canPlace(d, p, l) {
+    return !timetable.some(t => t.day === d && t.period === p && (t.teacher === l.teacher || t.form === l.form));
 }
 
 function populateFilters() {
     const forms = [...new Set(timetable.map(x => x.form))].sort();
     const teachers = [...new Set(timetable.map(x => x.teacher))].sort();
-    document.getElementById('streamSelect').innerHTML = '<option value="">-- View Class --</option>' + forms.map(f => `<option value="${f}">${f}</option>`).join('');
-    document.getElementById('teacherSelect').innerHTML = '<option value="">-- View Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">-- Class --</option>' + forms.map(f => `<option value="${f}">${f}</option>`).join('');
+    document.getElementById('teacherSelect').innerHTML = '<option value="">-- Teacher --</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
 }
 
-function getHeaderHTML() {
+function getHeader(title) {
     const sName = document.getElementById('schoolNameInput').value || 'SCHOOL TIMETABLE';
-    const logoImg = logoData ? `<img src="${logoData}" style="max-height:80px">` : '<div></div>';
-    return `<div class="print-header">${logoImg}<div class="header-text"><h1>${sName}</h1></div><div style="width:80px"></div></div>`;
+    const logo = logoData ? `<img src="${logoData}">` : '<div></div>';
+    return `<div class="print-header">${logo}<div class="header-text"><h1>${sName}</h1><h2>${title}</h2></div><div style="width:100px"></div></div>`;
 }
 
 function renderMaster() {
-    let html = getHeaderHTML();
+    let html = getHeader("MASTER TIMETABLE 2026");
     const forms = [...new Set(timetable.map(x => x.form))].sort();
     DAYS.forEach(day => {
-        html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th>STREAM</th>` + timeline.map(p => `<th>${p.p}<span class="time-hdr">${p.t}</span></th>`).join('') + `</tr>`;
+        html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:80px">STREAM</th>` + timeline.map(p => `<th>${p.p}<br><span style="font-size:8px; font-weight:normal">${p.t}</span></th>`).join('') + `</tr>`;
         forms.forEach(f => {
             html += `<tr><td style="font-weight:bold">${f}</td>`;
             timeline.forEach(p => {
                 const spec = getSpecialContent(day, p.p);
-                if(p.isBreak) html += `<td class="break-cell">${p.p}</td>`;
+                if(p.isBreak) html += `<td class="break-cell">BREAK</td>`;
                 else if(spec) html += `<td class="${spec.class}">${spec.text}</td>`;
                 else {
                     const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
-                    html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
+                    const isOff = unavailRules.some(r => r.t === (m?m.teacher:'') && r.d === day && r.p === p.p);
+                    html += `<td style="background:${m ? getSubjectColor(m.subject) : '#fff'}">${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
                 }
             });
             html += `</tr>`;
@@ -247,20 +271,39 @@ function renderMaster() {
     document.getElementById('output').innerHTML = html;
 }
 
+function renderLoads() {
+    const teachers = [...new Set(timetable.map(x => x.teacher))].sort();
+    let html = getHeader("TEACHER LOAD ANALYSIS");
+    html += `<table><tr><th>Teacher Name</th><th>Total Periods / Week</th><th>Subjects & Classes</th></tr>`;
+    teachers.forEach(t => {
+        const tLessons = timetable.filter(x => x.teacher === t);
+        const subMap = tLessons.reduce((acc, curr) => {
+            const key = `${curr.subject} (${curr.form})`;
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+        const details = Object.entries(subMap).map(([k,v]) => `${k}: ${v}`).join(', ');
+        html += `<tr><td><b>${t}</b></td><td>${tLessons.length}</td><td style="text-align:left; padding-left:10px">${details}</td></tr>`;
+    });
+    document.getElementById('output').innerHTML = html + `</table>`;
+}
+
 function renderIndividual(type, value = null) {
     const val = value || (type === 'stream' ? document.getElementById('streamSelect').value : document.getElementById('teacherSelect').value);
     if(!val) return;
-    let html = getHeaderHTML() + `<div class="day-title">${val} - Personalized View</div>`;
+    let html = getHeader(`${type.toUpperCase()}: ${val}`);
     html += `<table><tr><th>DAY</th>` + timeline.map(p => `<th>${p.p}<br>${p.t}</th>`).join('') + `</tr>`;
     DAYS.forEach(day => {
         html += `<tr><td style="font-weight:bold">${day}</td>`;
         timeline.forEach(p => {
             const spec = getSpecialContent(day, p.p);
-            if(p.isBreak) html += `<td class="break-cell">${p.p}</td>`;
+            const isOff = type === 'teacher' && unavailRules.some(r => r.t === val && r.d === day && r.p === p.p);
+            if(p.isBreak) html += `<td class="break-cell">BREAK</td>`;
+            else if(isOff) html += `<td class="unavail-cell">OFF</td>`;
             else if(spec) html += `<td class="${spec.class}">${spec.text}</td>`;
             else {
                 const m = timetable.find(x => x.day === day && x.period === p.p && (type==='stream'? x.form===val : x.teacher===val));
-                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:m.form}` : ''}</td>`;
+                html += `<td style="background:${m ? getSubjectColor(m.subject) : '#fff'}">${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:m.form}` : ''}</td>`;
             }
         });
         html += `</tr>`;
@@ -268,40 +311,30 @@ function renderIndividual(type, value = null) {
     document.getElementById('output').innerHTML = html + "</table>";
 }
 
-// PDF SAVE LOGIC
-function saveAsPDF() {
+async function saveAsPDF() {
     const opt = document.getElementById('saveOption').value;
-    const element = document.getElementById('output');
-    const schoolName = document.getElementById('schoolNameInput').value || 'Timetable';
+    const out = document.getElementById('output');
+    const sName = document.getElementById('schoolNameInput').value || 'Timetable';
     
-    if (opt === 'master') {
-        renderMaster();
-        downloadPDF(`${schoolName}_Master.pdf`);
-    } else if (opt === 'teachers') {
-        const teachers = [...new Set(timetable.map(x => x.teacher))].sort();
-        let fullHtml = '';
-        teachers.forEach(t => {
-            renderIndividual('teacher', t);
-            fullHtml += document.getElementById('output').innerHTML + '<div style="page-break-after: always;"></div>';
-        });
-        element.innerHTML = fullHtml;
-        downloadPDF(`${schoolName}_Teachers.pdf`);
-    } else if (opt === 'streams') {
-        const forms = [...new Set(timetable.map(x => x.form))].sort();
-        let fullHtml = '';
-        forms.forEach(f => {
-            renderIndividual('stream', f);
-            fullHtml += document.getElementById('output').innerHTML + '<div style="page-break-after: always;"></div>';
-        });
-        element.innerHTML = fullHtml;
-        downloadPDF(`${schoolName}_Classes.pdf`);
+    if(opt === 'master') { renderMaster(); await downloadPDF(`${sName}_Master.pdf`); }
+    else if(opt === 'loads') { renderLoads(); await downloadPDF(`${sName}_Loads.pdf`); }
+    else if(opt === 'teachers' || opt === 'streams') {
+        const type = opt === 'teachers' ? 'teacher' : 'stream';
+        const list = [...new Set(timetable.map(x => type === 'teacher' ? x.teacher : x.form))].sort();
+        let fullHtml = "";
+        for(let item of list) {
+            renderIndividual(type, item);
+            fullHtml += out.innerHTML + `<div style="page-break-after: always;"></div>`;
+        }
+        out.innerHTML = fullHtml;
+        await downloadPDF(`${sName}_All_${type}s.pdf`);
+        renderMaster(); // Reset view
     }
 }
 
-function downloadPDF(filename) {
-    const element = document.getElementById('output');
-    const options = { margin: 10, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
-    html2pdf().set(options).from(element).save();
+function downloadPDF(fname) {
+    const opt = { margin: 10, filename: fname, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
+    return html2pdf().set(opt).from(document.getElementById('output')).save();
 }
 </script>
 </body>

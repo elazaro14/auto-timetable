@@ -129,7 +129,6 @@ function toggleCompact(cb) { document.getElementById('mainBody').classList.toggl
 function adjustHeight(val) { document.documentElement.style.setProperty('--row-height', val + 'px'); }
 function toggleAvailPanel() { const p = document.getElementById('availPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
 
-// UPDATED: Added Thursday Debate reservation
 function getSpecialContent(day, p) {
     if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return { text: "RELIGION", class: "fixed-block" };
     if (day === "THURSDAY" && (p === "P8" || p === "P9")) return { text: "DEBATE", class: "fixed-block" };
@@ -198,16 +197,32 @@ function startGeneration() {
         grouped[k].push(l);
     });
 
-    Object.values(grouped).forEach(lessons => {
+    // Strategy: Process Mathematics first to ensure they get P1-P7
+    const sortedGroups = Object.keys(grouped).sort((a, b) => {
+        if (a.includes("MATH") && !b.includes("MATH")) return -1;
+        if (!a.includes("MATH") && b.includes("MATH")) return 1;
+        return 0;
+    });
+
+    sortedGroups.forEach(key => {
+        const lessons = grouped[key];
         let rem = lessons.length;
+        const isMath = key.toUpperCase().includes("MATH");
+
+        // PHASE 1: Try Double Periods First
         while(rem >= 2) {
             let placed = false;
-            for(let att = 0; att < 400; att++) {
+            // High attempt count to force double period layout
+            for(let att = 0; att < 1000; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const idx = Math.floor(Math.random()*8);
                 const p1 = vp[idx], p2 = vp[idx+1];
                 
-                if ((p1 === "P4" && p2 === "P5") || (p1 === "P5" && p2 === "P4")) continue;
+                // Break logic
+                if ((p1 === "P4" && p2 === "P5")) continue;
+
+                // Mathematics logic: Prefer P1-P7 for both periods
+                if (isMath && (idx > 5)) continue; 
 
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
                 if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2) && dayC === 0) {
@@ -216,25 +231,39 @@ function startGeneration() {
                     rem -= 2; placed = true; break;
                 }
             }
-            if(!placed) break;
+            if(!placed) break; // Move to single placement if no double possible
         }
+
+        // PHASE 2: Single Periods
         while(rem > 0) {
             let placedSingle = false;
-            for(let att = 0; att < 300; att++) {
+            for(let att = 0; att < 500; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
-                const per = vp[Math.floor(Math.random()*9)];
+                const pIdx = Math.floor(Math.random()*9);
+                const per = vp[pIdx];
                 
-                const isAdjacentToBreak = (per === "P4" || per === "P5");
-                const otherSide = per === "P4" ? "P5" : "P4";
-                const hasSubjectOnOtherSide = timetable.some(x => x.day === day && x.period === otherSide && x.form === lessons[0].form && x.subject === lessons[0].subject);
+                if (isMath && pIdx > 6) continue; // P1-P7 enforcement for Math
 
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && dayC < 2 && !hasSubjectOnOtherSide) {
+                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && dayC < 2) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; placedSingle = true; break;
                 }
             }
-            if(!placedSingle) rem--;
+            if(!placedSingle) {
+                // Final fallback for Math if P1-P7 is completely full
+                if (isMath) {
+                     for(let att = 0; att < 100; att++) {
+                        const day = DAYS[Math.floor(Math.random()*5)];
+                        const per = vp[Math.floor(Math.random()*9)];
+                        if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per)) {
+                            timetable.push({...lessons[0], day, period: per});
+                            rem--; placedSingle = true; break;
+                        }
+                     }
+                }
+                rem--; // Drop lesson if impossible to schedule
+            }
         }
     });
     document.getElementById('viewBar').style.display = 'block';

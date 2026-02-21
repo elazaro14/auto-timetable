@@ -197,7 +197,6 @@ function startGeneration() {
         grouped[k].push(l);
     });
 
-    // Strategy: Process Mathematics first to ensure they get P1-P7
     const sortedGroups = Object.keys(grouped).sort((a, b) => {
         if (a.includes("MATH") && !b.includes("MATH")) return -1;
         if (!a.includes("MATH") && b.includes("MATH")) return 1;
@@ -209,61 +208,50 @@ function startGeneration() {
         let rem = lessons.length;
         const isMath = key.toUpperCase().includes("MATH");
 
-        // PHASE 1: Try Double Periods First
+        // PHASE 1: Double Consecutive Periods (Max 1 block per day)
         while(rem >= 2) {
             let placed = false;
-            // High attempt count to force double period layout
-            for(let att = 0; att < 1000; att++) {
+            for(let att = 0; att < 1200; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const idx = Math.floor(Math.random()*8);
                 const p1 = vp[idx], p2 = vp[idx+1];
                 
-                // Break logic
-                if ((p1 === "P4" && p2 === "P5")) continue;
+                if (p1 === "P4" && p2 === "P5") continue;
+                if (isMath && idx > 5) continue; 
 
-                // Mathematics logic: Prefer P1-P7 for both periods
-                if (isMath && (idx > 5)) continue; 
-
+                // STRICT RULE: Check if subject ALREADY exists on this day
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2) && dayC === 0) {
+                if (dayC > 0) continue; 
+
+                if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0]) && !getSpecialContent(day, p1) && !getSpecialContent(day, p2)) {
                     timetable.push({...lessons[0], day, period: p1});
                     timetable.push({...lessons[0], day, period: p2});
                     rem -= 2; placed = true; break;
                 }
             }
-            if(!placed) break; // Move to single placement if no double possible
+            if(!placed) break; 
         }
 
-        // PHASE 2: Single Periods
+        // PHASE 2: Single Periods (Max 1 block per day)
         while(rem > 0) {
             let placedSingle = false;
-            for(let att = 0; att < 500; att++) {
+            for(let att = 0; att < 800; att++) {
                 const day = DAYS[Math.floor(Math.random()*5)];
                 const pIdx = Math.floor(Math.random()*9);
                 const per = vp[pIdx];
                 
-                if (isMath && pIdx > 6) continue; // P1-P7 enforcement for Math
+                if (isMath && pIdx > 6) continue;
 
+                // STRICT RULE: Check if subject ALREADY exists on this day
                 const dayC = timetable.filter(x => x.day === day && x.form === lessons[0].form && x.subject === lessons[0].subject).length;
-                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per) && dayC < 2) {
+                if (dayC > 0) continue;
+
+                if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per)) {
                     timetable.push({...lessons[0], day, period: per});
                     rem--; placedSingle = true; break;
                 }
             }
-            if(!placedSingle) {
-                // Final fallback for Math if P1-P7 is completely full
-                if (isMath) {
-                     for(let att = 0; att < 100; att++) {
-                        const day = DAYS[Math.floor(Math.random()*5)];
-                        const per = vp[Math.floor(Math.random()*9)];
-                        if(canPlace(day, per, lessons[0]) && !getSpecialContent(day, per)) {
-                            timetable.push({...lessons[0], day, period: per});
-                            rem--; placedSingle = true; break;
-                        }
-                     }
-                }
-                rem--; // Drop lesson if impossible to schedule
-            }
+            if(!placedSingle) rem--; 
         }
     });
     document.getElementById('viewBar').style.display = 'block';

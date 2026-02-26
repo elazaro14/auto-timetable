@@ -2,268 +2,251 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Master Pro Complete</title>
+    <title>Timetable 2026 - Master Pro Ultra</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --color-spec: #f0f0f0; }
+        :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
         .color-on { --color-spec: #ffecb3; --color-double: #e8f5e9; }
-        .compact-mode { --row-height: 26px !important; --font-size: 9px !important; --cell-padding: 2px !important; }
+        .compact-mode { --row-height: 28px !important; --font-size: 9px !important; --cell-padding: 2px !important; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 5px; }
-        .panel { background: white; padding: 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
-        .print-header { display: flex; align-items: center; border-bottom: 2px solid var(--primary); padding: 2px 10px; margin-bottom: 5px; background: white; height: 50px; justify-content: space-between; }
-        .logo-container { height: 45px; width: 45px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
-        .logo-container img { max-height: 100%; max-width: 100%; }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px; }
-        .input-group { display: flex; flex-direction: column; gap: 2px; }
-        .input-group label { font-size: 9px; font-weight: bold; color: #555; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 15px; background: white; border: 2px solid #000; }
-        th, td { border: 1px solid #000; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); line-height: 1.1; }
-        th { background: #eee; color: #000; font-weight: bold; }
-        .day-title { background: var(--primary); color: white; padding: 4px; font-size: 13px; text-align: center; font-weight: bold; border: 2px solid #000; border-bottom: none; }
-        .break-cell, .spec-merged { background: var(--color-spec) !important; font-weight: bold; width: 22px !important; border: 1px solid #000; padding: 0 !important; }
+        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px; border-top: 4px solid var(--primary); }
+        .print-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; background: white; padding: 5px; }
+        .logo-container { width: 50px; height: 50px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .logo-container img { max-width: 100%; max-height: 100%; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #666; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; border: 2px solid #000; margin-top: 10px; }
+        th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); }
+        th { background: #f8f9fa; }
+        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; border-bottom: none; }
+        .break-cell, .spec-merged { background: #eee !important; font-weight: bold; width: 25px !important; border: 1px solid #000; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
-        .rule-tag { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 8px; display: inline-block; margin: 2px; border: 1px solid #ccc; }
-        .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px; border-top: 1px solid #eee; }
-        button, select { padding: 6px 12px; border-radius: 3px; border: 1px solid #ccc; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .btn-main { background: #2ecc71; color: white; border: none; }
+        .rule-tag { background: #ffebee; border: 1px solid #ffcdd2; padding: 2px 6px; border-radius: 12px; font-size: 9px; margin: 2px; display: inline-block; }
+        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
+        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #f0f0f0; }
+        .btn-gen { background: #27ae60 !important; color: white; border: none; }
+        .btn-gen:hover { background: #2ecc71 !important; }
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } }
     </style>
 </head>
 <body class="compact-mode">
 
 <div class="panel no-print">
-    <div class="print-header" style="border: none;">
-        <div class="logo-container" id="logoPreview" onclick="document.getElementById('logoInput').click()"><span>LOGO</span></div>
-        <input type="file" id="logoInput" accept="image/*" hidden onchange="loadLogo(event)">
-        <input type="text" id="schoolNameInput" placeholder="SCHOOL NAME" style="flex-grow:1; margin: 0 20px; font-size: 18px; border:none; border-bottom: 1px solid #ccc; text-align:center;">
-        <div id="loadStatus" style="font-size: 9px; color: red; font-weight: bold;">NO CSV LOADED</div>
+    <div class="print-header">
+        <div class="logo-container" id="logoBox" onclick="document.getElementById('logoIn').click()">LOGO</div>
+        <input type="file" id="logoIn" hidden onchange="loadLogo(event)">
+        <input type="text" id="schName" placeholder="SCHOOL NAME HERE" style="font-size: 20px; text-align: center; flex-grow: 1; border: none; border-bottom: 2px solid #eee;">
+        <div id="status" style="color: red; font-weight: bold; font-size: 10px;">EMPTY</div>
     </div>
 
     <div class="config-grid">
-        <div class="input-group"><label>Start</label><input type="time" id="cfgStartTime" value="08:00"></div>
-        <div class="input-group"><label>Mins</label><input type="number" id="cfgDur" value="40"></div>
-        <div class="input-group"><label>Periods</label><input type="number" id="cfgCount" value="9"></div>
-        <div class="input-group"><label>Unavailability (Multi)</label>
+        <div class="input-group"><label>Time/Dur</label><div style="display:flex;"><input type="time" id="tTime" value="08:00"><input type="number" id="tDur" value="40" style="width:40px"></div></div>
+        <div class="input-group"><label>Periods</label><input type="number" id="tCount" value="9"></div>
+        <div class="input-group">
+            <label>Unavailability Rule</label>
             <div style="display:flex; gap:2px">
-                <select id="unavailDay"><option value="MONDAY">Mon</option><option value="TUESDAY">Tue</option><option value="WEDNESDAY">Wed</option><option value="THURSDAY">Thu</option><option value="FRIDAY">Fri</option></select>
-                <select id="unavailName"><option value="">Teacher</option></select>
-                <select id="unavailPeriod"><option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option><option value="P4">P4</option><option value="P5">P5</option><option value="P6">P6</option><option value="P7">P7</option><option value="P8">P8</option><option value="P9">P9</option></select>
-                <button onclick="addUnavailRule()" style="padding:2px 5px">+</button>
+                <select id="uDay"><option value="MONDAY">Mon</option><option value="TUESDAY">Tue</option><option value="WEDNESDAY">Wed</option><option value="THURSDAY">Thu</option><option value="FRIDAY">Fri</option></select>
+                <select id="uName"><option value="">Teacher</option></select>
+                <select id="uPer"><option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option><option value="P4">P4</option><option value="P5">P5</option><option value="P6">P6</option><option value="P7">P7</option><option value="P8">P8</option><option value="P9">P9</option></select>
+                <button onclick="addRule()">+</button>
             </div>
-            <div id="rulesList" style="max-height: 40px; overflow-y: auto; margin-top:5px; border:1px inset #eee; padding:2px;"></div>
+            <div id="ruleBox"></div>
         </div>
-        <div class="input-group"><label>Color Mode</label><select id="colorOpt" onchange="toggleColor()"><option value="no">No</option><option value="yes">Yes</option></select></div>
     </div>
 
     <div class="controls">
-        <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
-        <button onclick="document.getElementById('csvFile').click()">UPLOAD CSV</button>
-        <button class="btn-main" onclick="startGeneration()">GENERATE</button>
-        <button onclick="renderLoadAnalysis()">LOAD ANALYSIS</button>
+        <input type="file" id="csvIn" hidden onchange="readCSV(event)">
+        <button onclick="document.getElementById('csvIn').click()">1. UPLOAD CSV</button>
+        <button class="btn-gen" onclick="runGenerator()">2. GENERATE</button>
         <button onclick="window.print()">PRINT</button>
-        <button class="btn-main" style="background:#3498db" onclick="saveAsPDF()">SAVE PDF</button>
+        <button onclick="savePDF()" style="background:#2980b9; color:white;">PDF</button>
     </div>
 </div>
 
-<div id="viewBar" class="no-print" style="text-align:center; margin-bottom:10px; display:none;">
-    <button onclick="renderMaster()">Full Master View</button> | 
-    <select id="streamSelect" onchange="renderIndividual('stream')"></select>
-    <select id="teacherSelect" onchange="renderIndividual('teacher')"></select>
+<div id="viewBar" class="no-print" style="text-align:center; display:none; padding:10px;">
+    <button onclick="drawMaster()">MASTER</button> | 
+    <select id="selStream" onchange="drawIndiv('stream')"></select>
+    <select id="selTeacher" onchange="drawIndiv('teacher')"></select>
+    <button onclick="drawLoad()">LOAD ANALYSIS</button>
 </div>
 
-<div id="output"></div>
+<div id="mainDisplay"></div>
 
 <script>
+let RAW = [], DATA = [], TIME = [], RULES = [], LOGO = null;
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-let rawData = [], timetable = [], timeline = [], unavailRules = [], logoData = null;
-
-function addUnavailRule() {
-    const d = document.getElementById('unavailDay').value;
-    const t = document.getElementById('unavailName').value;
-    const p = document.getElementById('unavailPeriod').value;
-    if(!t) return;
-    unavailRules.push({day: d, teacher: t, period: p});
-    updateRulesUI();
-}
-
-function updateRulesUI() {
-    document.getElementById('rulesList').innerHTML = unavailRules.map((r, i) => 
-        `<span class="rule-tag">${r.teacher} (${r.day.slice(0,3)} ${r.period}) <span onclick="unavailRules.splice(${i},1); updateRulesUI();" style="cursor:pointer; color:red">x</span></span>`
-    ).join('');
-}
-
-function toggleColor() { document.body.classList.toggle('color-on', document.getElementById('colorOpt').value === 'yes'); }
 
 function loadLogo(e) {
+    const f = e.target.files[0];
     const reader = new FileReader();
-    reader.onload = (ev) => { logoData = ev.target.result; document.getElementById('logoPreview').innerHTML = `<img src="${logoData}">`; };
-    reader.readAsDataURL(e.target.files[0]);
+    reader.onload = (r) => { LOGO = r.target.result; document.getElementById('logoBox').innerHTML = `<img src="${LOGO}">`; };
+    reader.readAsDataURL(f);
 }
 
-function handleUpload(e) {
+function readCSV(e) {
+    const f = e.target.files[0];
     const reader = new FileReader();
-    reader.onload = (ev) => {
-        const lines = ev.target.result.split('\n').slice(1).filter(l => l.trim());
-        rawData = lines.map(l => {
-            const p = l.split(',');
-            return { subject: p[0].trim().toUpperCase(), teacher: p[1].trim(), form: p[3].trim().toUpperCase() };
+    reader.onload = (r) => {
+        const rows = r.target.result.split('\n').slice(1);
+        RAW = rows.filter(line => line.trim()).map(line => {
+            const cols = line.split(',');
+            return { sub: cols[0].trim().toUpperCase(), tea: cols[1].trim(), frm: cols[3].trim().toUpperCase() };
         });
-        const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-        document.getElementById('unavailName').innerHTML = '<option value="">Teacher</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-        document.getElementById('loadStatus').innerText = "CSV LOADED ✓ (" + rawData.length + " Lessons)";
-        document.getElementById('loadStatus').style.color = "green";
+        const tList = [...new Set(RAW.map(x => x.tea))].sort();
+        document.getElementById('uName').innerHTML = '<option value="">Teacher</option>' + tList.map(t => `<option>${t}</option>`).join('');
+        document.getElementById('status').innerText = "LOADED: " + RAW.length;
+        document.getElementById('status').style.color = "green";
     };
-    reader.readAsText(e.target.files[0]);
+    reader.readAsText(f);
 }
 
-function getSpecialContent(day, p) {
-    if (day === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
-    if (day === "THURSDAY" && (p === "P8" || p === "P9")) return "DEBATE";
-    if (day === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
+function addRule() {
+    const t = document.getElementById('uName').value;
+    if(!t) return;
+    RULES.push({ d: document.getElementById('uDay').value, t: t, p: document.getElementById('uPer').value });
+    document.getElementById('ruleBox').innerHTML = RULES.map((r, i) => `<span class="rule-tag">${r.t} ${r.d.slice(0,3)} ${r.p} <b onclick="RULES.splice(${i},1);addRule();" style="cursor:pointer;color:red">×</b></span>`).join('');
+}
+
+function getSpec(d, p) {
+    if (d === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
+    if (d === "THURSDAY" && (p === "P8" || p === "P9")) return "DEBATE";
+    if (d === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
     return null;
 }
 
-function startGeneration() {
-    timetable = [];
-    const totalP = parseInt(document.getElementById('cfgCount').value);
-    const breakAt = parseInt(document.getElementById('cfgBreakAfter').value);
+function runGenerator() {
+    if(RAW.length === 0) { alert("Please upload a CSV first!"); return; }
+    DATA = []; TIME = [];
+    const count = parseInt(document.getElementById('tCount').value);
+    const dur = parseInt(document.getElementById('tDur').value);
+    let curr = new Date("2026-01-01T" + document.getElementById('tTime').value);
 
-    timeline = [];
-    let curr = new Date(`2026-01-01T${document.getElementById('cfgStartTime').value}`);
-    for(let i=1; i<=totalP; i++) {
-        let sT = curr.toTimeString().substring(0,5);
-        curr.setMinutes(curr.getMinutes() + parseInt(document.getElementById('cfgDur').value));
-        let eT = curr.toTimeString().substring(0,5);
-        timeline.push({p: `P${i}`, t: `${sT}-${eT}`, isBreak: false});
-        if(i === breakAt) {
-            let bS = eT; curr.setMinutes(curr.getMinutes() + 30);
-            timeline.push({p: "BREAK", t: `${bS}-${curr.toTimeString().substring(0,5)}`, isBreak: true});
+    for(let i=1; i<=count; i++) {
+        let s = curr.toTimeString().slice(0,5);
+        curr.setMinutes(curr.getMinutes() + dur);
+        TIME.push({ p: 'P'+i, t: s + '-' + curr.toTimeString().slice(0,5), isB: false });
+        if(i === 4) {
+            let bs = curr.toTimeString().slice(0,5);
+            curr.setMinutes(curr.getMinutes() + 30);
+            TIME.push({ p: 'BREAK', t: bs + '-' + curr.toTimeString().slice(0,5), isB: true });
         }
     }
 
-    const grouped = {};
-    rawData.forEach(l => {
-        const k = `${l.form}-${l.subject}`;
-        if(!grouped[k]) grouped[k] = [];
-        grouped[k].push(l);
-    });
+    // Allocation logic
+    const groups = RAW.reduce((acc, obj) => {
+        const key = obj.frm + '-' + obj.sub;
+        if(!acc[key]) acc[key] = [];
+        acc[key].push(obj);
+        return acc;
+    }, {});
 
-    Object.keys(grouped).forEach(key => {
-        const lessons = grouped[key];
-        let rem = lessons.length;
-        while(rem > 0) {
+    Object.values(groups).forEach(lessons => {
+        let left = lessons.length;
+        while(left > 0) {
             let placed = false;
-            let size = (rem >= 2) ? 2 : 1;
-            const slots = size === 2 ? [0, 2, 4, 5, 7] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
+            let sz = (left >= 2) ? 2 : 1;
+            const slots = sz === 2 ? [0, 2, 5, 7] : [0, 1, 2, 3, 5, 6, 7, 8];
             for(let sIdx of slots) {
-                const p1 = `P${sIdx+1}`, p2 = `P${sIdx+2}`;
-                for(let day of DAYS) {
-                    if (size === 2) {
-                        if(sIdx+1 === breakAt || sIdx+2 > totalP) continue;
-                        if(canPlace(day, p1, lessons[0]) && canPlace(day, p2, lessons[0])) {
-                            timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
-                            rem -= 2; placed = true; break;
+                for(let d of DAYS) {
+                    const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
+                    if(sz === 2) {
+                        if(check(d, p1, lessons[0]) && check(d, p2, lessons[0])) {
+                            DATA.push({...lessons[0], d, p: p1}, {...lessons[0], d, p: p2});
+                            left -= 2; placed = true; break;
                         }
                     } else {
-                        if(canPlace(day, p1, lessons[0])) {
-                            timetable.push({...lessons[0], day, period: p1});
-                            rem--; placed = true; break;
+                        if(check(d, p1, lessons[0])) {
+                            DATA.push({...lessons[0], d, p: p1});
+                            left--; placed = true; break;
                         }
                     }
                 }
                 if(placed) break;
             }
-            if(!placed) rem--;
+            if(!placed) left--; 
         }
     });
+
     document.getElementById('viewBar').style.display = 'block';
-    populateDropdowns();
-    renderMaster();
+    const fList = [...new Set(DATA.map(x => x.frm))].sort();
+    const tList = [...new Set(DATA.map(x => x.tea))].sort();
+    document.getElementById('selStream').innerHTML = '<option value="">Streams</option>' + fList.map(f => `<option>${f}</option>`).join('');
+    document.getElementById('selTeacher').innerHTML = '<option value="">Teachers</option>' + tList.map(t => `<option>${t}</option>`).join('');
+    drawMaster();
 }
 
-function canPlace(d, p, l) {
-    if(unavailRules.some(r => r.day === d && r.teacher === l.teacher && r.period === p)) return false;
-    if(getSpecialContent(d, p)) return false;
-    return !timetable.some(t => t.day === d && t.period === p && (t.teacher === l.teacher || t.form === l.form));
+function check(d, p, l) {
+    if(RULES.some(r => r.d === d && r.t === l.tea && r.p === p)) return false;
+    if(getSpec(d, p)) return false;
+    return !DATA.some(x => x.d === d && x.p === p && (x.tea === l.tea || x.frm === l.frm));
 }
 
-function populateDropdowns() {
-    const f = [...new Set(timetable.map(x => x.form))].sort();
-    const t = [...new Set(timetable.map(x => x.teacher))].sort();
-    document.getElementById('streamSelect').innerHTML = '<option value="">Class Filter</option>' + f.map(x => `<option value="${x}">${x}</option>`).join('');
-    document.getElementById('teacherSelect').innerHTML = '<option value="">Teacher Filter</option>' + t.map(x => `<option value="${x}">${x}</option>`).join('');
-}
-
-function renderMaster() {
-    let html = getHeaderHTML("MASTER VIEW");
-    const forms = [...new Set(timetable.map(x => x.form))].sort();
+function drawMaster() {
+    let h = `<h2>MASTER VIEW</h2>`;
+    const frms = [...new Set(DATA.map(x => x.frm))].sort();
     DAYS.forEach(day => {
-        html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:55px">STRM</th>`;
-        timeline.forEach(p => {
-            const spec = getSpecialContent(day, p.p);
-            html += (p.isBreak || spec) ? `<th class="break-cell"><span class="vertical-text" style="font-size:7px;">${p.t}</span></th>` : `<th>${p.p}<br><small>${p.t}</small></th>`;
+        h += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th>STRM</th>`;
+        TIME.forEach(tp => {
+            const sp = getSpec(day, tp.p);
+            h += (tp.isB || sp) ? `<th class="break-cell"><span class="vertical-text" style="font-size:7px;">${tp.t}</span></th>` : `<th>${tp.p}<br><small>${tp.t}</small></th>`;
         });
-        html += `</tr>`;
-        forms.forEach((f, fIdx) => {
-            html += `<tr><td><b>${f}</b></td>`;
-            timeline.forEach(p => {
-                const spec = getSpecialContent(day, p.p);
-                if(p.isBreak) { if(fIdx === 0) html += `<td class="break-cell" rowspan="${forms.length}"><span class="vertical-text">BREAK</span></td>`; }
-                else if(spec) { if(fIdx === 0) html += `<td class="spec-merged" rowspan="${forms.length}"><span class="vertical-text">${spec}</span></td>`; }
+        h += `</tr>`;
+        frms.forEach((f, idx) => {
+            h += `<tr><td><b>${f}</b></td>`;
+            TIME.forEach(tp => {
+                const sp = getSpec(day, tp.p);
+                if(tp.isB) { if(idx === 0) h += `<td class="break-cell" rowspan="${frms.length}"><span class="vertical-text">BREAK</span></td>`; }
+                else if(sp) { if(idx === 0) h += `<td class="spec-merged" rowspan="${frms.length}"><span class="vertical-text">${sp}</span></td>`; }
                 else {
-                    const m = timetable.find(x => x.day === day && x.period === p.p && x.form === f);
-                    html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
+                    const m = DATA.find(x => x.d === day && x.p === tp.p && x.frm === f);
+                    h += `<td>${m ? `<b>${m.sub}</b><br>${m.tea}` : ''}</td>`;
                 }
             });
-            html += `</tr>`;
+            h += `</tr>`;
         });
-        html += `</table></div>`;
+        h += `</table></div>`;
     });
-    document.getElementById('output').innerHTML = html;
+    document.getElementById('mainDisplay').innerHTML = h;
 }
 
-function renderIndividual(type) {
-    const val = document.getElementById(type === 'stream' ? 'streamSelect' : 'teacherSelect').value;
+function drawIndiv(type) {
+    const val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
-    let html = getHeaderHTML(`${type.toUpperCase()}: ${val}`);
-    html += `<table><tr><th>DAY</th>` + timeline.map(p => p.isBreak ? `<th class="break-cell"><small style="font-size:7px">${p.t}</small></th>` : `<th>${p.p}<br>${p.t}</th>`).join('') + `</tr>`;
-    DAYS.forEach(day => {
-        html += `<tr><td><b>${day}</b></td>`;
-        timeline.forEach(p => {
-            const spec = getSpecialContent(day, p.p);
-            if(p.isBreak) html += `<td class="break-cell"><span style="font-size:8px">BRK</span></td>`;
-            else if(spec) html += `<td class="spec-merged"><span style="font-size:8px">${spec}</span></td>`;
+    let h = `<h2>${type.toUpperCase()}: ${val}</h2><table><tr><th>DAY</th>`;
+    TIME.forEach(tp => h += `<th>${tp.p}<br><small>${tp.t}</small></th>`);
+    h += `</tr>`;
+    DAYS.forEach(d => {
+        h += `<tr><td><b>${d}</b></td>`;
+        TIME.forEach(tp => {
+            const sp = getSpec(d, tp.p);
+            if(tp.isB) h += `<td class="break-cell">BRK</td>`;
+            else if(sp) h += `<td class="spec-merged">${sp}</td>`;
             else {
-                const m = timetable.find(x => x.day === day && x.period === p.p && (type==='stream'? x.form===val : x.teacher===val));
-                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:m.form}` : ''}</td>`;
+                const m = DATA.find(x => x.d === d && x.p === tp.p && (type === 'stream' ? x.frm === val : x.tea === val));
+                h += `<td>${m ? `<b>${m.sub}</b><br>${type === 'stream' ? m.tea : m.frm}` : ''}</td>`;
             }
         });
-        html += `</tr>`;
+        h += `</tr>`;
     });
-    document.getElementById('output').innerHTML = html + "</table>";
+    document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }
 
-function renderLoadAnalysis() {
-    let html = getHeaderHTML("LOAD ANALYSIS");
-    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    html += `<h3>Allocation Summary</h3><table><tr><th>Teacher</th><th>Target Load</th><th>Allocated</th></tr>`;
-    teachers.forEach(t => {
-        const target = rawData.filter(x => x.teacher === t).length;
-        const current = timetable.filter(x => x.teacher === t).length;
-        html += `<tr><td>${t}</td><td>${target}</td><td>${current}</td></tr>`;
+function drawLoad() {
+    const tList = [...new Set(RAW.map(x => x.tea))].sort();
+    let h = `<h2>LOAD ANALYSIS</h2><table style="width:50%; margin:auto;"><tr><th>TEACHER</th><th>LOAD</th></tr>`;
+    tList.forEach(t => {
+        const c = DATA.filter(x => x.tea === t).length;
+        h += `<tr><td>${t}</td><td>${c} Periods</td></tr>`;
     });
-    html += `</table>`;
-    document.getElementById('output').innerHTML = html;
+    document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }
 
-function getHeaderHTML(title) {
-    const sName = document.getElementById('schoolNameInput').value || 'TIMETABLE';
-    return `<div class="print-header"><div class="logo-container">${logoData ? `<img src="${logoData}">`:''}</div><div class="header-text"><h1>${sName}</h1><h2 style="margin:0; font-size:11px; color:#666;">${title}</h2></div><div style="width:45px"></div></div>`;
-}
-
-async function saveAsPDF() {
-    const opt = { margin: 5, filename: 'Timetable.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
-    html2pdf().set(opt).from(document.getElementById('output')).save();
+function savePDF() {
+    const el = document.getElementById('mainDisplay');
+    const opt = { margin: 5, filename: 'Timetable.pdf', jsPDF: { orientation: 'landscape' } };
+    html2pdf().set(opt).from(el).save();
 }
 </script>
 </body>

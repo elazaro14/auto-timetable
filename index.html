@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Master Double Periods</title>
+    <title>Timetable 2026 - Extended Double Periods</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
@@ -22,7 +22,6 @@
         .day-title { background: #2c3e50; color: white; padding: 4px; font-size: 13px; text-align: center; font-weight: bold; }
         .break-cell { background: #f0f0f0 !important; font-weight: bold; width: 22px !important; font-size: 10px; border: 1px solid #000; padding: 0 !important; }
         .break-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
-        .fixed-block { background: #e3f2fd !important; font-weight: bold; }
         .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px; border-top: 1px solid #eee; }
         button, select { padding: 6px 12px; border-radius: 3px; border: 1px solid #ccc; cursor: pointer; font-size: 11px; font-weight: bold; }
         .btn-main { background: #2ecc71; color: white; border: none; }
@@ -88,7 +87,6 @@ function handleUpload(e) {
         });
         const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
         document.getElementById('unavailNameDropdown').innerHTML = '<option value="">Teacher</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-        alert("CSV Loaded!");
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -105,11 +103,12 @@ function startGeneration() {
     const offT = document.getElementById('unavailNameDropdown').value;
     const offP = document.getElementById('unavailPeriod').value;
     const breakAt = parseInt(document.getElementById('cfgBreakAfter').value);
+    const totalP = parseInt(document.getElementById('cfgCount').value);
 
-    // Build Timeline
+    // Timeline Setup
     timeline = [];
     let curr = new Date(`2026-01-01T${document.getElementById('cfgStartTime').value}`);
-    for(let i=1; i<=parseInt(document.getElementById('cfgCount').value); i++) {
+    for(let i=1; i<=totalP; i++) {
         let sT = curr.toTimeString().substring(0,5);
         curr.setMinutes(curr.getMinutes() + parseInt(document.getElementById('cfgDur').value));
         let eT = curr.toTimeString().substring(0,5);
@@ -133,28 +132,39 @@ function startGeneration() {
         
         while(rem > 0) {
             let placed = false;
-            // Force Doubles for P1-P4
             let size = (rem >= 2) ? 2 : 1;
             
-            for(let att=0; att<300; att++) {
-                const day = DAYS[Math.floor(Math.random()*5)];
-                // If double, pick P1 (for P1-P2) or P3 (for P3-P4)
-                let pIdx = size === 2 ? (Math.random() > 0.5 ? 0 : 2) : Math.floor(Math.random() * 9);
-                const p1 = `P${pIdx+1}`, p2 = `P${pIdx+2}`;
+            // Priority allocation for Double Periods
+            const possibleSlots = size === 2 ? [0, 2, 4, 5, 7] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
+            
+            // Re-order slots to favor morning (Lower indices first)
+            for(let slotIdx of possibleSlots) {
+                if (slotIdx >= totalP) continue;
+                
+                const p1 = `P${slotIdx+1}`;
+                const p2 = `P${slotIdx+2}`;
 
-                if(size === 2) {
-                    if(canPlace(day, p1, lessons[0], offT, offP) && canPlace(day, p2, lessons[0], offT, offP)) {
-                        timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
-                        rem -= 2; placed = true; break;
-                    }
-                } else {
-                    if(canPlace(day, p1, lessons[0], offT, offP)) {
-                        timetable.push({...lessons[0], day, period: p1});
-                        rem--; placed = true; break;
+                for(let dIdx=0; dIdx<5; dIdx++) {
+                    const day = DAYS[dIdx];
+                    if (size === 2) {
+                        // Skip if P1-P2 straddles the break
+                        if(slotIdx+1 === breakAt) continue;
+                        if(slotIdx+2 > totalP) continue;
+
+                        if(canPlace(day, p1, lessons[0], offT, offP) && canPlace(day, p2, lessons[0], offT, offP)) {
+                            timetable.push({...lessons[0], day, period: p1}, {...lessons[0], day, period: p2});
+                            rem -= 2; placed = true; break;
+                        }
+                    } else {
+                        if(canPlace(day, p1, lessons[0], offT, offP)) {
+                            timetable.push({...lessons[0], day, period: p1});
+                            rem--; placed = true; break;
+                        }
                     }
                 }
+                if(placed) break;
             }
-            if(!placed) rem--; // Fallback to avoid infinite loop
+            if(!placed) rem--; 
         }
     });
 

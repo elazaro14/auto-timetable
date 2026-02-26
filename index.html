@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Master Pro Multi-Rule</title>
+    <title>Timetable 2026 - Master Pro Final</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
+        :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --color-spec: #f0f0f0; }
         .color-on { --color-spec: #ffecb3; --color-double: #e8f5e9; }
         .compact-mode { --row-height: 26px !important; --font-size: 9px !important; --cell-padding: 2px !important; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 5px; }
         .panel { background: white; padding: 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
         .print-header { display: flex; align-items: center; border-bottom: 2px solid var(--primary); padding: 2px 10px; margin-bottom: 5px; background: white; height: 50px; justify-content: space-between; }
-        .logo-container { height: 45px; width: 45px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .logo-container { height: 45px; width: 45px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
         .logo-container img { max-height: 100%; max-width: 100%; }
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px; }
         .input-group { display: flex; flex-direction: column; gap: 2px; }
@@ -20,7 +20,7 @@
         th, td { border: 1px solid #000; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); line-height: 1.1; }
         th { background: #eee; color: #000; font-weight: bold; }
         .day-title { background: var(--primary); color: white; padding: 4px; font-size: 13px; text-align: center; font-weight: bold; border: 2px solid #000; border-bottom: none; }
-        .break-cell, .spec-merged { background: #f0f0f0 !important; font-weight: bold; width: 22px !important; border: 1px solid #000; padding: 0 !important; }
+        .break-cell, .spec-merged { background: var(--color-spec) !important; font-weight: bold; width: 22px !important; border: 1px solid #000; padding: 0 !important; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
         .rule-tag { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 8px; display: inline-block; margin: 2px; border: 1px solid #ccc; }
         .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px; border-top: 1px solid #eee; }
@@ -43,7 +43,7 @@
         <div class="input-group"><label>Start</label><input type="time" id="cfgStartTime" value="08:00"></div>
         <div class="input-group"><label>Mins</label><input type="number" id="cfgDur" value="40"></div>
         <div class="input-group"><label>Periods</label><input type="number" id="cfgCount" value="9"></div>
-        <div class="input-group"><label>Teacher Unavailability (Multi)</label>
+        <div class="input-group"><label>Unavailability (Multi)</label>
             <div style="display:flex; gap:2px">
                 <select id="unavailDay"><option value="MONDAY">Mon</option><option value="TUESDAY">Tue</option><option value="WEDNESDAY">Wed</option><option value="THURSDAY">Thu</option><option value="FRIDAY">Fri</option></select>
                 <select id="unavailName"><option value="">Teacher</option></select>
@@ -59,13 +59,14 @@
         <input type="file" id="csvFile" accept=".csv" hidden onchange="handleUpload(event)">
         <button onclick="document.getElementById('csvFile').click()">UPLOAD CSV</button>
         <button class="btn-main" onclick="startGeneration()">GENERATE</button>
+        <button onclick="renderLoadAnalysis()">LOAD ANALYSIS</button>
         <button onclick="window.print()">PRINT</button>
         <button class="btn-main" style="background:#3498db" onclick="saveAsPDF()">SAVE PDF</button>
     </div>
 </div>
 
 <div id="viewBar" class="no-print" style="text-align:center; margin-bottom:10px; display:none;">
-    <button onclick="renderMaster()">Full Master</button> | 
+    <button onclick="renderMaster()">Full Master View</button> | 
     <select id="streamSelect" onchange="renderIndividual('stream')"></select>
     <select id="teacherSelect" onchange="renderIndividual('teacher')"></select>
 </div>
@@ -154,7 +155,6 @@ function startGeneration() {
             let placed = false;
             let size = (rem >= 2) ? 2 : 1;
             const slots = size === 2 ? [0, 2, 4, 5, 7] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
-            
             for(let sIdx of slots) {
                 const p1 = `P${sIdx+1}`, p2 = `P${sIdx+2}`;
                 for(let day of DAYS) {
@@ -176,7 +176,6 @@ function startGeneration() {
             if(!placed) rem--;
         }
     });
-
     document.getElementById('viewBar').style.display = 'block';
     populateDropdowns();
     renderMaster();
@@ -191,8 +190,8 @@ function canPlace(d, p, l) {
 function populateDropdowns() {
     const f = [...new Set(timetable.map(x => x.form))].sort();
     const t = [...new Set(timetable.map(x => x.teacher))].sort();
-    document.getElementById('streamSelect').innerHTML = '<option value="">Class</option>' + f.map(x => `<option value="${x}">${x}</option>`).join('');
-    document.getElementById('teacherSelect').innerHTML = '<option value="">Teacher</option>' + t.map(x => `<option value="${x}">${x}</option>`).join('');
+    document.getElementById('streamSelect').innerHTML = '<option value="">Class Filter</option>' + f.map(x => `<option value="${x}">${x}</option>`).join('');
+    document.getElementById('teacherSelect').innerHTML = '<option value="">Teacher Filter</option>' + t.map(x => `<option value="${x}">${x}</option>`).join('');
 }
 
 function renderMaster() {
@@ -202,7 +201,7 @@ function renderMaster() {
         html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:55px">STRM</th>`;
         timeline.forEach(p => {
             const spec = getSpecialContent(day, p.p);
-            html += (p.isBreak || spec) ? `<th class="break-cell"><span class="vertical-text" style="font-size:7px; font-weight:normal;">${p.t}</span></th>` : `<th>${p.p}<br><small>${p.t}</small></th>`;
+            html += (p.isBreak || spec) ? `<th class="break-cell"><span class="vertical-text" style="font-size:7px;">${p.t}</span></th>` : `<th>${p.p}<br><small>${p.t}</small></th>`;
         });
         html += `</tr>`;
         forms.forEach((f, fIdx) => {
@@ -242,6 +241,18 @@ function renderIndividual(type) {
         html += `</tr>`;
     });
     document.getElementById('output').innerHTML = html + "</table>";
+}
+
+function renderLoadAnalysis() {
+    let html = getHeaderHTML("LOAD ANALYSIS");
+    const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
+    html += `<h3>Teacher Load</h3><table><tr><th>Teacher</th><th>Total Periods</th></tr>`;
+    teachers.forEach(t => {
+        const count = timetable.filter(x => x.teacher === t).length;
+        html += `<tr><td>${t}</td><td>${count}</td></tr>`;
+    });
+    html += `</table>`;
+    document.getElementById('output').innerHTML = html;
 }
 
 function getHeaderHTML(title) {

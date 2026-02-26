@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Master Pro Final</title>
+    <title>Timetable 2026 - Master Pro Complete</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --color-spec: #f0f0f0; }
@@ -110,7 +110,7 @@ function handleUpload(e) {
         });
         const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
         document.getElementById('unavailName').innerHTML = '<option value="">Teacher</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
-        document.getElementById('loadStatus').innerText = "CSV LOADED ✓";
+        document.getElementById('loadStatus').innerText = "CSV LOADED ✓ (" + rawData.length + " Lessons)";
         document.getElementById('loadStatus').style.color = "green";
     };
     reader.readAsText(e.target.files[0]);
@@ -246,10 +246,11 @@ function renderIndividual(type) {
 function renderLoadAnalysis() {
     let html = getHeaderHTML("LOAD ANALYSIS");
     const teachers = [...new Set(rawData.map(x => x.teacher))].sort();
-    html += `<h3>Teacher Load</h3><table><tr><th>Teacher</th><th>Total Periods</th></tr>`;
+    html += `<h3>Allocation Summary</h3><table><tr><th>Teacher</th><th>Target Load</th><th>Allocated</th></tr>`;
     teachers.forEach(t => {
-        const count = timetable.filter(x => x.teacher === t).length;
-        html += `<tr><td>${t}</td><td>${count}</td></tr>`;
+        const target = rawData.filter(x => x.teacher === t).length;
+        const current = timetable.filter(x => x.teacher === t).length;
+        html += `<tr><td>${t}</td><td>${target}</td><td>${current}</td></tr>`;
     });
     html += `</table>`;
     document.getElementById('output').innerHTML = html;

@@ -12,14 +12,13 @@
         .container { max-width: 100%; margin: 0 auto; }
         .panel { background: white; padding: 10px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
         
-        /* UPDATED: MINIMIZED SCHOOL INFO SPACE */
         .print-header { display: flex; align-items: center; border-bottom: 2px solid var(--primary); padding: 2px 10px; margin-bottom: 5px; background: white; height: 50px; justify-content: space-between; }
         .logo-container { height: 45px; width: 45px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
         .logo-container img { max-height: 100%; max-width: 100%; }
         .header-text h1 { margin: 0; font-size: 18px; text-transform: uppercase; color: var(--primary); line-height: 1; }
         .header-text h2 { margin: 0; font-size: 11px; color: #666; }
 
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px; }
         .input-group { display: flex; flex-direction: column; gap: 2px; }
         .input-group label { font-size: 9px; font-weight: bold; color: #555; }
         
@@ -29,7 +28,6 @@
         
         .day-title { background: #2c3e50; color: white; padding: 4px; font-size: 13px; text-align: center; font-weight: bold; }
         
-        /* UPDATED: NARROW MERGED BREAK COLUMN */
         .break-cell { background: #f0f0f0 !important; font-weight: bold; width: 22px !important; font-size: 10px; border: 1px solid #000; padding: 0 !important; }
         .break-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
 
@@ -63,6 +61,7 @@
         <div class="input-group"><label>Mins</label><input type="number" id="cfgDur" value="40"></div>
         <div class="input-group"><label>Total Periods</label><input type="number" id="cfgCount" value="9"></div>
         <div class="input-group"><label>Break After P.</label><input type="number" id="cfgBreakAfter" value="4"></div>
+        <div class="input-group"><label>Break Mins</label><input type="number" id="cfgBreakDur" value="30"></div>
         <div class="input-group"><label>Teacher Off</label><select id="unavailNameDropdown"><option value="">--Select--</option></select></div>
     </div>
 
@@ -119,14 +118,21 @@ function startGeneration() {
     timetable = [];
     const vp = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
     const breakAt = parseInt(document.getElementById('cfgBreakAfter').value);
+    const breakDur = parseInt(document.getElementById('cfgBreakDur').value);
     
     timeline = [];
     let curr = new Date(`2026-01-01T${document.getElementById('cfgStartTime').value}`);
     for(let i=1; i<=parseInt(document.getElementById('cfgCount').value); i++) {
         let sT = curr.toTimeString().substring(0,5);
         curr.setMinutes(curr.getMinutes() + parseInt(document.getElementById('cfgDur').value));
-        timeline.push({p: `P${i}`, t: `${sT}-${curr.toTimeString().substring(0,5)}`, isBreak: false});
-        if(i === breakAt) timeline.push({p: "BREAK", isBreak: true});
+        let eT = curr.toTimeString().substring(0,5);
+        timeline.push({p: `P${i}`, t: `${sT}-${eT}`, isBreak: false});
+        
+        if(i === breakAt) {
+            let bStart = eT;
+            curr.setMinutes(curr.getMinutes() + breakDur);
+            timeline.push({p: "BREAK", t: `${bStart}-${curr.toTimeString().substring(0,5)}`, isBreak: true});
+        }
     }
 
     const grouped = {};
@@ -193,7 +199,7 @@ function renderMaster() {
     DAYS.forEach(day => {
         html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:60px">STRM</th>`;
         timeline.forEach(p => {
-            if(p.isBreak) html += `<th class="break-cell"></th>`;
+            if(p.isBreak) html += `<th class="break-cell"><span style="writing-mode: vertical-rl; transform: rotate(180deg); font-size:7px; font-weight:normal;">${p.t}</span></th>`;
             else html += `<th>${p.p}<br><small>${p.t}</small></th>`;
         });
         html += `</tr>`;
@@ -227,7 +233,7 @@ function renderIndividual(type) {
     const val = document.getElementById(type === 'stream' ? 'streamSelect' : 'teacherSelect').value;
     if(!val) return;
     let html = getHeaderHTML(`${type.toUpperCase()}: ${val}`);
-    html += `<table><tr><th>DAY</th>` + timeline.map(p => p.isBreak ? `<th class="break-cell"></th>` : `<th>${p.p}<br>${p.t}</th>`).join('') + `</tr>`;
+    html += `<table><tr><th>DAY</th>` + timeline.map(p => p.isBreak ? `<th class="break-cell"><small style="font-size:7px">${p.t}</small></th>` : `<th>${p.p}<br>${p.t}</th>`).join('') + `</tr>`;
     DAYS.forEach(day => {
         html += `<tr><td><b>${day}</b></td>`;
         timeline.forEach(p => {

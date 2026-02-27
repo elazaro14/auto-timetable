@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Master Pro (Final Build)</title>
+    <title>Timetable 2026 - Double/Single Engine</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
@@ -22,8 +22,7 @@
         .break-cell, .spec-merged { background: #eeeeee !important; font-weight: bold; width: 25px !important; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
         .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; flex-wrap: wrap; }
-        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #f0f0f0; }
+        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
         .btn-gen { background: #27ae60 !important; color: white; border: none; }
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } }
     </style>
@@ -38,15 +37,15 @@
         <div id="status" style="color: red; font-weight: bold; font-size: 10px;">READY</div>
     </div>
     <div class="config-grid">
-        <div class="input-group"><label>Start</label><input type="time" id="tTime" value="08:00"></div>
+        <div class="input-group"><label>Start Time</label><input type="time" id="tTime" value="08:00"></div>
         <div class="input-group"><label>Duration</label><input type="number" id="tDur" value="40"></div>
         <div class="input-group"><label>Periods</label><input type="number" id="tCount" value="9"></div>
     </div>
     <div class="controls">
         <input type="file" id="csvIn" hidden onchange="readCSV(event)">
         <button onclick="document.getElementById('csvIn').click()">1. UPLOAD CSV</button>
-        <button class="btn-gen" onclick="runGenerator()">2. GENERATE / RESCHEDULE</button>
-        <button onclick="drawLoad()">CHECK LOAD</button>
+        <button class="btn-gen" onclick="runGenerator()">2. GENERATE (DBL/SNGL)</button>
+        <button onclick="drawLoad()">LOAD ANALYSIS</button>
         <button onclick="window.print()">PRINT</button>
     </div>
 </div>
@@ -77,7 +76,7 @@ function readCSV(e) {
             const c = l.split(',');
             return { sub: c[0]?.trim().toUpperCase(), tea: c[1]?.trim(), frm: c[3]?.trim().toUpperCase() };
         });
-        document.getElementById('status').innerText = "LOADED: " + RAW.length + " LESSONS";
+        document.getElementById('status').innerText = "LOADED: " + RAW.length;
         document.getElementById('status').style.color = "green";
     };
     reader.readAsText(e.target.files[0]);
@@ -91,11 +90,9 @@ function getSpec(d, p) {
 }
 
 function runGenerator() {
-    if(RAW.length === 0) { alert("Please upload a CSV first."); return; }
+    if(RAW.length === 0) { alert("Upload CSV first."); return; }
     
-    // --- RESET DATA FOR RESCHEDULE ---
     DATA = []; FAILURES = []; TIME = [];
-    
     const count = parseInt(document.getElementById('tCount').value);
     const dur = parseInt(document.getElementById('tDur').value);
     let curr = new Date("2026-01-01T" + document.getElementById('tTime').value);
@@ -104,7 +101,7 @@ function runGenerator() {
         let s = curr.toTimeString().slice(0,5);
         curr.setMinutes(curr.getMinutes() + dur);
         TIME.push({ p: 'P'+i, t: s + '-' + curr.toTimeString().slice(0,5), isB: false });
-        if(i === 4) { // Break after P4
+        if(i === 4) { 
             let bs = curr.toTimeString().slice(0,5);
             curr.setMinutes(curr.getMinutes() + 30);
             TIME.push({ p: 'BREAK', t: bs + '-' + curr.toTimeString().slice(0,5), isB: true });
@@ -112,26 +109,28 @@ function runGenerator() {
     }
 
     const groups = RAW.reduce((acc, obj) => {
-        const key = obj.frm + '-' + obj.sub;
+        const key = obj.frm + '|' + obj.sub + '|' + obj.tea;
         if(!acc[key]) acc[key] = [];
         acc[key].push(obj);
         return acc;
     }, {});
 
-    // --- DOUBLE PRIORITY ENGINE ---
-    Object.values(groups).forEach(lessons => {
+    Object.keys(groups).forEach(key => {
+        const lessons = groups[key];
         let left = lessons.length;
-        
-        // Pass 1: Doubles (Priority)
+        let usedDays = new Set(); // Rule: One subject block (Dbl or Sngl) per day
+
+        // Pass 1: Doubles
         while(left >= 2) {
             let placed = false;
-            // Valid start indices: P1, P2, P3, P5, P6, P7 (Skips P4 to avoid break)
-            const doubleStartIndices = [0, 1, 2, 5, 6, 7]; 
-            for(let sIdx of doubleStartIndices) {
+            const doubleSlots = [0, 1, 2, 5, 6, 7]; // Skip index 3 (P4) to avoid break
+            for(let sIdx of doubleSlots) {
                 for(let d of DAYS) {
+                    if(usedDays.has(d)) continue;
                     const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
                     if(check(d, p1, lessons[0]) && check(d, p2, lessons[0])) {
                         DATA.push({...lessons[0], d, p: p1}, {...lessons[0], d, p: p2});
+                        usedDays.add(d);
                         left -= 2; placed = true; break;
                     }
                 }
@@ -140,14 +139,16 @@ function runGenerator() {
             if(!placed) break; 
         }
 
-        // Pass 2: Singles (Fill gaps like P5)
+        // Pass 2: Singles
         while(left > 0) {
             let placed = false;
-            for(let sIdx=0; sIdx < count; sIdx++) {
-                for(let d of DAYS) {
+            for(let d of DAYS) {
+                if(usedDays.has(d)) continue;
+                for(let sIdx=0; sIdx < count; sIdx++) {
                     const p = 'P'+(sIdx+1);
                     if(check(d, p, lessons[0])) {
                         DATA.push({...lessons[0], d, p: p});
+                        usedDays.add(d);
                         left--; placed = true; break;
                     }
                 }
@@ -164,7 +165,6 @@ function runGenerator() {
 
 function check(d, p, l) {
     if(getSpec(d, p)) return false;
-    // Check teacher or stream booking
     return !DATA.some(x => x.d === d && x.p === p && (x.tea === l.tea || x.frm === l.frm));
 }
 
@@ -202,7 +202,7 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(RAW.map(x => x.tea))].sort();
-    let h = `<h2>LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>REQ</th><th>GOT</th><th>STATUS</th></tr>`;
+    let h = `<h2>TEACHER LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>REQ</th><th>GOT</th><th>STATUS</th></tr>`;
     list.forEach(t => {
         const target = RAW.filter(x => x.tea === t).length;
         const got = DATA.filter(x => x.tea === t).length;

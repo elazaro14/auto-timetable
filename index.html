@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Double/Single Engine</title>
+    <title>Timetable 2026 - Master Pro (Total Refresh)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
@@ -19,9 +19,9 @@
         th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); line-height: 1.1; }
         th { background: #f8f9fa; }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; border-bottom: none; }
-        .break-cell, .spec-merged { background: #eeeeee !important; font-weight: bold; width: 25px !important; }
+        .break-cell, .spec-merged { background: #eee !important; font-weight: bold; width: 25px !important; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
-        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; flex-wrap: wrap; }
+        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
         button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
         .btn-gen { background: #27ae60 !important; color: white; border: none; }
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } }
@@ -44,8 +44,8 @@
     <div class="controls">
         <input type="file" id="csvIn" hidden onchange="readCSV(event)">
         <button onclick="document.getElementById('csvIn').click()">1. UPLOAD CSV</button>
-        <button class="btn-gen" onclick="runGenerator()">2. GENERATE (DBL/SNGL)</button>
-        <button onclick="drawLoad()">LOAD ANALYSIS</button>
+        <button class="btn-gen" onclick="runGenerator()">2. GENERATE & REFRESH</button>
+        <button onclick="drawLoad()">CHECK LOAD</button>
         <button onclick="window.print()">PRINT</button>
     </div>
 </div>
@@ -76,7 +76,7 @@ function readCSV(e) {
             const c = l.split(',');
             return { sub: c[0]?.trim().toUpperCase(), tea: c[1]?.trim(), frm: c[3]?.trim().toUpperCase() };
         });
-        document.getElementById('status').innerText = "LOADED: " + RAW.length;
+        document.getElementById('status').innerText = "DATA LOADED: " + RAW.length;
         document.getElementById('status').style.color = "green";
     };
     reader.readAsText(e.target.files[0]);
@@ -92,7 +92,11 @@ function getSpec(d, p) {
 function runGenerator() {
     if(RAW.length === 0) { alert("Upload CSV first."); return; }
     
+    // --- 1. FULL RESET ---
     DATA = []; FAILURES = []; TIME = [];
+    document.getElementById('mainDisplay').innerHTML = ""; 
+    
+    // --- 2. REBUILD TIME AXIS ---
     const count = parseInt(document.getElementById('tCount').value);
     const dur = parseInt(document.getElementById('tDur').value);
     let curr = new Date("2026-01-01T" + document.getElementById('tTime').value);
@@ -115,15 +119,15 @@ function runGenerator() {
         return acc;
     }, {});
 
+    // --- 3. ALLOCATION (DBL/SNGL RULE) ---
     Object.keys(groups).forEach(key => {
         const lessons = groups[key];
         let left = lessons.length;
-        let usedDays = new Set(); // Rule: One subject block (Dbl or Sngl) per day
+        let usedDays = new Set();
 
-        // Pass 1: Doubles
         while(left >= 2) {
             let placed = false;
-            const doubleSlots = [0, 1, 2, 5, 6, 7]; // Skip index 3 (P4) to avoid break
+            const doubleSlots = [0, 1, 2, 5, 6, 7]; 
             for(let sIdx of doubleSlots) {
                 for(let d of DAYS) {
                     if(usedDays.has(d)) continue;
@@ -139,7 +143,6 @@ function runGenerator() {
             if(!placed) break; 
         }
 
-        // Pass 2: Singles
         while(left > 0) {
             let placed = false;
             for(let d of DAYS) {
@@ -158,6 +161,7 @@ function runGenerator() {
         }
     });
 
+    // --- 4. RENDER REFRESHED UI ---
     document.getElementById('viewBar').style.display = 'block';
     populateDropdowns();
     drawMaster();
@@ -202,12 +206,11 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(RAW.map(x => x.tea))].sort();
-    let h = `<h2>TEACHER LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>REQ</th><th>GOT</th><th>STATUS</th></tr>`;
+    let h = `<h2>LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>REQ</th><th>GOT</th><th>STATUS</th></tr>`;
     list.forEach(t => {
         const target = RAW.filter(x => x.tea === t).length;
         const got = DATA.filter(x => x.tea === t).length;
-        const status = got === target ? '✅' : '❌ Missing ' + (target - got);
-        h += `<tr><td>${t}</td><td>${target}</td><td>${got}</td><td>${status}</td></tr>`;
+        h += `<tr><td>${t}</td><td>${target}</td><td>${got}</td><td>${got===target?'✅':'❌ Missing '+(target-got)}</td></tr>`;
     });
     document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Refresh & Reallocate</title>
+    <title>Timetable 2026 - Smart Shuffle Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
@@ -35,7 +35,7 @@
     <div class="controls">
         <input type="file" id="csvIn" hidden onchange="readCSV(event)">
         <button onclick="document.getElementById('csvIn').click()">1. UPLOAD CSV</button>
-        <button class="btn-gen" onclick="runGenerator()">2. GENERATE & REALLOCATE</button>
+        <button class="btn-gen" onclick="runGenerator()">2. GENERATE & SHUFFLE</button>
         <button onclick="drawLoad()">CHECK LOAD</button>
         <button onclick="window.print()">PRINT</button>
     </div>
@@ -61,7 +61,7 @@ function readCSV(e) {
             const c = l.split(',');
             return { sub: c[0]?.trim().toUpperCase(), tea: c[1]?.trim(), frm: c[3]?.trim().toUpperCase() };
         });
-        alert("Loaded " + RAW.length + " lessons.");
+        alert("Success! " + RAW.length + " lessons loaded.");
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -73,14 +73,23 @@ function getSpec(d, p) {
     return null;
 }
 
+// Fisher-Yates Shuffle Algorithm
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
 function runGenerator() {
-    if(RAW.length === 0) return alert("Upload CSV first!");
+    if(RAW.length === 0) return alert("Please upload a CSV file first.");
 
-    // --- FULL RESET ---
+    // --- FULL REFRESH / RESET ---
     DATA = []; FAILURES = []; TIME = [];
-    document.getElementById('mainDisplay').innerHTML = "Generating...";
+    document.getElementById('mainDisplay').innerHTML = "Optimizing Schedule...";
 
-    // --- BUILD TIME ---
+    // --- REBUILD TIME AXIS ---
     const count = parseInt(document.getElementById('tCount').value);
     const dur = parseInt(document.getElementById('tDur').value);
     let curr = new Date("2026-01-01T" + document.getElementById('tTime').value);
@@ -96,24 +105,31 @@ function runGenerator() {
         }
     }
 
-    // --- REALLOCATE ---
-    const groups = RAW.reduce((acc, obj) => {
+    // --- SHUFFLE SUBJECTS FOR FAIR REALLOCATION ---
+    const groupsMap = RAW.reduce((acc, obj) => {
         const key = obj.frm + '|' + obj.sub + '|' + obj.tea;
         if(!acc[key]) acc[key] = [];
         acc[key].push(obj);
         return acc;
     }, {});
+    
+    let groupKeys = shuffle(Object.keys(groupsMap));
 
-    Object.keys(groups).forEach(key => {
-        let lessons = groups[key];
+    // --- ALLOCATION LOOP ---
+    groupKeys.forEach(key => {
+        let lessons = groupsMap[key];
         let left = lessons.length;
         let usedDays = new Set();
+        let shuffledDays = shuffle([...DAYS]);
 
-        // Pass 1: Doubles
+        // Pass 1: Attempt Doubles (Priority)
         while(left >= 2) {
             let placed = false;
-            for(let sIdx of [0, 1, 2, 5, 6, 7]) { // Valid double starts
-                for(let d of DAYS) {
+            // Shuffled start indices for double periods (excludes P4 to avoid break)
+            let doubleStarts = shuffle([0, 1, 2, 5, 6, 7]); 
+            
+            for(let sIdx of doubleStarts) {
+                for(let d of shuffledDays) {
                     if(usedDays.has(d)) continue;
                     const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
                     if(check(d, p1, lessons[0]) && check(d, p2, lessons[0])) {
@@ -126,12 +142,14 @@ function runGenerator() {
             if(!placed) break;
         }
 
-        // Pass 2: Singles
+        // Pass 2: Attempt Singles
         while(left > 0) {
             let placed = false;
-            for(let d of DAYS) {
+            for(let d of shuffledDays) {
                 if(usedDays.has(d)) continue;
-                for(let sIdx=0; sIdx < count; sIdx++) {
+                // Try every available period for a single
+                let allPeriods = shuffle([...Array(count).keys()]);
+                for(let sIdx of allPeriods) {
                     const p = 'P'+(sIdx+1);
                     if(check(d, p, lessons[0])) {
                         DATA.push({...lessons[0], d, p: p});
@@ -151,6 +169,7 @@ function runGenerator() {
 
 function check(d, p, l) {
     if(getSpec(d, p)) return false;
+    // Check if Teacher or Stream is already busy at this time
     return !DATA.some(x => x.d === d && x.p === p && (x.tea === l.tea || x.frm === l.frm));
 }
 
@@ -188,11 +207,11 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(RAW.map(x => x.tea))].sort();
-    let h = `<h2>LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>GOT</th><th>STATUS</th></tr>`;
+    let h = `<h2>TEACHER LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>LOADED</th><th>STATUS</th></tr>`;
     list.forEach(t => {
         const target = RAW.filter(x => x.tea === t).length;
         const got = DATA.filter(x => x.tea === t).length;
-        h += `<tr><td>${t}</td><td>${got}/${target}</td><td>${got===target?'✅':'❌'}</td></tr>`;
+        h += `<tr><td>${t}</td><td>${got} / ${target}</td><td>${got===target?'✅ OK':'❌ Incomplete'}</td></tr>`;
     });
     document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }
@@ -200,7 +219,7 @@ function drawLoad() {
 function drawIndiv(type) {
     const val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
-    let h = `<h2>${val}</h2><table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
+    let h = `<h2>${val} Timetable</h2><table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         TIME.forEach(tp => {

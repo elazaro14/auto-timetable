@@ -2,23 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Master Pro (Total Refresh)</title>
+    <title>Timetable 2026 - Refresh & Reallocate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
         .compact-mode { --row-height: 28px !important; --font-size: 10px !important; --cell-padding: 2px !important; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 5px; }
         .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px; border-top: 4px solid var(--primary); }
-        .print-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; background: white; padding: 5px; }
-        .logo-container { width: 50px; height: 50px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .logo-container img { max-width: 100%; max-height: 100%; }
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
         .input-group { display: flex; flex-direction: column; gap: 4px; }
         .input-group label { font-size: 10px; font-weight: bold; color: #666; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; border: 2px solid #000; margin-top: 10px; }
-        th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); line-height: 1.1; }
+        th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); }
         th { background: #f8f9fa; }
-        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; border-bottom: none; }
+        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; }
         .break-cell, .spec-merged { background: #eee !important; font-weight: bold; width: 25px !important; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
         .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
@@ -30,12 +27,6 @@
 <body class="compact-mode">
 
 <div class="panel no-print">
-    <div class="print-header">
-        <div class="logo-container" id="logoBox" onclick="document.getElementById('logoIn').click()">LOGO</div>
-        <input type="file" id="logoIn" hidden onchange="loadLogo(event)">
-        <input type="text" id="schName" placeholder="SCHOOL NAME" style="font-size: 18px; text-align: center; flex-grow: 1; border: none; border-bottom: 2px solid #eee;">
-        <div id="status" style="color: red; font-weight: bold; font-size: 10px;">READY</div>
-    </div>
     <div class="config-grid">
         <div class="input-group"><label>Start Time</label><input type="time" id="tTime" value="08:00"></div>
         <div class="input-group"><label>Duration</label><input type="number" id="tDur" value="40"></div>
@@ -44,13 +35,13 @@
     <div class="controls">
         <input type="file" id="csvIn" hidden onchange="readCSV(event)">
         <button onclick="document.getElementById('csvIn').click()">1. UPLOAD CSV</button>
-        <button class="btn-gen" onclick="runGenerator()">2. GENERATE & REFRESH</button>
+        <button class="btn-gen" onclick="runGenerator()">2. GENERATE & REALLOCATE</button>
         <button onclick="drawLoad()">CHECK LOAD</button>
         <button onclick="window.print()">PRINT</button>
     </div>
 </div>
 
-<div id="viewBar" class="no-print" style="text-align:center; display:none; padding:10px; background:#fff; border-bottom:1px solid #ddd;">
+<div id="viewBar" class="no-print" style="text-align:center; display:none; padding:10px;">
     <button onclick="drawMaster()">MASTER VIEW</button> | 
     <select id="selStream" onchange="drawIndiv('stream')"><option value="">Streams</option></select>
     <select id="selTeacher" onchange="drawIndiv('teacher')"><option value="">Teachers</option></select>
@@ -59,14 +50,8 @@
 <div id="mainDisplay"></div>
 
 <script>
-let RAW = [], DATA = [], TIME = [], LOGO = null, FAILURES = [];
+let RAW = [], DATA = [], TIME = [], FAILURES = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-
-function loadLogo(e) {
-    const reader = new FileReader();
-    reader.onload = (r) => { LOGO = r.target.result; document.getElementById('logoBox').innerHTML = `<img src="${LOGO}">`; };
-    reader.readAsDataURL(e.target.files[0]);
-}
 
 function readCSV(e) {
     const reader = new FileReader();
@@ -76,8 +61,7 @@ function readCSV(e) {
             const c = l.split(',');
             return { sub: c[0]?.trim().toUpperCase(), tea: c[1]?.trim(), frm: c[3]?.trim().toUpperCase() };
         });
-        document.getElementById('status').innerText = "DATA LOADED: " + RAW.length;
-        document.getElementById('status').style.color = "green";
+        alert("Loaded " + RAW.length + " lessons.");
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -90,13 +74,13 @@ function getSpec(d, p) {
 }
 
 function runGenerator() {
-    if(RAW.length === 0) { alert("Upload CSV first."); return; }
-    
-    // --- 1. FULL RESET ---
+    if(RAW.length === 0) return alert("Upload CSV first!");
+
+    // --- FULL RESET ---
     DATA = []; FAILURES = []; TIME = [];
-    document.getElementById('mainDisplay').innerHTML = ""; 
-    
-    // --- 2. REBUILD TIME AXIS ---
+    document.getElementById('mainDisplay').innerHTML = "Generating...";
+
+    // --- BUILD TIME ---
     const count = parseInt(document.getElementById('tCount').value);
     const dur = parseInt(document.getElementById('tDur').value);
     let curr = new Date("2026-01-01T" + document.getElementById('tTime').value);
@@ -105,13 +89,14 @@ function runGenerator() {
         let s = curr.toTimeString().slice(0,5);
         curr.setMinutes(curr.getMinutes() + dur);
         TIME.push({ p: 'P'+i, t: s + '-' + curr.toTimeString().slice(0,5), isB: false });
-        if(i === 4) { 
+        if(i === 4) {
             let bs = curr.toTimeString().slice(0,5);
             curr.setMinutes(curr.getMinutes() + 30);
             TIME.push({ p: 'BREAK', t: bs + '-' + curr.toTimeString().slice(0,5), isB: true });
         }
     }
 
+    // --- REALLOCATE ---
     const groups = RAW.reduce((acc, obj) => {
         const key = obj.frm + '|' + obj.sub + '|' + obj.tea;
         if(!acc[key]) acc[key] = [];
@@ -119,30 +104,29 @@ function runGenerator() {
         return acc;
     }, {});
 
-    // --- 3. ALLOCATION (DBL/SNGL RULE) ---
     Object.keys(groups).forEach(key => {
-        const lessons = groups[key];
+        let lessons = groups[key];
         let left = lessons.length;
         let usedDays = new Set();
 
+        // Pass 1: Doubles
         while(left >= 2) {
             let placed = false;
-            const doubleSlots = [0, 1, 2, 5, 6, 7]; 
-            for(let sIdx of doubleSlots) {
+            for(let sIdx of [0, 1, 2, 5, 6, 7]) { // Valid double starts
                 for(let d of DAYS) {
                     if(usedDays.has(d)) continue;
                     const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
                     if(check(d, p1, lessons[0]) && check(d, p2, lessons[0])) {
                         DATA.push({...lessons[0], d, p: p1}, {...lessons[0], d, p: p2});
-                        usedDays.add(d);
-                        left -= 2; placed = true; break;
+                        usedDays.add(d); left -= 2; placed = true; break;
                     }
                 }
                 if(placed) break;
             }
-            if(!placed) break; 
+            if(!placed) break;
         }
 
+        // Pass 2: Singles
         while(left > 0) {
             let placed = false;
             for(let d of DAYS) {
@@ -151,8 +135,7 @@ function runGenerator() {
                     const p = 'P'+(sIdx+1);
                     if(check(d, p, lessons[0])) {
                         DATA.push({...lessons[0], d, p: p});
-                        usedDays.add(d);
-                        left--; placed = true; break;
+                        usedDays.add(d); left--; placed = true; break;
                     }
                 }
                 if(placed) break;
@@ -161,7 +144,6 @@ function runGenerator() {
         }
     });
 
-    // --- 4. RENDER REFRESHED UI ---
     document.getElementById('viewBar').style.display = 'block';
     populateDropdowns();
     drawMaster();
@@ -180,7 +162,7 @@ function populateDropdowns() {
 }
 
 function drawMaster() {
-    let h = `<h2>MASTER TIMETABLE</h2>`;
+    let h = "";
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
     DAYS.forEach(day => {
         h += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th>STRM</th>`;
@@ -206,11 +188,11 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(RAW.map(x => x.tea))].sort();
-    let h = `<h2>LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>REQ</th><th>GOT</th><th>STATUS</th></tr>`;
+    let h = `<h2>LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>GOT</th><th>STATUS</th></tr>`;
     list.forEach(t => {
         const target = RAW.filter(x => x.tea === t).length;
         const got = DATA.filter(x => x.tea === t).length;
-        h += `<tr><td>${t}</td><td>${target}</td><td>${got}</td><td>${got===target?'✅':'❌ Missing '+(target-got)}</td></tr>`;
+        h += `<tr><td>${t}</td><td>${got}/${target}</td><td>${got===target?'✅':'❌'}</td></tr>`;
     });
     document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }

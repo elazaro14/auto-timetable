@@ -5,22 +5,33 @@
     <title>Timetable 2026 - Smart Shuffle Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; }
+        :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --accent: #27ae60; }
         .compact-mode { --row-height: 28px !important; --font-size: 10px !important; --cell-padding: 2px !important; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 5px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 10px; }
+        
         .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px; border-top: 4px solid var(--primary); }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .input-group { display: flex; flex-direction: column; gap: 4px; }
-        .input-group label { font-size: 10px; font-weight: bold; color: #666; }
+        .input-group label { font-size: 11px; font-weight: bold; color: #666; }
+        
+        /* Subject Registry Styles */
+        .registry-area { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
+        .registry-row { display: grid; grid-template-columns: 1fr 1fr 1fr 80px 40px; gap: 5px; margin-bottom: 5px; }
+        .registry-row input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        
         table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; border: 2px solid #000; margin-top: 10px; }
         th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); }
         th { background: #f8f9fa; }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; }
         .break-cell, .spec-merged { background: #eee !important; font-weight: bold; width: 25px !important; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
+        
         .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
-        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
-        .btn-gen { background: #27ae60 !important; color: white; border: none; }
+        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #f0f0f0; }
+        .btn-gen { background: var(--accent) !important; color: white; border: none; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 4px 10px; font-size: 10px; }
+        
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } }
     </style>
 </head>
@@ -29,13 +40,28 @@
 <div class="panel no-print">
     <div class="config-grid">
         <div class="input-group"><label>Start Time</label><input type="time" id="tTime" value="08:00"></div>
-        <div class="input-group"><label>Duration</label><input type="number" id="tDur" value="40"></div>
-        <div class="input-group"><label>Periods</label><input type="number" id="tCount" value="9"></div>
+        <div class="input-group"><label>Period Duration (min)</label><input type="number" id="tDur" value="40"></div>
+        <div class="input-group"><label>Periods per Day</label><input type="number" id="tCount" value="9"></div>
     </div>
+
+    <div class="registry-area">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <label style="font-weight:bold; font-size:12px;">SUBJECT REGISTRY</label>
+            <button class="btn-add" onclick="addRow()">+ ADD SUBJECT</button>
+        </div>
+        <div id="registryList">
+            <div class="registry-row">
+                <input type="text" placeholder="Subject (e.g. MATH)" class="reg-sub">
+                <input type="text" placeholder="Teacher" class="reg-tea">
+                <input type="text" placeholder="Stream/Form" class="reg-frm">
+                <input type="number" placeholder="Periods/Wk" class="reg-pwk" title="Total periods per week">
+                <span></span>
+            </div>
+        </div>
+    </div>
+
     <div class="controls">
-        <input type="file" id="csvIn" hidden onchange="readCSV(event)">
-        <button onclick="document.getElementById('csvIn').click()">1. UPLOAD CSV</button>
-        <button class="btn-gen" onclick="runGenerator()">2. GENERATE & SHUFFLE</button>
+        <button class="btn-gen" onclick="runGenerator()">GENERATE TIMETABLE</button>
         <button onclick="drawLoad()">CHECK LOAD</button>
         <button onclick="window.print()">PRINT</button>
     </div>
@@ -50,20 +76,20 @@
 <div id="mainDisplay"></div>
 
 <script>
-let RAW = [], DATA = [], TIME = [], FAILURES = [];
+let DATA = [], TIME = [], FAILURES = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
-function readCSV(e) {
-    const reader = new FileReader();
-    reader.onload = (r) => {
-        const rows = r.target.result.split('\n').slice(1);
-        RAW = rows.filter(l => l.trim()).map(l => {
-            const c = l.split(',');
-            return { sub: c[0]?.trim().toUpperCase(), tea: c[1]?.trim(), frm: c[3]?.trim().toUpperCase() };
-        });
-        alert("Success! " + RAW.length + " lessons loaded.");
-    };
-    reader.readAsText(e.target.files[0]);
+function addRow() {
+    const div = document.createElement('div');
+    div.className = 'registry-row';
+    div.innerHTML = `
+        <input type="text" placeholder="Subject" class="reg-sub">
+        <input type="text" placeholder="Teacher" class="reg-tea">
+        <input type="text" placeholder="Stream/Form" class="reg-frm">
+        <input type="number" placeholder="Periods/Wk" class="reg-pwk">
+        <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
+    `;
+    document.getElementById('registryList').appendChild(div);
 }
 
 function getSpec(d, p) {
@@ -87,11 +113,23 @@ function check(d, p, l) {
 }
 
 function runGenerator() {
-    if(RAW.length === 0) return alert("Please upload a CSV file first.");
+    const rows = document.querySelectorAll('.registry-row');
+    let RAW_DATA = [];
+    
+    rows.forEach(row => {
+        const sub = row.querySelector('.reg-sub').value.trim().toUpperCase();
+        const tea = row.querySelector('.reg-tea').value.trim();
+        const frm = row.querySelector('.reg-frm').value.trim().toUpperCase();
+        const pwk = parseInt(row.querySelector('.reg-pwk').value) || 0;
+        
+        if(sub && tea && frm && pwk > 0) {
+            RAW_DATA.push({ sub, tea, frm, pwk });
+        }
+    });
+
+    if(RAW_DATA.length === 0) return alert("Please add at least one subject with periods per week.");
 
     DATA = []; FAILURES = []; TIME = [];
-    document.getElementById('mainDisplay').innerHTML = "Optimizing Schedule...";
-
     const count = parseInt(document.getElementById('tCount').value);
     const dur = parseInt(document.getElementById('tDur').value);
     let curr = new Date("2026-01-01T" + document.getElementById('tTime').value);
@@ -107,58 +145,53 @@ function runGenerator() {
         }
     }
 
-    const groupsMap = RAW.reduce((acc, obj) => {
-        const key = obj.frm + '|' + obj.sub + '|' + obj.tea;
-        if(!acc[key]) acc[key] = [];
-        acc[key].push(obj);
-        return acc;
-    }, {});
-    
-    let groupKeys = shuffle(Object.keys(groupsMap));
+    // Allocation Logic
+    let groupKeys = shuffle(RAW_DATA);
 
-    groupKeys.forEach(key => {
-        let lessons = [...groupsMap[key]];
-        let doubleDaysUsed = new Set(); 
-        let allDaysShuffled = shuffle([...DAYS]);
+    groupKeys.forEach(item => {
+        let left = item.pwk;
+        let doubleDone = false;
+        let shuffledDays = shuffle([...DAYS]);
 
-        // PASS 1: Attempt ONLY ONE double period per subject per day
-        while(lessons.length >= 2) {
+        // 1. FIRST PRIORITY: Place ONE double period
+        if (left >= 2) {
             let placed = false;
-            let doubleStarts = shuffle([0, 1, 2, 4, 5, 6, 7]).filter(s => s + 1 < count); 
+            let doubleStarts = shuffle([0, 1, 2, 4, 5, 6, 7]).filter(s => s + 1 < count);
             
-            for(let d of allDaysShuffled) {
-                if(doubleDaysUsed.has(d)) continue; // Ensure only one double per day
-
+            for(let d of shuffledDays) {
                 for(let sIdx of doubleStarts) {
                     const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
-                    if(check(d, p1, lessons[0]) && check(d, p2, lessons[0])) {
-                        DATA.push({...lessons[0], d, p: p1}, {...lessons[0], d, p: p2});
-                        doubleDaysUsed.add(d);
-                        lessons.splice(0, 2);
+                    if(check(d, p1, item) && check(d, p2, item)) {
+                        DATA.push({...item, d, p: p1}, {...item, d, p: p2});
+                        left -= 2;
+                        doubleDone = true;
                         placed = true; break;
                     }
                 }
                 if(placed) break;
             }
-            if(!placed) break; // If no more double slots found, move to singles
         }
 
-        // PASS 2: Singles for remainders
-        while(lessons.length > 0) {
+        // 2. Remaining periods as singles on different days if possible
+        while(left > 0) {
             let placed = false;
-            for(let d of allDaysShuffled) {
+            for(let d of shuffledDays) {
+                // Try to avoid putting a single on the same day as the double if other days are free
                 let allPeriods = shuffle([...Array(count).keys()]);
                 for(let sIdx of allPeriods) {
                     const p = 'P'+(sIdx+1);
-                    if(check(d, p, lessons[0])) {
-                        DATA.push({...lessons[0], d, p: p});
-                        lessons.shift();
+                    if(check(d, p, item)) {
+                        DATA.push({...item, d, p: p});
+                        left--;
                         placed = true; break;
                     }
                 }
                 if(placed) break;
             }
-            if(!placed) { FAILURES.push(lessons.shift()); }
+            if(!placed) { 
+                FAILURES.push({...item, remaining: left}); 
+                left = 0; 
+            }
         }
     });
 
@@ -200,12 +233,11 @@ function drawMaster() {
 }
 
 function drawLoad() {
-    const list = [...new Set(RAW.map(x => x.tea))].sort();
-    let h = `<h2>TEACHER LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>LOADED</th><th>STATUS</th></tr>`;
+    const list = [...new Set(DATA.map(x => x.tea))].sort();
+    let h = `<h2>TEACHER LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>LOADED PERIODS</th></tr>`;
     list.forEach(t => {
-        const target = RAW.filter(x => x.tea === t).length;
-        const got = DATA.filter(x => x.tea === t).length;
-        h += `<tr><td>${t}</td><td>${got} / ${target}</td><td>${got===target?'✅ OK':'❌ Incomplete'}</td></tr>`;
+        const count = DATA.filter(x => x.tea === t).length;
+        h += `<tr><td>${t}</td><td>${count}</td></tr>`;
     });
     document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }

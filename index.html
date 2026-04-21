@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Stream & Form Pro</title>
+    <title>Timetable 2026 - Multi-Stream Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --accent: #27ae60; }
@@ -16,8 +16,8 @@
         .inline-group { display: flex; align-items: center; gap: 8px; font-size: 11px; }
         
         .registry-area { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
-        .registry-header { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr 40px; gap: 5px; font-weight: bold; font-size: 10px; color: #555; margin-bottom: 5px; padding-left: 5px; }
-        .registry-row { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr 40px; gap: 5px; margin-bottom: 5px; }
+        .registry-header { display: grid; grid-template-columns: 1.2fr 1.5fr 2fr 1fr 40px; gap: 5px; font-weight: bold; font-size: 10px; color: #555; margin-bottom: 5px; padding-left: 5px; }
+        .registry-row { display: grid; grid-template-columns: 1.2fr 1.5fr 2fr 1fr 40px; gap: 5px; margin-bottom: 5px; }
         .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         
         table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; border: 2px solid #000; margin-top: 10px; }
@@ -64,21 +64,21 @@
 
     <div class="registry-area">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:13px;">SUBJECT & STREAM REGISTRY</label>
-            <button class="btn-add" onclick="addRow()">+ ADD NEW SUBJECT LINE</button>
+            <label style="font-weight:bold; font-size:13px;">SUBJECT & MULTI-STREAM REGISTRY</label>
+            <button class="btn-add" onclick="addRow()">+ ADD NEW ROW</button>
         </div>
         <div class="registry-header">
-            <div>SUBJECT (e.g., PHYS)</div>
+            <div>SUBJECT</div>
             <div>TEACHER</div>
-            <div>STREAM (e.g., F1A)</div>
+            <div>STREAMS (e.g., F1A, F1B, F1C)</div>
             <div>PER/WK</div>
             <div></div>
         </div>
         <div id="registryList">
             <div class="registry-row">
-                <input type="text" placeholder="e.g. MATH" class="reg-sub">
-                <input type="text" placeholder="Teacher Name" class="reg-tea">
-                <input type="text" placeholder="F1A" class="reg-frm">
+                <input type="text" placeholder="MATH" class="reg-sub">
+                <input type="text" placeholder="Mr. Juma" class="reg-tea">
+                <input type="text" placeholder="F1A, F1B" class="reg-frm">
                 <input type="number" value="6" class="reg-pwk">
                 <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
             </div>
@@ -108,9 +108,9 @@ function addRow() {
     const div = document.createElement('div');
     div.className = 'registry-row';
     div.innerHTML = `
-        <input type="text" placeholder="e.g. CHEM" class="reg-sub">
+        <input type="text" placeholder="Subject" class="reg-sub">
         <input type="text" placeholder="Teacher" class="reg-tea">
-        <input type="text" placeholder="F1B" class="reg-frm">
+        <input type="text" placeholder="F1A, F1B" class="reg-frm">
         <input type="number" value="6" class="reg-pwk">
         <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
     `;
@@ -134,21 +134,30 @@ function shuffle(array) {
 
 function check(d, p, l) {
     if(getSpec(d, p)) return false;
+    // Strictly checks if Teacher or the specific Stream is occupied
     return !DATA.some(x => x.d === d && x.p === p && (x.tea === l.tea || x.frm === l.frm));
 }
 
 function runGenerator() {
     const rows = document.querySelectorAll('.registry-row');
     let RAW_DATA = [];
+    
     rows.forEach(row => {
         const sub = row.querySelector('.reg-sub').value.trim().toUpperCase();
         const tea = row.querySelector('.reg-tea').value.trim();
-        const frm = row.querySelector('.reg-frm').value.trim().toUpperCase();
+        const frmInput = row.querySelector('.reg-frm').value.trim().toUpperCase();
         const pwk = parseInt(row.querySelector('.reg-pwk').value) || 0;
-        if(sub && tea && frm && pwk > 0) RAW_DATA.push({ sub, tea, frm, pwk });
+        
+        if(sub && tea && frmInput && pwk > 0) {
+            // Split comma separated streams into individual units
+            const streams = frmInput.split(',').map(s => s.trim()).filter(s => s);
+            streams.forEach(stream => {
+                RAW_DATA.push({ sub, tea, frm: stream, pwk });
+            });
+        }
     });
 
-    if(RAW_DATA.length === 0) return alert("Registry is empty. Please add subjects.");
+    if(RAW_DATA.length === 0) return alert("Please define subjects and streams first.");
 
     DATA = []; FAILURES = []; TIME = [];
     const count = parseInt(document.getElementById('tCount').value);
@@ -164,7 +173,6 @@ function runGenerator() {
         let s = curr.toTimeString().slice(0,5);
         curr.setMinutes(curr.getMinutes() + dur);
         TIME.push({ p: 'P'+i, t: s + '-' + curr.toTimeString().slice(0,5), isB: false });
-        
         if(bEn && i === bAft) {
             let ts = curr.toTimeString().slice(0,5);
             curr.setMinutes(curr.getMinutes() + parseInt(document.getElementById('breakDur').value));
@@ -177,8 +185,8 @@ function runGenerator() {
         }
     }
 
-    let groupKeys = shuffle(RAW_DATA);
-    groupKeys.forEach(item => {
+    let items = shuffle(RAW_DATA);
+    items.forEach(item => {
         let left = item.pwk;
         let shuffledDays = shuffle([...DAYS]);
         let doubleDone = false;
@@ -223,7 +231,6 @@ function runGenerator() {
     document.getElementById('viewBar').style.display = 'block';
     populateDropdowns();
     drawMaster();
-    if(FAILURES.length > 0) alert("Note: " + FAILURES.length + " slots could not be placed due to teacher clashes.");
 }
 
 function populateDropdowns() {
@@ -260,7 +267,7 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(DATA.map(x => x.tea))].sort();
-    let h = `<h2>Teacher Workload</h2><table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>TOTAL PERIODS</th></tr>`;
+    let h = `<h2>Teacher Workload Summary</h2><table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>TOTAL PERIODS</th></tr>`;
     list.forEach(t => {
         h += `<tr><td>${t}</td><td>${DATA.filter(x => x.tea === t).length}</td></tr>`;
     });
@@ -270,7 +277,7 @@ function drawLoad() {
 function drawIndiv(type) {
     const val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
-    let h = `<h2>Timetable for: ${val}</h2><table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
+    let h = `<h2>${val} Timetable</h2><table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         TIME.forEach(tp => {

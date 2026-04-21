@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Smart Shuffle Pro</title>
+    <title>Timetable 2026 - Stream & Form Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --accent: #27ae60; }
@@ -16,8 +16,9 @@
         .inline-group { display: flex; align-items: center; gap: 8px; font-size: 11px; }
         
         .registry-area { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
-        .registry-row { display: grid; grid-template-columns: 1fr 1fr 1fr 80px 40px; gap: 5px; margin-bottom: 5px; }
-        .registry-row input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+        .registry-header { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr 40px; gap: 5px; font-weight: bold; font-size: 10px; color: #555; margin-bottom: 5px; padding-left: 5px; }
+        .registry-row { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr 40px; gap: 5px; margin-bottom: 5px; }
+        .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
         
         table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; border: 2px solid #000; margin-top: 10px; }
         th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); }
@@ -29,7 +30,7 @@
         .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
         button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
         .btn-gen { background: var(--accent) !important; color: white; border: none; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 4px 10px; font-size: 10px; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 6px 12px; font-size: 11px; }
         
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } }
     </style>
@@ -43,19 +44,19 @@
         <div class="input-group"><label>Total Periods</label><input type="number" id="tCount" value="9"></div>
         
         <div class="input-group">
-            <label>Break Time</label>
+            <label>Break Interval</label>
             <div class="inline-group">
-                <input type="checkbox" id="breakEn" checked> En?
-                <input type="number" id="breakDur" value="20" style="width:40px"> min
+                <input type="checkbox" id="breakEn" checked> Use? 
+                <input type="number" id="breakDur" value="20" style="width:40px"> min 
                 after P<input type="number" id="breakAfter" value="3" style="width:30px">
             </div>
         </div>
 
         <div class="input-group">
-            <label>Lunch Time</label>
+            <label>Lunch Interval</label>
             <div class="inline-group">
-                <input type="checkbox" id="lunchEn" checked> En?
-                <input type="number" id="lunchDur" value="45" style="width:40px"> min
+                <input type="checkbox" id="lunchEn" checked> Use? 
+                <input type="number" id="lunchDur" value="45" style="width:40px"> min 
                 after P<input type="number" id="lunchAfter" value="6" style="width:30px">
             </div>
         </div>
@@ -63,31 +64,38 @@
 
     <div class="registry-area">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:12px;">SUBJECT REGISTRY</label>
-            <button class="btn-add" onclick="addRow()">+ ADD SUBJECT</button>
+            <label style="font-weight:bold; font-size:13px;">SUBJECT & STREAM REGISTRY</label>
+            <button class="btn-add" onclick="addRow()">+ ADD NEW SUBJECT LINE</button>
+        </div>
+        <div class="registry-header">
+            <div>SUBJECT (e.g., PHYS)</div>
+            <div>TEACHER</div>
+            <div>STREAM (e.g., F1A)</div>
+            <div>PER/WK</div>
+            <div></div>
         </div>
         <div id="registryList">
             <div class="registry-row">
-                <input type="text" placeholder="Subject" class="reg-sub">
-                <input type="text" placeholder="Teacher" class="reg-tea">
-                <input type="text" placeholder="Stream/Form" class="reg-frm">
-                <input type="number" placeholder="Periods/Wk" class="reg-pwk">
-                <span></span>
+                <input type="text" placeholder="e.g. MATH" class="reg-sub">
+                <input type="text" placeholder="Teacher Name" class="reg-tea">
+                <input type="text" placeholder="F1A" class="reg-frm">
+                <input type="number" value="6" class="reg-pwk">
+                <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
             </div>
         </div>
     </div>
 
     <div class="controls">
-        <button class="btn-gen" onclick="runGenerator()">GENERATE TIMETABLE</button>
-        <button onclick="drawLoad()">CHECK LOAD</button>
-        <button onclick="window.print()">PRINT</button>
+        <button class="btn-gen" onclick="runGenerator()">GENERATE FULL TIMETABLE</button>
+        <button onclick="drawLoad()">VIEW TEACHER LOAD</button>
+        <button onclick="window.print()">PRINT TO PDF</button>
     </div>
 </div>
 
 <div id="viewBar" class="no-print" style="text-align:center; display:none; padding:10px;">
     <button onclick="drawMaster()">MASTER VIEW</button> | 
-    <select id="selStream" onchange="drawIndiv('stream')"><option value="">Streams</option></select>
-    <select id="selTeacher" onchange="drawIndiv('teacher')"><option value="">Teachers</option></select>
+    <select id="selStream" onchange="drawIndiv('stream')"><option value="">Select Stream</option></select>
+    <select id="selTeacher" onchange="drawIndiv('teacher')"><option value="">Select Teacher</option></select>
 </div>
 
 <div id="mainDisplay"></div>
@@ -100,10 +108,10 @@ function addRow() {
     const div = document.createElement('div');
     div.className = 'registry-row';
     div.innerHTML = `
-        <input type="text" placeholder="Subject" class="reg-sub">
+        <input type="text" placeholder="e.g. CHEM" class="reg-sub">
         <input type="text" placeholder="Teacher" class="reg-tea">
-        <input type="text" placeholder="Stream/Form" class="reg-frm">
-        <input type="number" placeholder="Periods/Wk" class="reg-pwk">
+        <input type="text" placeholder="F1B" class="reg-frm">
+        <input type="number" value="6" class="reg-pwk">
         <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
     `;
     document.getElementById('registryList').appendChild(div);
@@ -140,7 +148,7 @@ function runGenerator() {
         if(sub && tea && frm && pwk > 0) RAW_DATA.push({ sub, tea, frm, pwk });
     });
 
-    if(RAW_DATA.length === 0) return alert("Please add subjects first.");
+    if(RAW_DATA.length === 0) return alert("Registry is empty. Please add subjects.");
 
     DATA = []; FAILURES = []; TIME = [];
     const count = parseInt(document.getElementById('tCount').value);
@@ -173,11 +181,10 @@ function runGenerator() {
     groupKeys.forEach(item => {
         let left = item.pwk;
         let shuffledDays = shuffle([...DAYS]);
+        let doubleDone = false;
 
-        // 1. Double Period Priority (Max 1 per day)
+        // 1. ONE DOUBLE PERIOD PRIORITY
         if (left >= 2) {
-            let placed = false;
-            // Filter out periods that precede a break or lunch
             let badStarts = [];
             if(bEn) badStarts.push(bAft);
             if(lEn) badStarts.push(lAft);
@@ -188,14 +195,14 @@ function runGenerator() {
                     const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
                     if(check(d, p1, item) && check(d, p2, item)) {
                         DATA.push({...item, d, p: p1}, {...item, d, p: p2});
-                        left -= 2; placed = true; break;
+                        left -= 2; doubleDone = true; break;
                     }
                 }
-                if(placed) break;
+                if(doubleDone) break;
             }
         }
 
-        // 2. Singles
+        // 2. SINGLES FOR REMAINDER
         while(left > 0) {
             let placed = false;
             for(let d of shuffledDays) {
@@ -216,13 +223,14 @@ function runGenerator() {
     document.getElementById('viewBar').style.display = 'block';
     populateDropdowns();
     drawMaster();
+    if(FAILURES.length > 0) alert("Note: " + FAILURES.length + " slots could not be placed due to teacher clashes.");
 }
 
 function populateDropdowns() {
     const fList = [...new Set(DATA.map(x => x.frm))].sort();
     const tList = [...new Set(DATA.map(x => x.tea))].sort();
-    document.getElementById('selStream').innerHTML = '<option value="">Streams</option>' + fList.map(f => `<option>${f}</option>`).join('');
-    document.getElementById('selTeacher').innerHTML = '<option value="">Teachers</option>' + tList.map(t => `<option>${t}</option>`).join('');
+    document.getElementById('selStream').innerHTML = '<option value="">Select Stream</option>' + fList.map(f => `<option>${f}</option>`).join('');
+    document.getElementById('selTeacher').innerHTML = '<option value="">Select Teacher</option>' + tList.map(t => `<option>${t}</option>`).join('');
 }
 
 function drawMaster() {
@@ -252,7 +260,7 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(DATA.map(x => x.tea))].sort();
-    let h = `<h2>TEACHER LOAD</h2><table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>LOAD</th></tr>`;
+    let h = `<h2>Teacher Workload</h2><table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>TOTAL PERIODS</th></tr>`;
     list.forEach(t => {
         h += `<tr><td>${t}</td><td>${DATA.filter(x => x.tea === t).length}</td></tr>`;
     });
@@ -262,7 +270,7 @@ function drawLoad() {
 function drawIndiv(type) {
     const val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
-    let h = `<h2>${val} Timetable</h2><table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
+    let h = `<h2>Timetable for: ${val}</h2><table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         TIME.forEach(tp => {

@@ -10,11 +10,11 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 10px; }
         
         .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px; border-top: 4px solid var(--primary); }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .input-group { display: flex; flex-direction: column; gap: 4px; }
         .input-group label { font-size: 11px; font-weight: bold; color: #666; }
+        .inline-group { display: flex; align-items: center; gap: 8px; font-size: 11px; }
         
-        /* Subject Registry Styles */
         .registry-area { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
         .registry-row { display: grid; grid-template-columns: 1fr 1fr 1fr 80px 40px; gap: 5px; margin-bottom: 5px; }
         .registry-row input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
@@ -23,12 +23,11 @@
         th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); }
         th { background: #f8f9fa; }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; }
-        .break-cell, .spec-merged { background: #eee !important; font-weight: bold; width: 25px !important; }
+        .break-cell, .spec-merged { background: #eee !important; font-weight: bold; width: 30px !important; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
         
         .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
-        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #f0f0f0; }
+        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
         .btn-gen { background: var(--accent) !important; color: white; border: none; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 4px 10px; font-size: 10px; }
         
@@ -41,7 +40,25 @@
     <div class="config-grid">
         <div class="input-group"><label>Start Time</label><input type="time" id="tTime" value="08:00"></div>
         <div class="input-group"><label>Period Duration (min)</label><input type="number" id="tDur" value="40"></div>
-        <div class="input-group"><label>Periods per Day</label><input type="number" id="tCount" value="9"></div>
+        <div class="input-group"><label>Total Periods</label><input type="number" id="tCount" value="9"></div>
+        
+        <div class="input-group">
+            <label>Break Time</label>
+            <div class="inline-group">
+                <input type="checkbox" id="breakEn" checked> En?
+                <input type="number" id="breakDur" value="20" style="width:40px"> min
+                after P<input type="number" id="breakAfter" value="3" style="width:30px">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Lunch Time</label>
+            <div class="inline-group">
+                <input type="checkbox" id="lunchEn" checked> En?
+                <input type="number" id="lunchDur" value="45" style="width:40px"> min
+                after P<input type="number" id="lunchAfter" value="6" style="width:30px">
+            </div>
+        </div>
     </div>
 
     <div class="registry-area">
@@ -51,10 +68,10 @@
         </div>
         <div id="registryList">
             <div class="registry-row">
-                <input type="text" placeholder="Subject (e.g. MATH)" class="reg-sub">
+                <input type="text" placeholder="Subject" class="reg-sub">
                 <input type="text" placeholder="Teacher" class="reg-tea">
                 <input type="text" placeholder="Stream/Form" class="reg-frm">
-                <input type="number" placeholder="Periods/Wk" class="reg-pwk" title="Total periods per week">
+                <input type="number" placeholder="Periods/Wk" class="reg-pwk">
                 <span></span>
             </div>
         </div>
@@ -115,83 +132,84 @@ function check(d, p, l) {
 function runGenerator() {
     const rows = document.querySelectorAll('.registry-row');
     let RAW_DATA = [];
-    
     rows.forEach(row => {
         const sub = row.querySelector('.reg-sub').value.trim().toUpperCase();
         const tea = row.querySelector('.reg-tea').value.trim();
         const frm = row.querySelector('.reg-frm').value.trim().toUpperCase();
         const pwk = parseInt(row.querySelector('.reg-pwk').value) || 0;
-        
-        if(sub && tea && frm && pwk > 0) {
-            RAW_DATA.push({ sub, tea, frm, pwk });
-        }
+        if(sub && tea && frm && pwk > 0) RAW_DATA.push({ sub, tea, frm, pwk });
     });
 
-    if(RAW_DATA.length === 0) return alert("Please add at least one subject with periods per week.");
+    if(RAW_DATA.length === 0) return alert("Please add subjects first.");
 
     DATA = []; FAILURES = []; TIME = [];
     const count = parseInt(document.getElementById('tCount').value);
     const dur = parseInt(document.getElementById('tDur').value);
+    const bEn = document.getElementById('breakEn').checked;
+    const bAft = parseInt(document.getElementById('breakAfter').value);
+    const lEn = document.getElementById('lunchEn').checked;
+    const lAft = parseInt(document.getElementById('lunchAfter').value);
+
     let curr = new Date("2026-01-01T" + document.getElementById('tTime').value);
 
     for(let i=1; i<=count; i++) {
         let s = curr.toTimeString().slice(0,5);
         curr.setMinutes(curr.getMinutes() + dur);
         TIME.push({ p: 'P'+i, t: s + '-' + curr.toTimeString().slice(0,5), isB: false });
-        if(i === 4) {
-            let bs = curr.toTimeString().slice(0,5);
-            curr.setMinutes(curr.getMinutes() + 30);
-            TIME.push({ p: 'BREAK', t: bs + '-' + curr.toTimeString().slice(0,5), isB: true });
+        
+        if(bEn && i === bAft) {
+            let ts = curr.toTimeString().slice(0,5);
+            curr.setMinutes(curr.getMinutes() + parseInt(document.getElementById('breakDur').value));
+            TIME.push({ p: 'BREAK', t: ts + '-' + curr.toTimeString().slice(0,5), isB: true });
+        }
+        if(lEn && i === lAft) {
+            let ts = curr.toTimeString().slice(0,5);
+            curr.setMinutes(curr.getMinutes() + parseInt(document.getElementById('lunchDur').value));
+            TIME.push({ p: 'LUNCH', t: ts + '-' + curr.toTimeString().slice(0,5), isB: true });
         }
     }
 
-    // Allocation Logic
     let groupKeys = shuffle(RAW_DATA);
-
     groupKeys.forEach(item => {
         let left = item.pwk;
-        let doubleDone = false;
         let shuffledDays = shuffle([...DAYS]);
 
-        // 1. FIRST PRIORITY: Place ONE double period
+        // 1. Double Period Priority (Max 1 per day)
         if (left >= 2) {
             let placed = false;
-            let doubleStarts = shuffle([0, 1, 2, 4, 5, 6, 7]).filter(s => s + 1 < count);
-            
+            // Filter out periods that precede a break or lunch
+            let badStarts = [];
+            if(bEn) badStarts.push(bAft);
+            if(lEn) badStarts.push(lAft);
+            let doubleStarts = shuffle([...Array(count-1).keys()]).filter(s => !badStarts.includes(s+1));
+
             for(let d of shuffledDays) {
                 for(let sIdx of doubleStarts) {
                     const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
                     if(check(d, p1, item) && check(d, p2, item)) {
                         DATA.push({...item, d, p: p1}, {...item, d, p: p2});
-                        left -= 2;
-                        doubleDone = true;
-                        placed = true; break;
+                        left -= 2; placed = true; break;
                     }
                 }
                 if(placed) break;
             }
         }
 
-        // 2. Remaining periods as singles on different days if possible
+        // 2. Singles
         while(left > 0) {
             let placed = false;
             for(let d of shuffledDays) {
-                // Try to avoid putting a single on the same day as the double if other days are free
                 let allPeriods = shuffle([...Array(count).keys()]);
                 for(let sIdx of allPeriods) {
                     const p = 'P'+(sIdx+1);
                     if(check(d, p, item)) {
                         DATA.push({...item, d, p: p});
-                        left--;
-                        placed = true; break;
+                        left--; placed = true; break;
                     }
                 }
                 if(placed) break;
             }
-            if(!placed) { 
-                FAILURES.push({...item, remaining: left}); 
-                left = 0; 
-            }
+            if(!placed) { FAILURES.push({...item, rem: left}); left = 0; }
         }
     });
 
@@ -218,7 +236,7 @@ function drawMaster() {
             h += `<tr><td><b>${f}</b></td>`;
             TIME.forEach(tp => {
                 const sp = getSpec(day, tp.p);
-                if(tp.isB) { if(idx===0) h+=`<td class="break-cell" rowspan="${frms.length}"><span class="vertical-text">BREAK</span></td>`; }
+                if(tp.isB) { if(idx===0) h+=`<td class="break-cell" rowspan="${frms.length}"><span class="vertical-text">${tp.p}</span></td>`; }
                 else if(sp) { if(idx===0) h+=`<td class="spec-merged" rowspan="${frms.length}"><span class="vertical-text">${sp}</span></td>`; }
                 else {
                     const m = DATA.find(x => x.d === day && x.p === tp.p && x.frm === f);
@@ -234,10 +252,9 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(DATA.map(x => x.tea))].sort();
-    let h = `<h2>TEACHER LOAD ANALYSIS</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>LOADED PERIODS</th></tr>`;
+    let h = `<h2>TEACHER LOAD</h2><table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>LOAD</th></tr>`;
     list.forEach(t => {
-        const count = DATA.filter(x => x.tea === t).length;
-        h += `<tr><td>${t}</td><td>${count}</td></tr>`;
+        h += `<tr><td>${t}</td><td>${DATA.filter(x => x.tea === t).length}</td></tr>`;
     });
     document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }
@@ -250,7 +267,7 @@ function drawIndiv(type) {
         h += `<tr><td><b>${d}</b></td>`;
         TIME.forEach(tp => {
             const sp = getSpec(d, tp.p);
-            if(tp.isB) h += `<td class="break-cell">BRK</td>`;
+            if(tp.isB) h += `<td class="break-cell">${tp.p}</td>`;
             else if(sp) h += `<td class="spec-merged">${sp}</td>`;
             else {
                 const m = DATA.find(x => x.d === d && x.p === tp.p && (type==='stream'? x.frm===val : x.tea===val));

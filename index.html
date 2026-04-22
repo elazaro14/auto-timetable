@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Official Tanzania Pro</title>
+    <title>Timetable 2026 - Tanzania Official Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --accent: #27ae60; }
@@ -10,17 +10,17 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 10px; }
         
         .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px; border-top: 4px solid var(--primary); }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .input-group { display: flex; flex-direction: column; gap: 4px; }
         .input-group label { font-size: 11px; font-weight: bold; color: #666; }
         .inline-group { display: flex; align-items: center; gap: 8px; font-size: 11px; }
         
-        .upload-zone { border: 2px dashed #ccc; padding: 10px; border-radius: 6px; background: #fffcf0; margin-bottom: 15px; text-align: center; }
+        .upload-zone { border: 2px dashed #ccc; padding: 12px; border-radius: 6px; background: #fffcf0; margin-bottom: 15px; text-align: center; }
         .registry-area { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
         
-        /* Adjusted grid for the new Room field */
-        .registry-header { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 1fr 0.6fr 40px; gap: 5px; font-weight: bold; font-size: 10px; color: #555; margin-bottom: 5px; padding-left: 5px; }
-        .registry-row { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 1fr 0.6fr 40px; gap: 5px; margin-bottom: 5px; }
+        /* Official Template Grid: Subject, Teacher, Room, Form, P/WK, Action */
+        .registry-header { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 8px; font-weight: bold; font-size: 10px; color: #555; margin-bottom: 5px; padding-left: 5px; }
+        .registry-row { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 8px; margin-bottom: 5px; }
         .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; width: 100%; box-sizing: border-box; }
         
         table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; border: 2px solid #000; margin-top: 10px; }
@@ -28,7 +28,7 @@
         th { background: #f8f9fa; }
         
         .tt-header { text-align: center; margin-bottom: 10px; border-bottom: 2px double #333; padding-bottom: 10px; }
-        .tt-school-name { font-size: 22px; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .tt-school-name { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; }
         .tt-sub-header { font-size: 14px; font-weight: bold; color: #444; margin: 5px 0; }
 
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; }
@@ -36,7 +36,8 @@
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
         
         .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; flex-wrap: wrap; }
-        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
+        button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #f0f0f0; }
         .btn-gen { background: var(--accent) !important; color: white; border: none; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 6px 12px; font-size: 11px; }
         
@@ -47,7 +48,7 @@
 
 <div class="panel no-print">
     <div class="config-grid">
-        <div class="input-group"><label>School Name</label><input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL"></div>
+        <div class="input-group"><label>School Name</label><input type="text" id="schoolName" value="YOUR SCHOOL NAME HERE"></div>
         <div class="input-group"><label>Calendar Year</label><input type="text" id="calYear" value="2026"></div>
         <div class="input-group"><label>Start Time</label><input type="time" id="tTime" value="08:00"></div>
         <div class="input-group"><label>Period Duration (min)</label><input type="number" id="tDur" value="40"></div>
@@ -73,14 +74,14 @@
     </div>
 
     <div class="upload-zone">
-        <label style="font-weight:bold; display:block; margin-bottom:5px;">UPLOAD OFFICIAL TEMPLATE (CSV)</label>
+        <label style="font-weight:bold; display:block; margin-bottom:5px;">IMPORT FROM TANZANIA TEMPLATE (CSV)</label>
         <input type="file" id="csvUpload" accept=".csv" onchange="handleFileUpload(event)">
-        <p style="font-size: 10px; color: #777; margin: 5px 0 0 0;">Format: Subject, Teacher, Room, Form (Multi-rows auto-counted)</p>
+        <p style="font-size: 10px; color: #d35400; margin-top: 5px;">Upload your file with columns: Subject, Teacher, Room, Form</p>
     </div>
 
     <div class="registry-area">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:13px;">SUBJECT & STREAM REGISTRY</label>
+            <label style="font-weight:bold; font-size:13px;">SUBJECT REGISTRY (MANUAL ADDING)</label>
             <button class="btn-add" onclick="addRow()">+ ADD NEW ROW</button>
         </div>
         <div class="registry-header">
@@ -100,14 +101,14 @@
 
     <div class="controls">
         <button class="btn-gen" onclick="runGenerator()">GENERATE FULL TIMETABLE</button>
-        <button onclick="drawLoad()">VIEW TEACHER LOAD</button>
+        <button onclick="drawLoad()">TEACHER LOAD</button>
         <button onclick="window.print()">PRINT TO PDF</button>
     </div>
 </div>
 
-<div id="viewBar" class="no-print" style="text-align:center; display:none; padding:10px;">
+<div id="viewBar" class="no-print" style="text-align:center; display:none; padding:10px; background:#e9ecef;">
     <button onclick="drawMaster()">MASTER VIEW</button> | 
-    <select id="selStream" onchange="drawIndiv('stream')"><option value="">Select Stream</option></select>
+    <select id="selStream" onchange="drawIndiv('stream')"><option value="">Select Form/Stream</option></select>
     <select id="selTeacher" onchange="drawIndiv('teacher')"><option value="">Select Teacher</option></select>
 </div>
 
@@ -117,13 +118,13 @@
 let DATA = [], TIME = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
-function addRow(sub="", tea="", room="", frm="", pwk=6) {
+function addRow(sub="", tea="", room="", frm="", pwk=4) {
     const div = document.createElement('div');
     div.className = 'registry-row';
     div.innerHTML = `
         <input type="text" class="reg-sub" value="${sub}" placeholder="Subject">
         <input type="text" class="reg-tea" value="${tea}" placeholder="Teacher">
-        <input type="text" class="reg-room" value="${room}" placeholder="Room">
+        <input type="text" class="reg-room" value="${room}" placeholder="Room (Opt)">
         <input type="text" class="reg-frm" value="${frm}" placeholder="Form">
         <input type="number" class="reg-pwk" value="${pwk}">
         <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
@@ -137,17 +138,15 @@ function handleFileUpload(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const lines = e.target.result.split('\n');
-        const counts = {}; // To group and count periods per week
-        
+        const counts = {};
         lines.forEach(line => {
             if (!line.trim() || line.toUpperCase().includes("TEACHER")) return;
             const c = line.split(',').map(item => item.trim());
             if (c.length >= 4) {
-                const key = `${c[0]}|${c[1]}|${c[2]}|${c[3]}`;
+                const key = `${c[0]}|${c[1]}|${c[2]}|${c[3]}`; // Sub|Tea|Room|Form
                 counts[key] = (counts[key] || 0) + 1;
             }
         });
-
         document.getElementById('registryList').innerHTML = '';
         for (const key in counts) {
             const [sub, tea, room, frm] = key.split('|');
@@ -174,7 +173,7 @@ function shuffle(array) {
 
 function check(d, p, l) {
     if(getSpec(d, p)) return false;
-    // Check if teacher or form or room is occupied
+    // Strict conflict check: Teacher, Form, and Room (if specified)
     return !DATA.some(x => x.d === d && x.p === p && (x.tea === l.tea || x.frm === l.frm || (l.room && x.room === l.room)));
 }
 
@@ -198,12 +197,10 @@ function runGenerator() {
         const room = row.querySelector('.reg-room').value.trim();
         const frm = row.querySelector('.reg-frm').value.trim().toUpperCase();
         const pwk = parseInt(row.querySelector('.reg-pwk').value) || 0;
-        if(sub && tea && frm && pwk > 0) {
-            RAW_DATA.push({ sub, tea, room, frm, pwk });
-        }
+        if(sub && tea && frm && pwk > 0) RAW_DATA.push({ sub, tea, room, frm, pwk });
     });
 
-    if(RAW_DATA.length === 0) return alert("Registry is empty.");
+    if(RAW_DATA.length === 0) return alert("Please add subjects first.");
 
     DATA = []; TIME = [];
     const count = parseInt(document.getElementById('tCount').value);
@@ -228,43 +225,53 @@ function runGenerator() {
         }
     }
 
-    let items = shuffle(RAW_DATA);
-    items.forEach(item => {
-        let left = item.pwk;
+    // Logic: Spreading periods across days (MAX ONE BLOCK PER DAY)
+    RAW_DATA.forEach(item => {
+        let pwk = item.pwk;
         let shuffledDays = shuffle([...DAYS]);
         
-        // Memory-based Personalization: Prioritize 2 consecutive periods (Double Period)
-        if (left >= 2) {
-            let doubleDone = false;
-            let badStarts = [];
-            if(bEn) badStarts.push(bAft); if(lEn) badStarts.push(lAft);
-            let doubleStarts = shuffle([...Array(count-1).keys()]).filter(s => !badStarts.includes(s+1));
-            
-            for(let d of shuffledDays) {
-                for(let sIdx of doubleStarts) {
-                    const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
-                    if(check(d, p1, item) && check(d, p2, item)) {
-                        DATA.push({...item, d, p: p1}, {...item, d, p: p2});
-                        left -= 2; doubleDone = true; break;
-                    }
-                }
-                if(doubleDone) break;
-            }
-        }
+        // As you requested, prioritizing double periods while keeping the "Once a Day" rule.
+        // We decide how many days will have Doubles vs Singles.
+        // If pwk = 6, we want 3 days of Doubles (2+2+2).
+        // If pwk = 5, we want 2 days of Doubles and 1 day of Single (2+2+1).
+        let numDoubles = Math.min(Math.floor(pwk / 2), 5); // Max 5 doubles as there are only 5 days
+        let numSingles = Math.min(pwk - (numDoubles * 2), 5 - numDoubles);
+        
+        let plan = [];
+        for(let i=0; i<numDoubles; i++) plan.push('double');
+        for(let i=0; i<numSingles; i++) plan.push('single');
 
-        // Remainder as Single Periods
-        while(left > 0) {
+        plan.forEach(type => {
             let placed = false;
+            // Iterate through days to find one where we haven't placed this subject yet
             for(let d of shuffledDays) {
-                let allPeriods = shuffle([...Array(count).keys()]);
-                for(let sIdx of allPeriods) {
-                    const p = 'P'+(sIdx+1);
-                    if(check(d, p, item)) { DATA.push({...item, d, p: p}); left--; placed = true; break; }
+                // Ensure once-a-day rule: check if subject already exists on this day for this form
+                if (DATA.some(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
+
+                if (type === 'double') {
+                    let badStarts = [];
+                    if(bEn) badStarts.push(bAft); if(lEn) badStarts.push(lAft);
+                    let starts = shuffle([...Array(count-1).keys()]).filter(s => !badStarts.includes(s+1));
+                    for(let sIdx of starts) {
+                        const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
+                        if(check(d, p1, item) && check(d, p2, item)) {
+                            DATA.push({...item, d, p: p1}, {...item, d, p: p2});
+                            placed = true; break;
+                        }
+                    }
+                } else {
+                    let periods = shuffle([...Array(count).keys()]);
+                    for(let sIdx of periods) {
+                        const p = 'P'+(sIdx+1);
+                        if(check(d, p, item)) {
+                            DATA.push({...item, d, p});
+                            placed = true; break;
+                        }
+                    }
                 }
                 if(placed) break;
             }
-            if(!placed) left = 0;
-        }
+        });
     });
 
     document.getElementById('viewBar').style.display = 'block';
@@ -275,7 +282,7 @@ function runGenerator() {
 function populateDropdowns() {
     const fList = [...new Set(DATA.map(x => x.frm))].sort();
     const tList = [...new Set(DATA.map(x => x.tea))].sort();
-    document.getElementById('selStream').innerHTML = '<option value="">Select Stream</option>' + fList.map(f => `<option>${f}</option>`).join('');
+    document.getElementById('selStream').innerHTML = '<option value="">Select Form/Stream</option>' + fList.map(f => `<option>${f}</option>`).join('');
     document.getElementById('selTeacher').innerHTML = '<option value="">Select Teacher</option>' + tList.map(t => `<option>${t}</option>`).join('');
 }
 
@@ -283,7 +290,7 @@ function drawMaster() {
     let h = getHeaderHTML("MASTER TIMETABLE");
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
     DAYS.forEach(day => {
-        h += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:60px">STRM</th>`;
+        h += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:65px">FORM</th>`;
         TIME.forEach(tp => h += tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}<br><small>${tp.t}</small></th>`);
         h += `</tr>`;
         frms.forEach((f, idx) => {
@@ -325,7 +332,7 @@ function drawIndiv(type) {
             else if(sp) h += `<td class="spec-merged">${sp}</td>`;
             else {
                 const m = DATA.find(x => x.d === d && x.p === tp.p && (type==='stream'? x.frm===val : x.tea===val));
-                h += `<td>${m ? `<b>${m.sub}</b><br>${type==='stream' ? m.tea + (m.room ? ' ('+m.room+')' : '') : m.frm}` : ''}</td>`;
+                h += `<td>${m ? `<b>${m.sub}</b><br>${type==='stream' ? m.tea + (m.room ? ' ['+m.room+']' : '') : m.frm}` : ''}</td>`;
             }
         });
         h += `</tr>`;

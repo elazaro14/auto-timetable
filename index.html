@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Multi-Stream Pro (Upload Enabled)</title>
+    <title>Timetable 2026 - Multi-Stream Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --accent: #27ae60; }
@@ -16,7 +16,6 @@
         .inline-group { display: flex; align-items: center; gap: 8px; font-size: 11px; }
         
         .upload-zone { border: 2px dashed #ccc; padding: 10px; border-radius: 6px; background: #fffcf0; margin-bottom: 15px; text-align: center; }
-        
         .registry-area { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
         .registry-header { display: grid; grid-template-columns: 1.2fr 1.5fr 2fr 1fr 40px; gap: 5px; font-weight: bold; font-size: 10px; color: #555; margin-bottom: 5px; padding-left: 5px; }
         .registry-row { display: grid; grid-template-columns: 1.2fr 1.5fr 2fr 1fr 40px; gap: 5px; margin-bottom: 5px; }
@@ -25,6 +24,12 @@
         table { width: 100%; border-collapse: collapse; table-layout: fixed; background: white; border: 2px solid #000; margin-top: 10px; }
         th, td { border: 1px solid #000; text-align: center; padding: var(--cell-padding); font-size: var(--font-size); height: var(--row-height); overflow: hidden; }
         th { background: #f8f9fa; }
+        
+        /* Header Styles */
+        .tt-header { text-align: center; margin-bottom: 10px; border-bottom: 2px double #333; padding-bottom: 10px; }
+        .tt-school-name { font-size: 22px; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .tt-sub-header { font-size: 14px; font-weight: bold; color: #444; margin: 5px 0; }
+
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; margin-top: 15px; border: 2px solid #000; }
         .break-cell, .spec-merged { background: #eee !important; font-weight: bold; width: 30px !important; }
         .vertical-text { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: inline-block; white-space: nowrap; }
@@ -33,7 +38,6 @@
         button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
         .btn-gen { background: var(--accent) !important; color: white; border: none; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 6px 12px; font-size: 11px; }
-        .btn-sample { font-size: 10px; background: #eee; border: 1px solid #bbb; }
         
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } }
     </style>
@@ -42,6 +46,9 @@
 
 <div class="panel no-print">
     <div class="config-grid">
+        <div class="input-group"><label>School Name</label><input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL"></div>
+        <div class="input-group"><label>Calendar Year</label><input type="text" id="calYear" value="2026"></div>
+        
         <div class="input-group"><label>Start Time</label><input type="time" id="tTime" value="08:00"></div>
         <div class="input-group"><label>Period Duration (min)</label><input type="number" id="tDur" value="40"></div>
         <div class="input-group"><label>Total Periods</label><input type="number" id="tCount" value="9"></div>
@@ -68,7 +75,6 @@
     <div class="upload-zone">
         <label style="font-weight:bold; display:block; margin-bottom:5px;">BULK DATA UPLOAD</label>
         <input type="file" id="csvUpload" accept=".csv" onchange="handleFileUpload(event)">
-        <button class="btn-sample" onclick="downloadSampleCSV()">Download Sample CSV</button>
     </div>
 
     <div class="registry-area">
@@ -77,17 +83,13 @@
             <button class="btn-add" onclick="addRow()">+ ADD NEW ROW</button>
         </div>
         <div class="registry-header">
-            <div>SUBJECT</div>
-            <div>TEACHER</div>
-            <div>STREAMS (e.g., F1A, F1B)</div>
-            <div>PER/WK</div>
-            <div></div>
+            <div>SUBJECT</div><div>TEACHER</div><div>STREAMS</div><div>PER/WK</div><div></div>
         </div>
         <div id="registryList">
             <div class="registry-row">
-                <input type="text" placeholder="MATH" class="reg-sub" value="MATH">
-                <input type="text" placeholder="Mr. Juma" class="reg-tea" value="Mr. Juma">
-                <input type="text" placeholder="F1A, F1B" class="reg-frm" value="F1A, F1B">
+                <input type="text" class="reg-sub" value="MATH">
+                <input type="text" class="reg-tea" value="Mr. Juma">
+                <input type="text" class="reg-frm" value="F1A, F1B">
                 <input type="number" value="6" class="reg-pwk">
                 <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
             </div>
@@ -110,19 +112,13 @@
 <div id="mainDisplay"></div>
 
 <script>
-let DATA = [], TIME = [], FAILURES = [];
+let DATA = [], TIME = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
 function addRow() {
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.innerHTML = `
-        <input type="text" placeholder="Subject" class="reg-sub">
-        <input type="text" placeholder="Teacher" class="reg-tea">
-        <input type="text" placeholder="F1A, F1B" class="reg-frm">
-        <input type="number" value="6" class="reg-pwk">
-        <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
-    `;
+    div.innerHTML = `<input type="text" placeholder="Subject" class="reg-sub"><input type="text" placeholder="Teacher" class="reg-tea"><input type="text" placeholder="F1A, F1B" class="reg-frm"><input type="number" value="6" class="reg-pwk"><button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>`;
     document.getElementById('registryList').appendChild(div);
 }
 
@@ -139,31 +135,12 @@ function handleFileUpload(event) {
             if (c.length >= 4) {
                 const div = document.createElement('div');
                 div.className = 'registry-row';
-                div.innerHTML = `
-                    <input type="text" class="reg-sub" value="${c[0]}">
-                    <input type="text" class="reg-tea" value="${c[1]}">
-                    <input type="text" class="reg-frm" value="${c[2]}">
-                    <input type="number" class="reg-pwk" value="${c[3]}">
-                    <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
-                `;
+                div.innerHTML = `<input type="text" class="reg-sub" value="${c[0]}"><input type="text" class="reg-tea" value="${c[1]}"><input type="text" class="reg-frm" value="${c[2]}"><input type="number" class="reg-pwk" value="${c[3]}"><button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>`;
                 document.getElementById('registryList').appendChild(div);
             }
         });
     };
     reader.readAsText(file);
-}
-
-function downloadSampleCSV() {
-    const csv = "Subject,Teacher,Streams,PeriodsPerWeek\nMATH,Mr. Juma,\"F1A, F1B\",6\nENGLISH,Ms. Sarah,\"F1A, F1B, F1C\",5\nPHYSICS,Mr. Abel,F1C,4";
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'sample_timetable_data.csv');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
 }
 
 function getSpec(d, p) {
@@ -184,6 +161,17 @@ function shuffle(array) {
 function check(d, p, l) {
     if(getSpec(d, p)) return false;
     return !DATA.some(x => x.d === d && x.p === p && (x.tea === l.tea || x.frm === l.frm));
+}
+
+function getHeaderHTML(subTitle) {
+    const school = document.getElementById('schoolName').value.toUpperCase();
+    const year = document.getElementById('calYear').value;
+    return `
+        <div class="tt-header">
+            <h1 class="tt-school-name">${school}</h1>
+            <p class="tt-sub-header">ACADEMIC CALENDAR: ${year} | ${subTitle}</p>
+        </div>
+    `;
 }
 
 function runGenerator() {
@@ -231,14 +219,11 @@ function runGenerator() {
         let left = item.pwk;
         let shuffledDays = shuffle([...DAYS]);
         
-        // DOUBLE PERIOD PRIORITY
         if (left >= 2) {
             let doubleDone = false;
             let badStarts = [];
-            if(bEn) badStarts.push(bAft);
-            if(lEn) badStarts.push(lAft);
+            if(bEn) badStarts.push(bAft); if(lEn) badStarts.push(lAft);
             let doubleStarts = shuffle([...Array(count-1).keys()]).filter(s => !badStarts.includes(s+1));
-
             for(let d of shuffledDays) {
                 for(let sIdx of doubleStarts) {
                     const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
@@ -250,18 +235,13 @@ function runGenerator() {
                 if(doubleDone) break;
             }
         }
-
-        // SINGLES
         while(left > 0) {
             let placed = false;
             for(let d of shuffledDays) {
                 let allPeriods = shuffle([...Array(count).keys()]);
                 for(let sIdx of allPeriods) {
                     const p = 'P'+(sIdx+1);
-                    if(check(d, p, item)) {
-                        DATA.push({...item, d, p: p});
-                        left--; placed = true; break;
-                    }
+                    if(check(d, p, item)) { DATA.push({...item, d, p: p}); left--; placed = true; break; }
                 }
                 if(placed) break;
             }
@@ -282,7 +262,7 @@ function populateDropdowns() {
 }
 
 function drawMaster() {
-    let h = "";
+    let h = getHeaderHTML("MASTER TIMETABLE");
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
     DAYS.forEach(day => {
         h += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th style="width:60px">STRM</th>`;
@@ -308,7 +288,8 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(DATA.map(x => x.tea))].sort();
-    let h = `<h2>Teacher Workload Summary</h2><table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>TOTAL PERIODS</th></tr>`;
+    let h = getHeaderHTML("TEACHER WORKLOAD SUMMARY");
+    h += `<table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>TOTAL PERIODS</th></tr>`;
     list.forEach(t => h += `<tr><td>${t}</td><td>${DATA.filter(x => x.tea === t).length}</td></tr>`);
     document.getElementById('mainDisplay').innerHTML = h + `</table>`;
 }
@@ -316,7 +297,8 @@ function drawLoad() {
 function drawIndiv(type) {
     const val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
-    let h = `<h2>${val} Timetable</h2><table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
+    let h = getHeaderHTML(`${type.toUpperCase()}: ${val}`);
+    h += `<table><tr><th>DAY</th>` + TIME.map(tp => tp.isB ? `<th class="break-cell"></th>` : `<th>${tp.p}</th>`).join('') + `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         TIME.forEach(tp => {

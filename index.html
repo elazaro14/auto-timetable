@@ -1,172 +1,158 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable Pro - Enterprise Edition</title>
+    <title>TT-Pro Enterprise - Time Precision Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f8f9fa; }
         body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar Navigation */
-        .sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 100; }
-        .sidebar h2 { font-size: 18px; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
-        .nav-btn { background: none; border: none; color: white; text-align: left; padding: 12px; cursor: pointer; border-radius: 6px; margin-bottom: 5px; font-weight: 500; }
-        .nav-btn:hover { background: rgba(255,255,255,0.1); }
-        .active-nav { background: var(--secondary) !important; }
-
-        /* Main Content Area */
+        /* Sidebar */
+        .sidebar { width: 280px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 100; overflow-y: auto; }
+        .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        
+        /* Main UI Components */
         .main-content { flex: 1; overflow-y: auto; padding: 25px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        /* Official Grid Styling */
-        .registry-header { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 10px; font-weight: 700; font-size: 12px; color: #546e7a; padding: 10px; border-bottom: 2px solid #eee; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e0e0e0; }
+        .setting-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .setting-row label { font-size: 11px; font-weight: 600; color: #90a4ae; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        input { padding: 10px; border: 1px solid #cfd8dc; border-radius: 6px; width: 100%; box-sizing: border-box; }
+
+        /* Registry Table */
+        .registry-header { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 10px; font-weight: 700; font-size: 11px; color: #546e7a; padding: 10px; background: #f1f5f9; border-radius: 6px; }
         .registry-row { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 10px; margin-top: 8px; align-items: center; }
-        .registry-row input { padding: 8px; border: 1px solid #cfd8dc; border-radius: 6px; transition: 0.3s; }
-        .registry-row input:focus { border-color: var(--secondary); outline: none; box-shadow: 0 0 0 2px rgba(13,71,161,0.1); }
 
-        /* Professional Header for Print */
-        .print-header { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; border-bottom: 3px solid var(--primary); padding-bottom: 15px; }
-        .school-logo { max-height: 80px; max-width: 80px; object-fit: contain; }
-        .header-text { text-align: center; }
-
-        /* Timetable Grid */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 11px; table-layout: fixed; }
-        th, td { border: 1px solid #263238; padding: 6px; text-align: center; height: 45px; }
-        th { background: #eceff1; font-weight: 700; color: var(--primary); }
-        .day-title { background: var(--primary); color: white; padding: 10px; font-weight: bold; margin-top: 20px; text-align: center; border-radius: 4px 4px 0 0; }
-
-        /* Buttons & Actions */
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-action { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-save { background: #455a64; color: white; }
-        .btn-gen { background: var(--accent); color: white; flex: 1; }
+        /* Professional Timetable Print Styles */
+        .print-header { display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 20px; border-bottom: 4px solid var(--primary); padding-bottom: 15px; }
+        .school-logo { max-height: 90px; max-width: 90px; object-fit: contain; border-radius: 4px; }
         
-        .no-print { display: block; }
-        @media print { .no-print { display: none !important; } body { background: white; } .main-content { padding: 0; } }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 42px; vertical-align: middle; }
+        th { background: #f1f5f9; color: #1a237e; font-weight: 800; line-height: 1.2; }
+        .time-label { display: block; font-size: 8.5px; color: #d32f2f; font-weight: normal; margin-top: 2px; }
+        
+        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; margin-top: 25px; text-align: center; border: 2px solid #000; border-bottom: none; }
+        .break-col { background: #eeeeee !important; width: 25px !important; font-weight: bold; }
+
+        /* Action Buttons */
+        .btn { padding: 12px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 11px; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; width: 100%; margin-top: 10px; }
+        .btn-outline { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); margin-bottom: 8px; }
+        .btn-outline:hover { background: rgba(255,255,255,0.2); }
+
+        @media print { .no-print { display: none !important; } .main-content { padding: 0; } body { background: white; } .day-section { page-break-after: always; } }
     </style>
 </head>
 <body>
 
 <div class="sidebar no-print">
-    <h2>🏫 TT-PRO ADMIN</h2>
-    <button class="nav-btn active-nav">Step 1: Configuration</button>
-    <button class="nav-btn">Step 2: Registry</button>
-    <button class="nav-btn">Step 3: Generate</button>
+    <h2><span>📅</span> TT-PRO ADMIN</h2>
     
-    <div style="margin-top: auto; padding-top: 20px;">
-        <label style="font-size: 11px; opacity: 0.8;">SCHOOL LOGO</label>
-        <input type="file" id="logoInp" accept="image/*" style="font-size: 10px; margin-top: 5px;" onchange="loadLogo(event)">
-        <img id="logoPrev" class="school-logo" style="margin-top:10px; display:none;">
+    <div class="setting-section">
+        <div class="setting-row">
+            <div><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
+            <div><label>Period (Min)</label><input type="number" id="duration" value="40"></div>
+        </div>
+        <div class="setting-row">
+            <div><label>Total Periods</label><input type="number" id="pCount" value="9"></div>
+            <div><label>Year</label><input type="number" id="calYear" value="2026"></div>
+        </div>
+        <label>School Name</label>
+        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="margin-bottom: 15px;">
+        
+        <label>School Logo</label>
+        <input type="file" id="logoInp" accept="image/*" onchange="previewLogo(event)" style="font-size: 10px; margin-bottom: 15px;">
+        <img id="logoPrev" class="school-logo" style="display:none; background:white; padding:5px; margin:0 auto 15px auto;">
     </div>
+
+    <button class="btn btn-outline" onclick="saveProject()">💾 Save Project File</button>
+    <button class="btn btn-outline" onclick="document.getElementById('loadInp').click()">📂 Load Project File</button>
+    <input type="file" id="loadInp" style="display:none" onchange="loadProject(event)">
+    <button class="btn btn-outline" onclick="window.print()">🖨️ Print to PDF</button>
 </div>
 
 <div class="main-content">
     <div class="card no-print">
-        <h3 style="margin-top:0">1. School & Logic Setup</h3>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
-            <div><label>School Name</label><input type="text" id="schoolName" placeholder="Enter Full Name" style="width:100%; padding:8px;" value="EXCELLENCE SECONDARY"></div>
-            <div><label>Year</label><input type="text" id="calYear" value="2026" style="width:100%; padding:8px;"></div>
-            <div><label>Periods/Day</label><input type="number" id="tCount" value="9" style="width:100%; padding:8px;"></div>
-        </div>
-        <div style="margin-top:15px; font-size:12px; color:#546e7a;">
-            <i>Note: Generator priorities are set to Double Periods first, one subject per day, and zero free periods in the morning.</i>
-        </div>
-    </div>
-
-    <div class="card no-print">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0">2. Subject & Teacher Registry</h3>
-            <div style="display:flex; gap:10px;">
-                <button class="btn-action btn-save" onclick="saveProject()">💾 SAVE PROJECT</button>
-                <button class="btn-action btn-save" onclick="document.getElementById('loadInp').click()">📂 LOAD PROJECT</button>
-                <input type="file" id="loadInp" style="display:none" onchange="loadProject(event)">
-                <button class="btn-action" style="background:var(--primary); color:white;" onclick="addRow()">+ ADD SUBJECT</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0; color:var(--primary);">Subject & Teacher Registry</h3>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <small>Import CSV: </small><input type="file" id="csvInp" style="width:180px; font-size:10px;" onchange="importCSV(event)">
+                <button class="btn" style="background:var(--primary); color:white; padding:8px 15px;" onclick="addRow()">+ Add Row</button>
             </div>
         </div>
-        
-        <div style="margin-top:15px;" class="upload-zone">
-            <small>Quick Import: </small><input type="file" id="csvInp" accept=".csv" onchange="handleCSV(event)">
-        </div>
-
         <div class="registry-header">
             <div>SUBJECT</div><div>TEACHER</div><div>ROOM</div><div>FORM</div><div>P/WK</div><div></div>
         </div>
-        <div id="registryList">
-            </div>
-        <button class="btn-action btn-gen" style="margin-top:20px;" onclick="runGenerator()">🚀 GENERATE OFFICIAL TIMETABLE</button>
+        <div id="registryList"></div>
+        <button class="btn btn-primary" onclick="generate()">🚀 Generate Full Timetable</button>
     </div>
 
-    <div id="printArea">
-        <div id="mainDisplay"></div>
-    </div>
+    <div id="displayArea"></div>
 </div>
 
 <script>
-let DATA = [], TIME = [], LOGO_DATA = "";
+let DATA = [], TIME_SLOTS = [], LOGO_URL = "";
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
 function addRow(s="", t="", r="", f="", p=5) {
     const div = document.createElement('div');
     div.className = 'registry-row';
     div.innerHTML = `
-        <input type="text" class="reg-sub" value="${s}" placeholder="Mathematics">
-        <input type="text" class="reg-tea" value="${t}" placeholder="Mr. Seuri">
-        <input type="text" class="reg-room" value="${r}" placeholder="Lab 1">
-        <input type="text" class="reg-frm" value="${f}" placeholder="F1A">
+        <input type="text" class="reg-sub" value="${s}" placeholder="Subject">
+        <input type="text" class="reg-tea" value="${t}" placeholder="Teacher">
+        <input type="text" class="reg-room" value="${r}" placeholder="Room">
+        <input type="text" class="reg-frm" value="${f}" placeholder="Form">
         <input type="number" class="reg-pwk" value="${p}">
-        <button onclick="this.parentElement.remove()" style="color:#f44336; border:none; background:none; cursor:pointer; font-size:18px;">&times;</button>
+        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:16px;">✕</button>
     `;
     document.getElementById('registryList').appendChild(div);
 }
 
-// Professional File Handling
-function saveProject() {
-    const rows = [...document.querySelectorAll('.registry-row')].map(r => ({
-        s: r.querySelector('.reg-sub').value,
-        t: r.querySelector('.reg-tea').value,
-        r: r.querySelector('.reg-room').value,
-        f: r.querySelector('.reg-frm').value,
-        p: r.querySelector('.reg-pwk').value
-    }));
-    const blob = new Blob([JSON.stringify({rows, logo: LOGO_DATA})], {type: "application/json"});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `TT_Project_${new Date().toLocaleDateString()}.ttpro`;
-    a.click();
-}
-
-function loadProject(ev) {
+function previewLogo(e) {
     const reader = new FileReader();
-    reader.onload = (e) => {
-        const data = JSON.parse(e.target.result);
-        document.getElementById('registryList').innerHTML = '';
-        data.rows.forEach(r => addRow(r.s, r.t, r.r, r.f, r.p));
-        if(data.logo) { LOGO_DATA = data.logo; document.getElementById('logoPrev').src = data.logo; document.getElementById('logoPrev').style.display='block'; }
+    reader.onload = () => { 
+        LOGO_URL = reader.result; 
+        document.getElementById('logoPrev').src = LOGO_URL; 
+        document.getElementById('logoPrev').style.display='block'; 
     };
-    reader.readAsText(ev.target.files[0]);
+    reader.readAsDataURL(e.target.files[0]);
 }
 
-function loadLogo(ev) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        LOGO_DATA = e.target.result;
-        document.getElementById('logoPrev').src = LOGO_DATA;
-        document.getElementById('logoPrev').style.display = 'block';
-    };
-    reader.readAsDataURL(ev.target.files[0]);
+function calculateTimes() {
+    TIME_SLOTS = [];
+    const start = document.getElementById('startTime').value;
+    const dur = parseInt(document.getElementById('duration').value);
+    const count = parseInt(document.getElementById('pCount').value);
+    
+    let current = new Date("2026-01-01T" + start);
+    
+    for(let i=1; i<=count; i++) {
+        let startTimeStr = current.toTimeString().slice(0,5);
+        current.setMinutes(current.getMinutes() + dur);
+        let endTimeStr = current.toTimeString().slice(0,5);
+        
+        TIME_SLOTS.push({
+            id: 'P'+i,
+            label: 'Period ' + i,
+            time: `${startTimeStr} - ${endTimeStr}`
+        });
+
+        // Auto-add breaks for a professional look
+        if(i === 3) { // Short Break
+            let bStart = current.toTimeString().slice(0,5);
+            current.setMinutes(current.getMinutes() + 20);
+            TIME_SLOTS.push({ id: 'BREAK', label: 'BREAK', time: `${bStart}-${current.toTimeString().slice(0,5)}`, isB: true });
+        }
+        if(i === 6) { // Lunch
+            let lStart = current.toTimeString().slice(0,5);
+            current.setMinutes(current.getMinutes() + 45);
+            TIME_SLOTS.push({ id: 'LUNCH', label: 'LUNCH', time: `${lStart}-${current.toTimeString().slice(0,5)}`, isB: true });
+        }
+    }
 }
 
-function getSpec(d, p) {
-    if (d === "WEDNESDAY" && (p === "P8" || p === "P9")) return "RELIGION";
-    if (d === "THURSDAY" && (p === "P8" || p === "P9")) return "DEBATE";
-    if (d === "FRIDAY" && (p === "P7" || p === "P8" || p === "P9")) return "MOSQUE";
-    return null;
-}
-
-function runGenerator() {
-    // Collect Data
+function generate() {
     const rows = document.querySelectorAll('.registry-row');
     let items = [];
     rows.forEach(r => {
@@ -178,41 +164,39 @@ function runGenerator() {
         if(sub && tea && frm) items.push({sub, tea, room, frm, pwk});
     });
 
-    DATA = []; TIME = [];
-    const count = parseInt(document.getElementById('tCount').value);
-    for(let i=1; i<=count; i++) TIME.push({p: 'P'+i, isB: false});
-
-    // Packing Algorithm
+    calculateTimes();
+    DATA = [];
+    
+    // Logic: Doubles Priority, Once-a-day, Morning packing
     items.forEach(item => {
         let left = item.pwk;
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
-        
         let plan = [];
-        let numDoubles = Math.min(Math.floor(left/2), 5);
-        let numSingles = Math.min(left - (numDoubles*2), 5 - numDoubles);
-        for(let i=0; i<numDoubles; i++) plan.push('double');
-        for(let i=0; i<numSingles; i++) plan.push('single');
+        let doubles = Math.min(Math.floor(left/2), 5);
+        let singles = Math.min(left - (doubles*2), 5 - doubles);
+        for(let i=0; i<doubles; i++) plan.push('double');
+        for(let i=0; i<singles; i++) plan.push('single');
 
         plan.forEach(type => {
             let placed = false;
             for(let d of shuffledDays) {
                 if (DATA.find(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
                 
-                if (type === 'double') {
-                    for(let s=0; s < count-1; s++) {
-                        const p1 = 'P'+(s+1), p2 = 'P'+(s+2);
-                        if (!getSpec(d, p1) && !getSpec(d, p2) &&
-                            !DATA.find(x => x.d===d && x.p===p1 && (x.tea===item.tea || x.frm===item.frm)) &&
-                            !DATA.find(x => x.d===d && x.p===p2 && (x.tea===item.tea || x.frm===item.frm))) {
-                            DATA.push({...item, d, p: p1}, {...item, d, p: p2});
+                if(type === 'double') {
+                    for(let i=0; i < TIME_SLOTS.length - 1; i++) {
+                        let t1 = TIME_SLOTS[i], t2 = TIME_SLOTS[i+1];
+                        if(t1.isB || t2.isB) continue;
+                        if(!DATA.find(x => x.d===d && x.p===t1.id && (x.tea===item.tea || x.frm===item.frm)) &&
+                           !DATA.find(x => x.d===d && x.p===t2.id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: t1.id}, {...item, d, p: t2.id});
                             placed = true; break;
                         }
                     }
                 } else {
-                    for(let s=0; s < count; s++) {
-                        const p = 'P'+(s+1);
-                        if (!getSpec(d, p) && !DATA.find(x => x.d===d && x.p===p && (x.tea===item.tea || x.frm===item.frm))) {
-                            DATA.push({...item, d, p});
+                    for(let t of TIME_SLOTS) {
+                        if(t.isB) continue;
+                        if(!DATA.find(x => x.d===d && x.p===t.id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: t.id});
                             placed = true; break;
                         }
                     }
@@ -222,46 +206,78 @@ function runGenerator() {
         });
     });
 
-    drawMaster();
+    render();
 }
 
-function drawMaster() {
+function render() {
     const school = document.getElementById('schoolName').value;
     const year = document.getElementById('calYear').value;
-    let h = `
+    const forms = [...new Set(DATA.map(x => x.frm))].sort();
+
+    let html = `
         <div class="print-header">
-            ${LOGO_DATA ? `<img src="${LOGO_DATA}" class="school-logo">` : ''}
-            <div class="header-text">
-                <h1 style="margin:0; text-transform:uppercase;">${school}</h1>
-                <p style="margin:5px 0;">MASTER TIMETABLE - ACADEMIC YEAR ${year}</p>
+            ${LOGO_URL ? `<img src="${LOGO_URL}" class="school-logo">` : ''}
+            <div style="text-align:center">
+                <h1 style="margin:0; color:#1a237e; text-transform:uppercase;">${school}</h1>
+                <p style="margin:5px 0; font-weight:bold;">OFFICIAL MASTER TIMETABLE - ${year}</p>
             </div>
         </div>
     `;
 
-    const forms = [...new Set(DATA.map(x => x.frm))].sort();
     DAYS.forEach(day => {
-        h += `<div class="day-title">${day}</div><table><tr><th width="70">FORM</th>`;
-        TIME.forEach(t => h += `<th>${t.p}</th>`);
-        h += `</tr>`;
+        html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th width="60">FORM</th>`;
+        TIME_SLOTS.forEach(slot => {
+            html += `<th>${slot.id}<span class="time-label">${slot.time}</span></th>`;
+        });
+        html += `</tr>`;
         
         forms.forEach(f => {
-            h += `<tr><td><b>${f}</b></td>`;
-            TIME.forEach(t => {
-                const sp = getSpec(day, t.p);
-                if(sp) h += `<td style="background:#f0f0f0; font-size:9px;">${sp}</td>`;
-                else {
-                    const m = DATA.find(x => x.d === day && x.p === t.p && x.frm === f);
-                    h += `<td>${m ? `<b>${m.sub}</b><br><small>${m.tea}</small>` : ''}</td>`;
+            html += `<tr><td style="background:#f8f9fa"><b>${f}</b></td>`;
+            TIME_SLOTS.forEach(slot => {
+                if(slot.isB) {
+                    html += `<td class="break-col" style="font-size:8px; writing-mode: vertical-rl;">${slot.label}</td>`;
+                } else {
+                    const m = DATA.find(x => x.d === day && x.p === slot.id && x.frm === f);
+                    html += `<td>${m ? `<b>${m.sub}</b><br>${m.tea}` : ''}</td>`;
                 }
             });
-            h += `</tr>`;
+            html += `</tr>`;
         });
-        h += `</table>`;
+        html += `</table></div>`;
     });
-    document.getElementById('mainDisplay').innerHTML = h;
+
+    document.getElementById('displayArea').innerHTML = html;
 }
 
-// Initial Row
+// Data Management
+function saveProject() {
+    const rows = [...document.querySelectorAll('.registry-row')].map(r => ({
+        s: r.querySelector('.reg-sub').value,
+        t: r.querySelector('.reg-tea').value,
+        r: r.querySelector('.reg-room').value,
+        f: r.querySelector('.reg-frm').value,
+        p: r.querySelector('.reg-pwk').value
+    }));
+    const blob = new Blob([JSON.stringify({rows, logo: LOGO_URL, school: document.getElementById('schoolName').value})], {type: "application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Timetable_Project.ttp`;
+    a.click();
+}
+
+function loadProject(ev) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const d = JSON.parse(e.target.result);
+        document.getElementById('registryList').innerHTML = '';
+        d.rows.forEach(r => addRow(r.s, r.t, r.r, r.f, r.p));
+        if(d.logo) { LOGO_URL = d.logo; document.getElementById('logoPrev').src=d.logo; document.getElementById('logoPrev').style.display='block'; }
+        if(d.school) document.getElementById('schoolName').value = d.school;
+    };
+    reader.readAsText(ev.target.files[0]);
+}
+
+// Initial Setup
 addRow("MATHEMATICS", "SEURI", "", "F1A", 5);
 </script>
 </body>

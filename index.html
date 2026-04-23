@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Timetable 2026 - Tanzania Official Pro</title>
+    <title>Timetable 2026 - Tanzania Morning-Pack Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --row-height: 38px; --font-size: 11px; --cell-padding: 4px; --primary: #2c3e50; --accent: #27ae60; }
@@ -18,7 +18,6 @@
         .upload-zone { border: 2px dashed #ccc; padding: 12px; border-radius: 6px; background: #fffcf0; margin-bottom: 15px; text-align: center; }
         .registry-area { border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
         
-        /* Official Template Grid: Subject, Teacher, Room, Form, P/WK, Action */
         .registry-header { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 8px; font-weight: bold; font-size: 10px; color: #555; margin-bottom: 5px; padding-left: 5px; }
         .registry-row { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 8px; margin-bottom: 5px; }
         .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; width: 100%; box-sizing: border-box; }
@@ -37,7 +36,6 @@
         
         .controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; flex-wrap: wrap; }
         button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #f0f0f0; }
         .btn-gen { background: var(--accent) !important; color: white; border: none; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 6px 12px; font-size: 11px; }
         
@@ -48,7 +46,7 @@
 
 <div class="panel no-print">
     <div class="config-grid">
-        <div class="input-group"><label>School Name</label><input type="text" id="schoolName" value="YOUR SCHOOL NAME HERE"></div>
+        <div class="input-group"><label>School Name</label><input type="text" id="schoolName" value="YOUR SCHOOL NAME"></div>
         <div class="input-group"><label>Calendar Year</label><input type="text" id="calYear" value="2026"></div>
         <div class="input-group"><label>Start Time</label><input type="time" id="tTime" value="08:00"></div>
         <div class="input-group"><label>Period Duration (min)</label><input type="number" id="tDur" value="40"></div>
@@ -58,8 +56,7 @@
             <label>Break Interval</label>
             <div class="inline-group">
                 <input type="checkbox" id="breakEn" checked> Use? 
-                <input type="number" id="breakDur" value="20" style="width:40px"> min 
-                after P<input type="number" id="breakAfter" value="3" style="width:30px">
+                <input type="number" id="breakDur" value="20" style="width:40px"> after P<input type="number" id="breakAfter" value="3" style="width:30px">
             </div>
         </div>
 
@@ -67,8 +64,7 @@
             <label>Lunch Interval</label>
             <div class="inline-group">
                 <input type="checkbox" id="lunchEn" checked> Use? 
-                <input type="number" id="lunchDur" value="45" style="width:40px"> min 
-                after P<input type="number" id="lunchAfter" value="6" style="width:30px">
+                <input type="number" id="lunchDur" value="45" style="width:40px"> after P<input type="number" id="lunchAfter" value="6" style="width:30px">
             </div>
         </div>
     </div>
@@ -76,12 +72,12 @@
     <div class="upload-zone">
         <label style="font-weight:bold; display:block; margin-bottom:5px;">IMPORT FROM TANZANIA TEMPLATE (CSV)</label>
         <input type="file" id="csvUpload" accept=".csv" onchange="handleFileUpload(event)">
-        <p style="font-size: 10px; color: #d35400; margin-top: 5px;">Upload your file with columns: Subject, Teacher, Room, Form</p>
+        <p style="font-size: 10px; color: #d35400;">Columns: Subject, Teacher, Room, Form</p>
     </div>
 
     <div class="registry-area">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:13px;">SUBJECT REGISTRY (MANUAL ADDING)</label>
+            <label style="font-weight:bold; font-size:13px;">SUBJECT REGISTRY (MANUAL)</label>
             <button class="btn-add" onclick="addRow()">+ ADD NEW ROW</button>
         </div>
         <div class="registry-header">
@@ -100,15 +96,15 @@
     </div>
 
     <div class="controls">
-        <button class="btn-gen" onclick="runGenerator()">GENERATE FULL TIMETABLE</button>
+        <button class="btn-gen" onclick="runGenerator()">GENERATE TIMETABLE</button>
         <button onclick="drawLoad()">TEACHER LOAD</button>
-        <button onclick="window.print()">PRINT TO PDF</button>
+        <button onclick="window.print()">PRINT PDF</button>
     </div>
 </div>
 
 <div id="viewBar" class="no-print" style="text-align:center; display:none; padding:10px; background:#e9ecef;">
     <button onclick="drawMaster()">MASTER VIEW</button> | 
-    <select id="selStream" onchange="drawIndiv('stream')"><option value="">Select Form/Stream</option></select>
+    <select id="selStream" onchange="drawIndiv('stream')"><option value="">Select Form</option></select>
     <select id="selTeacher" onchange="drawIndiv('teacher')"><option value="">Select Teacher</option></select>
 </div>
 
@@ -124,7 +120,7 @@ function addRow(sub="", tea="", room="", frm="", pwk=4) {
     div.innerHTML = `
         <input type="text" class="reg-sub" value="${sub}" placeholder="Subject">
         <input type="text" class="reg-tea" value="${tea}" placeholder="Teacher">
-        <input type="text" class="reg-room" value="${room}" placeholder="Room (Opt)">
+        <input type="text" class="reg-room" value="${room}" placeholder="Room">
         <input type="text" class="reg-frm" value="${frm}" placeholder="Form">
         <input type="number" class="reg-pwk" value="${pwk}">
         <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
@@ -143,7 +139,7 @@ function handleFileUpload(event) {
             if (!line.trim() || line.toUpperCase().includes("TEACHER")) return;
             const c = line.split(',').map(item => item.trim());
             if (c.length >= 4) {
-                const key = `${c[0]}|${c[1]}|${c[2]}|${c[3]}`; // Sub|Tea|Room|Form
+                const key = `${c[0]}|${c[1]}|${c[2]}|${c[3]}`;
                 counts[key] = (counts[key] || 0) + 1;
             }
         });
@@ -173,19 +169,13 @@ function shuffle(array) {
 
 function check(d, p, l) {
     if(getSpec(d, p)) return false;
-    // Strict conflict check: Teacher, Form, and Room (if specified)
     return !DATA.some(x => x.d === d && x.p === p && (x.tea === l.tea || x.frm === l.frm || (l.room && x.room === l.room)));
 }
 
 function getHeaderHTML(subTitle) {
     const school = document.getElementById('schoolName').value.toUpperCase();
     const year = document.getElementById('calYear').value;
-    return `
-        <div class="tt-header">
-            <h1 class="tt-school-name">${school}</h1>
-            <p class="tt-sub-header">ACADEMIC CALENDAR: ${year} | ${subTitle}</p>
-        </div>
-    `;
+    return `<div class="tt-header"><h1 class="tt-school-name">${school}</h1><p class="tt-sub-header">ACADEMIC YEAR: ${year} | ${subTitle}</p></div>`;
 }
 
 function runGenerator() {
@@ -200,7 +190,7 @@ function runGenerator() {
         if(sub && tea && frm && pwk > 0) RAW_DATA.push({ sub, tea, room, frm, pwk });
     });
 
-    if(RAW_DATA.length === 0) return alert("Please add subjects first.");
+    if(RAW_DATA.length === 0) return alert("Add subjects first.");
 
     DATA = []; TIME = [];
     const count = parseInt(document.getElementById('tCount').value);
@@ -225,34 +215,30 @@ function runGenerator() {
         }
     }
 
-    // Logic: Spreading periods across days (MAX ONE BLOCK PER DAY)
+    // Packing Algorithm: Prioritize Double -> Single -> Once-a-Day -> Pack Morning
+    RAW_DATA = shuffle(RAW_DATA);
     RAW_DATA.forEach(item => {
         let pwk = item.pwk;
         let shuffledDays = shuffle([...DAYS]);
         
-        // As you requested, prioritizing double periods while keeping the "Once a Day" rule.
-        // We decide how many days will have Doubles vs Singles.
-        // If pwk = 6, we want 3 days of Doubles (2+2+2).
-        // If pwk = 5, we want 2 days of Doubles and 1 day of Single (2+2+1).
-        let numDoubles = Math.min(Math.floor(pwk / 2), 5); // Max 5 doubles as there are only 5 days
+        let numDoubles = Math.min(Math.floor(pwk / 2), 5);
         let numSingles = Math.min(pwk - (numDoubles * 2), 5 - numDoubles);
-        
         let plan = [];
         for(let i=0; i<numDoubles; i++) plan.push('double');
         for(let i=0; i<numSingles; i++) plan.push('single');
 
         plan.forEach(type => {
             let placed = false;
-            // Iterate through days to find one where we haven't placed this subject yet
             for(let d of shuffledDays) {
-                // Ensure once-a-day rule: check if subject already exists on this day for this form
+                // Once-a-day rule check
                 if (DATA.some(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
 
                 if (type === 'double') {
                     let badStarts = [];
                     if(bEn) badStarts.push(bAft); if(lEn) badStarts.push(lAft);
-                    let starts = shuffle([...Array(count-1).keys()]).filter(s => !badStarts.includes(s+1));
-                    for(let sIdx of starts) {
+                    // Search periods in order (1, 2, 3...) to satisfy "Free period not in morning"
+                    for(let sIdx = 0; sIdx < count - 1; sIdx++) {
+                        if (badStarts.includes(sIdx+1)) continue;
                         const p1 = 'P'+(sIdx+1), p2 = 'P'+(sIdx+2);
                         if(check(d, p1, item) && check(d, p2, item)) {
                             DATA.push({...item, d, p: p1}, {...item, d, p: p2});
@@ -260,8 +246,8 @@ function runGenerator() {
                         }
                     }
                 } else {
-                    let periods = shuffle([...Array(count).keys()]);
-                    for(let sIdx of periods) {
+                    // Search periods in order (1, 2, 3...) to pack morning slots
+                    for(let sIdx = 0; sIdx < count; sIdx++) {
                         const p = 'P'+(sIdx+1);
                         if(check(d, p, item)) {
                             DATA.push({...item, d, p});
@@ -282,7 +268,7 @@ function runGenerator() {
 function populateDropdowns() {
     const fList = [...new Set(DATA.map(x => x.frm))].sort();
     const tList = [...new Set(DATA.map(x => x.tea))].sort();
-    document.getElementById('selStream').innerHTML = '<option value="">Select Form/Stream</option>' + fList.map(f => `<option>${f}</option>`).join('');
+    document.getElementById('selStream').innerHTML = '<option value="">Select Form</option>' + fList.map(f => `<option>${f}</option>`).join('');
     document.getElementById('selTeacher').innerHTML = '<option value="">Select Teacher</option>' + tList.map(t => `<option>${t}</option>`).join('');
 }
 
@@ -313,7 +299,7 @@ function drawMaster() {
 
 function drawLoad() {
     const list = [...new Set(DATA.map(x => x.tea))].sort();
-    let h = getHeaderHTML("TEACHER WORKLOAD SUMMARY");
+    let h = getHeaderHTML("TEACHER LOAD SUMMARY");
     h += `<table style="width:60%; margin:auto;"><tr><th>TEACHER</th><th>TOTAL PERIODS</th></tr>`;
     list.forEach(t => h += `<tr><td>${t}</td><td>${DATA.filter(x => x.tea === t).length}</td></tr>`);
     document.getElementById('mainDisplay').innerHTML = h + `</table>`;
@@ -332,7 +318,7 @@ function drawIndiv(type) {
             else if(sp) h += `<td class="spec-merged">${sp}</td>`;
             else {
                 const m = DATA.find(x => x.d === d && x.p === tp.p && (type==='stream'? x.frm===val : x.tea===val));
-                h += `<td>${m ? `<b>${m.sub}</b><br>${type==='stream' ? m.tea + (m.room ? ' ['+m.room+']' : '') : m.frm}` : ''}</td>`;
+                h += `<td>${m ? `<b>${m.sub}</b><br>${type==='stream' ? m.tea + (m.room ? ' ('+m.room+')' : '') : m.frm}` : ''}</td>`;
             }
         });
         h += `</tr>`;
@@ -342,3 +328,4 @@ function drawIndiv(type) {
 </script>
 </body>
 </html>
+            

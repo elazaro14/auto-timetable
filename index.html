@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-Pro Diamond - Final Suite</title>
+    <title>TT-Pro Diamond - Dynamic Break Edition</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -39,7 +39,7 @@
         .slot-box b { display: block; font-size: 10px; line-height: 1.1; }
         .slot-box small { display: block; font-size: 9px; margin-top: 2px; color: #555; }
         
-        .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; color: #777; }
+        .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; color: #777; width: 25px !important; }
         .special-cell { background: #fff9c4 !important; font-weight: bold; font-size: 9px; }
 
         .btn { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; transition: 0.2s; }
@@ -74,10 +74,18 @@
     </div>
 
     <div class="config-box">
-        <h4>Times & Periods</h4>
+        <h4>Time Setup</h4>
         <div class="input-row"><span>Start:</span> <input type="time" id="startTime" value="08:00"></div>
-        <div class="input-row"><span>Length:</span> <input type="number" id="pDur" value="40"></div>
+        <div class="input-row"><span>Mins/P:</span> <input type="number" id="pDur" value="40"></div>
         <div class="input-row"><span>Total P:</span> <input type="number" id="pTotal" value="9"></div>
+    </div>
+
+    <div class="config-box">
+        <h4>Break Options</h4>
+        <div class="input-row"><span>Break After P:</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Break Mins:</span> <input type="number" id="breakLen" value="20"></div>
+        <div class="input-row"><span>Lunch After P:</span> <input type="number" id="lunchAfter" value="6"></div>
+        <div class="input-row"><span>Lunch Mins:</span> <input type="number" id="lunchLen" value="45"></div>
     </div>
 
     <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
@@ -119,51 +127,35 @@
 </div>
 
 <script>
-// --- CORE CONFIG ---
 const EXPIRY_DATE = "2026-12-31"; 
 const CONTACT_NUM = "0763418732";
 let DATA = [], SLOTS = [], REGISTRY = [], currentView = "master";
 let draggedIdx = null;
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
-// 1. SECURITY ENGINE (Expiry & Countdown)
+// SECURITY ENGINE
 (function() {
     const today = new Date();
     const expiry = new Date(EXPIRY_DATE);
     const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-    
     if (diffDays <= 0) {
         window.onload = function() {
-            document.body.innerHTML = `
-                <div style="height:100vh; width:100vw; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#1a237e; color:white; text-align:center; font-family:sans-serif;">
-                    <h1 style="font-size:50px; color:#ff5252;">SUBSCRIPTION EXPIRED</h1>
-                    <p>Contact the administrator to renew your access.</p>
-                    <div style="font-size:30px; background:#00c853; color:black; padding:15px 40px; border-radius:50px; font-weight:bold; margin:20px 0;">📞 CALL: ${CONTACT_NUM}</div>
-                </div>`;
-            window.print = () => false;
+            document.body.innerHTML = `<div style="height:100vh; width:100vw; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#1a237e; color:white; text-align:center;"><h1>LICENSE EXPIRED</h1><div style="font-size:30px; background:#00c853; color:black; padding:15px 40px; border-radius:50px; font-weight:bold; margin:20px 0;">📞 CALL: ${CONTACT_NUM}</div></div>`;
         };
-        throw new Error("License Expired");
+        throw new Error("Expired");
     } else if (diffDays <= 5) {
         window.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('expiryBanner');
-            banner.style.display = 'block';
-            banner.innerHTML = `⚠️ SUBSCRIPTION WARNING: ${diffDays} day(s) remaining. Call ${CONTACT_NUM} to renew!`;
+            banner.style.display = 'block'; banner.innerHTML = `⚠️ ${diffDays} day(s) remaining. Call ${CONTACT_NUM}`;
         });
     }
 })();
 
-// 2. REGISTRY & FILE HANDLING
 function addRegistryRow(s="", t="", r="", f="", p=5) {
     const container = document.getElementById('regItems');
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.innerHTML = `
-        <input type="text" class="r-sub" value="${s}" placeholder="Subject">
-        <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
-        <input type="text" class="r-room" value="${r}" placeholder="Room">
-        <input type="text" class="r-frm" value="${f}" placeholder="Form">
-        <input type="number" class="r-pwk" value="${p}">
-        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>`;
+    div.innerHTML = `<input type="text" class="r-sub" value="${s}"><input type="text" class="r-tea" value="${t}"><input type="text" class="r-room" value="${r}"><input type="text" class="r-frm" value="${f}"><input type="number" class="r-pwk" value="${p}"><button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
     container.appendChild(div);
 }
 
@@ -189,25 +181,44 @@ function handleCSV(e) {
     reader.readAsText(e.target.files[0]);
 }
 
-// 3. ENGINE LOGIC
 function buildSlots() {
     SLOTS = [];
     let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
     const dur = parseInt(document.getElementById('pDur').value);
     const total = parseInt(document.getElementById('pTotal').value);
+    
+    const bAfter = parseInt(document.getElementById('breakAfter').value);
+    const bLen = parseInt(document.getElementById('breakLen').value);
+    const lAfter = parseInt(document.getElementById('lunchAfter').value);
+    const lLen = parseInt(document.getElementById('lunchLen').value);
+
     for(let i=1; i<=total; i++) {
         let sStr = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sStr}-${cur.toTimeString().slice(0,5)}`, isB: false });
-        if(i === 3) { // Short Break
-            let b = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 20);
-            SLOTS.push({ id: 'BREAK', time: `${b}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        
+        if(i === bAfter) {
+            let bs = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + bLen);
+            SLOTS.push({ id: 'BREAK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
-        if(i === 6) { // Lunch
-            let l = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 45);
-            SLOTS.push({ id: 'LUNCH', time: `${l}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        if(i === lAfter) {
+            let ls = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + lLen);
+            SLOTS.push({ id: 'LUNCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
     }
+}
+
+function getCellContent(m, idx) {
+    if(!m) return '';
+    const mode = document.getElementById('displayMode').value;
+    let text = (mode === 'sub') ? `<b>${m.sub}</b>` : (mode === 'tea') ? `<b>${m.tea}</b>` : `<b>${m.sub}</b><small>${m.tea}</small>`;
+    return `<div class="slot-box" draggable="true" ondragstart="drag(${idx})">${text}</div>`;
+}
+
+function refreshView() {
+    if(currentView === "master") renderMaster();
+    else if(currentView === "stream") renderIndividual('stream');
+    else renderIndividual('teacher');
 }
 
 function generate() {
@@ -219,10 +230,8 @@ function generate() {
         const pwk = parseInt(r.querySelector('.r-pwk').value);
         if(sub && tea && frm) REGISTRY.push({sub, tea, room: r.querySelector('.r-room').value, frm, pwk});
     });
-    if(!REGISTRY.length) return alert("Registry is empty!");
     buildSlots();
     DATA = [];
-    // Basic Distribution (Double-Period priority handled by sorting)
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         DAYS.forEach(d => {
@@ -237,24 +246,6 @@ function generate() {
     });
     updateFilters();
     renderMaster();
-}
-
-// 4. UI RENDERERS
-function getCellContent(m, idx) {
-    if(!m) return '';
-    const mode = document.getElementById('displayMode').value;
-    let text = "";
-    if(mode === 'sub') text = `<b>${m.sub}</b>`;
-    else if(mode === 'tea') text = `<b>${m.tea}</b>`;
-    else text = `<b>${m.sub}</b><small>${m.tea}</small>`;
-    
-    return `<div class="slot-box" draggable="true" ondragstart="drag(${idx})">${text}</div>`;
-}
-
-function refreshView() {
-    if(currentView === "master") renderMaster();
-    else if(currentView === "stream") renderIndividual('stream');
-    else renderIndividual('teacher');
 }
 
 function updateFilters() {
@@ -333,21 +324,17 @@ function renderBulk(type) {
     document.getElementById('timetableArea').innerHTML = h;
 }
 
-// 5. DRAG & DROP
 function drag(idx) { if(idx !== -1) draggedIdx = idx; }
 function drop(e, d, p, f) {
     e.preventDefault();
     if(draggedIdx === null) return;
     const item = DATA[draggedIdx];
     const targetIdx = DATA.findIndex(x => x.d === d && x.p === p && x.frm === f);
-    if(targetIdx !== -1) {
-        DATA[targetIdx].d = item.d; DATA[targetIdx].p = item.p;
-    }
+    if(targetIdx !== -1) { DATA[targetIdx].d = item.d; DATA[targetIdx].p = item.p; }
     item.d = d; item.p = p; item.frm = f;
     renderMaster();
 }
 
-// 6. SAVE/LOAD
 function saveProject() {
     const reg = [];
     document.querySelectorAll('.registry-row').forEach(r => reg.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));

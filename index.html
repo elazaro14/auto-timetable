@@ -2,189 +2,204 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-Pro Enterprise - Time Precision Edition</title>
+    <title>TT-Pro Enterprise - Official Tanzania Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f8f9fa; }
-        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* Sidebar */
-        .sidebar { width: 280px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 100; overflow-y: auto; }
-        .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .sidebar { width: 300px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.2); z-index: 100; overflow-y: auto; }
+        .sidebar h2 { font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
         
-        /* Main UI Components */
+        /* Controls */
+        .config-box { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        .config-box h4 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: var(--accent); }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .input-row input[type="number"], .input-row input[type="time"] { width: 80px; padding: 4px; border-radius: 4px; border: none; }
+        
+        /* Main View */
         .main-content { flex: 1; overflow-y: auto; padding: 25px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e0e0e0; }
-        .setting-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .setting-row label { font-size: 11px; font-weight: 600; color: #90a4ae; text-transform: uppercase; display: block; margin-bottom: 4px; }
-        input { padding: 10px; border: 1px solid #cfd8dc; border-radius: 6px; width: 100%; box-sizing: border-box; }
-
-        /* Registry Table */
-        .registry-header { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 10px; font-weight: 700; font-size: 11px; color: #546e7a; padding: 10px; background: #f1f5f9; border-radius: 6px; }
-        .registry-row { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 0.8fr 0.6fr 40px; gap: 10px; margin-top: 8px; align-items: center; }
-
-        /* Professional Timetable Print Styles */
-        .print-header { display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 20px; border-bottom: 4px solid var(--primary); padding-bottom: 15px; }
-        .school-logo { max-height: 90px; max-width: 90px; object-fit: contain; border-radius: 4px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
         
+        /* Registry */
+        .registry-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 40px; gap: 10px; font-weight: bold; font-size: 11px; padding: 10px; background: #e3f2fd; border-radius: 6px; color: var(--primary); }
+        .registry-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 40px; gap: 10px; margin-top: 8px; }
+        .registry-row input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+
+        /* Timetable UI */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
-        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 42px; vertical-align: middle; }
-        th { background: #f1f5f9; color: #1a237e; font-weight: 800; line-height: 1.2; }
-        .time-label { display: block; font-size: 8.5px; color: #d32f2f; font-weight: normal; margin-top: 2px; }
-        
-        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; margin-top: 25px; text-align: center; border: 2px solid #000; border-bottom: none; }
-        .break-col { background: #eeeeee !important; width: 25px !important; font-weight: bold; }
+        th, td { border: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; height: 45px; }
+        th { background: #f8f9fa; font-weight: 900; }
+        .time-label { display: block; font-size: 8px; color: #d32f2f; margin-top: 2px; }
+        .break-cell { background: #eeeeee !important; font-weight: bold; writing-mode: vertical-rl; text-orientation: mixed; width: 30px !important; }
 
-        /* Action Buttons */
-        .btn { padding: 12px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 11px; transition: 0.2s; }
-        .btn-primary { background: var(--accent); color: white; width: 100%; margin-top: 10px; }
-        .btn-outline { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); margin-bottom: 8px; }
-        .btn-outline:hover { background: rgba(255,255,255,0.2); }
+        .btn { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 5px; }
+        .btn-gen { background: var(--accent); color: white; font-size: 14px; }
+        .btn-add { background: var(--secondary); color: white; width: auto; padding: 8px 20px; }
 
-        @media print { .no-print { display: none !important; } .main-content { padding: 0; } body { background: white; } .day-section { page-break-after: always; } }
+        @media print { .no-print { display: none !important; } body { background: white; } .day-section { page-break-after: always; } }
     </style>
 </head>
 <body>
 
 <div class="sidebar no-print">
-    <h2><span>📅</span> TT-PRO ADMIN</h2>
+    <h2>TT-PRO SYSTEM</h2>
     
-    <div class="setting-section">
-        <div class="setting-row">
-            <div><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
-            <div><label>Period (Min)</label><input type="number" id="duration" value="40"></div>
-        </div>
-        <div class="setting-row">
-            <div><label>Total Periods</label><input type="number" id="pCount" value="9"></div>
-            <div><label>Year</label><input type="number" id="calYear" value="2026"></div>
-        </div>
-        <label>School Name</label>
-        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="margin-bottom: 15px;">
-        
-        <label>School Logo</label>
-        <input type="file" id="logoInp" accept="image/*" onchange="previewLogo(event)" style="font-size: 10px; margin-bottom: 15px;">
-        <img id="logoPrev" class="school-logo" style="display:none; background:white; padding:5px; margin:0 auto 15px auto;">
+    <div class="config-box">
+        <h4>General Setup</h4>
+        <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
+        <div class="input-row"><span>Period (min):</span> <input type="number" id="pDur" value="40"></div>
+        <div class="input-row"><span>Total Per.:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
-    <button class="btn btn-outline" onclick="saveProject()">💾 Save Project File</button>
-    <button class="btn btn-outline" onclick="document.getElementById('loadInp').click()">📂 Load Project File</button>
-    <input type="file" id="loadInp" style="display:none" onchange="loadProject(event)">
-    <button class="btn btn-outline" onclick="window.print()">🖨️ Print to PDF</button>
+    <div class="config-box">
+        <h4>Break Session</h4>
+        <div class="input-row"><span>Enable Break?</span> <input type="checkbox" id="breakOn" checked></div>
+        <div class="input-row"><span>After Period:</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Length (min):</span> <input type="number" id="breakLen" value="20"></div>
+    </div>
+
+    <div class="config-box">
+        <h4>Lunch Session</h4>
+        <div class="input-row"><span>Enable Lunch?</span> <input type="checkbox" id="lunchOn" checked></div>
+        <div class="input-row"><span>After Period:</span> <input type="number" id="lunchAfter" value="6"></div>
+        <div class="input-row"><span>Length (min):</span> <input type="number" id="lunchLen" value="45"></div>
+    </div>
+
+    <button class="btn btn-gen" onclick="generate()">GENERATE TIMETABLE</button>
+    <button class="btn" onclick="window.print()" style="background:#fff; color:#333; margin-top:10px;">PRINT TO PDF</button>
 </div>
 
 <div class="main-content">
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0; color:var(--primary);">Subject & Teacher Registry</h3>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <small>Import CSV: </small><input type="file" id="csvInp" style="width:180px; font-size:10px;" onchange="importCSV(event)">
-                <button class="btn" style="background:var(--primary); color:white; padding:8px 15px;" onclick="addRow()">+ Add Row</button>
+            <h3 style="margin:0">Subject Registry</h3>
+            <div>
+                <label style="font-size:12px; font-weight:bold;">Import CSV: </label>
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)">
+                <button class="btn btn-add" onclick="addRow()">+ Manual Row</button>
             </div>
         </div>
         <div class="registry-header">
             <div>SUBJECT</div><div>TEACHER</div><div>ROOM</div><div>FORM</div><div>P/WK</div><div></div>
         </div>
-        <div id="registryList"></div>
-        <button class="btn btn-primary" onclick="generate()">🚀 Generate Full Timetable</button>
+        <div id="regItems"></div>
     </div>
 
-    <div id="displayArea"></div>
+    <div id="timetableArea"></div>
 </div>
 
 <script>
-let DATA = [], TIME_SLOTS = [], LOGO_URL = "";
+let DATA = [], SLOTS = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
 function addRow(s="", t="", r="", f="", p=5) {
     const div = document.createElement('div');
     div.className = 'registry-row';
     div.innerHTML = `
-        <input type="text" class="reg-sub" value="${s}" placeholder="Subject">
-        <input type="text" class="reg-tea" value="${t}" placeholder="Teacher">
-        <input type="text" class="reg-room" value="${r}" placeholder="Room">
-        <input type="text" class="reg-frm" value="${f}" placeholder="Form">
-        <input type="number" class="reg-pwk" value="${p}">
-        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-size:16px;">✕</button>
+        <input type="text" class="r-sub" value="${s}" placeholder="Sub">
+        <input type="text" class="r-tea" value="${t}" placeholder="Tea">
+        <input type="text" class="r-room" value="${r}" placeholder="Room">
+        <input type="text" class="r-frm" value="${f}" placeholder="Form">
+        <input type="number" class="r-pwk" value="${p}">
+        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>
     `;
-    document.getElementById('registryList').appendChild(div);
+    document.getElementById('regItems').appendChild(div);
 }
 
-function previewLogo(e) {
+function handleCSV(e) {
     const reader = new FileReader();
-    reader.onload = () => { 
-        LOGO_URL = reader.result; 
-        document.getElementById('logoPrev').src = LOGO_URL; 
-        document.getElementById('logoPrev').style.display='block'; 
-    };
-    reader.readAsDataURL(e.target.files[0]);
-}
-
-function calculateTimes() {
-    TIME_SLOTS = [];
-    const start = document.getElementById('startTime').value;
-    const dur = parseInt(document.getElementById('duration').value);
-    const count = parseInt(document.getElementById('pCount').value);
-    
-    let current = new Date("2026-01-01T" + start);
-    
-    for(let i=1; i<=count; i++) {
-        let startTimeStr = current.toTimeString().slice(0,5);
-        current.setMinutes(current.getMinutes() + dur);
-        let endTimeStr = current.toTimeString().slice(0,5);
+    reader.onload = (ev) => {
+        const text = ev.target.result;
+        const rows = text.split('\n').slice(1); // Skip header
+        const counts = {};
         
-        TIME_SLOTS.push({
-            id: 'P'+i,
-            label: 'Period ' + i,
-            time: `${startTimeStr} - ${endTimeStr}`
+        rows.forEach(line => {
+            if(!line.trim()) return;
+            const parts = line.split(',').map(p => p.trim());
+            // Format: Subject, Teacher, Room, Form
+            const key = `${parts[0]}|${parts[1]}|${parts[2]}|${parts[3]}`;
+            counts[key] = (counts[key] || 0) + 1;
         });
 
-        // Auto-add breaks for a professional look
-        if(i === 3) { // Short Break
-            let bStart = current.toTimeString().slice(0,5);
-            current.setMinutes(current.getMinutes() + 20);
-            TIME_SLOTS.push({ id: 'BREAK', label: 'BREAK', time: `${bStart}-${current.toTimeString().slice(0,5)}`, isB: true });
+        document.getElementById('regItems').innerHTML = "";
+        for(let key in counts) {
+            const [s,t,r,f] = key.split('|');
+            addRow(s, t, r, f, counts[key]);
         }
-        if(i === 6) { // Lunch
-            let lStart = current.toTimeString().slice(0,5);
-            current.setMinutes(current.getMinutes() + 45);
-            TIME_SLOTS.push({ id: 'LUNCH', label: 'LUNCH', time: `${lStart}-${current.toTimeString().slice(0,5)}`, isB: true });
+    };
+    reader.readAsText(e.target.files[0]);
+}
+
+function buildSlots() {
+    SLOTS = [];
+    let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
+    const dur = parseInt(document.getElementById('pDur').value);
+    const total = parseInt(document.getElementById('pTotal').value);
+    
+    const bOn = document.getElementById('breakOn').checked;
+    const bAft = parseInt(document.getElementById('breakAfter').value);
+    const bLen = parseInt(document.getElementById('breakLen').value);
+
+    const lOn = document.getElementById('lunchOn').checked;
+    const lAft = parseInt(document.getElementById('lunchAfter').value);
+    const lLen = parseInt(document.getElementById('lunchLen').value);
+
+    for(let i=1; i<=total; i++) {
+        let sTime = cur.toTimeString().slice(0,5);
+        cur.setMinutes(cur.getMinutes() + dur);
+        let eTime = cur.toTimeString().slice(0,5);
+        SLOTS.push({ id: 'P'+i, time: `${sTime}-${eTime}`, isB: false });
+
+        if(bOn && i === bAft) {
+            let bs = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + bLen);
+            SLOTS.push({ id: 'BREAK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        }
+        if(lOn && i === lAft) {
+            let ls = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + lLen);
+            SLOTS.push({ id: 'LUNCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
     }
 }
 
 function generate() {
     const rows = document.querySelectorAll('.registry-row');
-    let items = [];
+    let registry = [];
     rows.forEach(r => {
-        const sub = r.querySelector('.reg-sub').value.toUpperCase();
-        const tea = r.querySelector('.reg-tea').value;
-        const room = r.querySelector('.reg-room').value;
-        const frm = r.querySelector('.reg-frm').value.toUpperCase();
-        const pwk = parseInt(r.querySelector('.reg-pwk').value);
-        if(sub && tea && frm) items.push({sub, tea, room, frm, pwk});
+        const sub = r.querySelector('.r-sub').value.toUpperCase();
+        const tea = r.querySelector('.r-tea').value;
+        const room = r.querySelector('.r-room').value;
+        const frm = r.querySelector('.r-frm').value.toUpperCase();
+        const pwk = parseInt(r.querySelector('.r-pwk').value);
+        if(sub && tea && frm) registry.push({sub, tea, room, frm, pwk});
     });
 
-    calculateTimes();
+    buildSlots();
     DATA = [];
-    
-    // Logic: Doubles Priority, Once-a-day, Morning packing
-    items.forEach(item => {
+
+    registry.forEach(item => {
         let left = item.pwk;
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
-        let plan = [];
+        
+        // Priority Double Periods
         let doubles = Math.min(Math.floor(left/2), 5);
         let singles = Math.min(left - (doubles*2), 5 - doubles);
+        let plan = [];
         for(let i=0; i<doubles; i++) plan.push('double');
         for(let i=0; i<singles; i++) plan.push('single');
 
         plan.forEach(type => {
             let placed = false;
             for(let d of shuffledDays) {
+                // Rule: Once a day per subject
                 if (DATA.find(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
-                
+
                 if(type === 'double') {
-                    for(let i=0; i < TIME_SLOTS.length - 1; i++) {
-                        let t1 = TIME_SLOTS[i], t2 = TIME_SLOTS[i+1];
+                    for(let i=0; i < SLOTS.length-1; i++) {
+                        let t1 = SLOTS[i], t2 = SLOTS[i+1];
                         if(t1.isB || t2.isB) continue;
                         if(!DATA.find(x => x.d===d && x.p===t1.id && (x.tea===item.tea || x.frm===item.frm)) &&
                            !DATA.find(x => x.d===d && x.p===t2.id && (x.tea===item.tea || x.frm===item.frm))) {
@@ -193,7 +208,7 @@ function generate() {
                         }
                     }
                 } else {
-                    for(let t of TIME_SLOTS) {
+                    for(let t of SLOTS) {
                         if(t.isB) continue;
                         if(!DATA.find(x => x.d===d && x.p===t.id && (x.tea===item.tea || x.frm===item.frm))) {
                             DATA.push({...item, d, p: t.id});
@@ -210,74 +225,31 @@ function generate() {
 }
 
 function render() {
-    const school = document.getElementById('schoolName').value;
-    const year = document.getElementById('calYear').value;
-    const forms = [...new Set(DATA.map(x => x.frm))].sort();
-
-    let html = `
-        <div class="print-header">
-            ${LOGO_URL ? `<img src="${LOGO_URL}" class="school-logo">` : ''}
-            <div style="text-align:center">
-                <h1 style="margin:0; color:#1a237e; text-transform:uppercase;">${school}</h1>
-                <p style="margin:5px 0; font-weight:bold;">OFFICIAL MASTER TIMETABLE - ${year}</p>
-            </div>
-        </div>
-    `;
+    const frms = [...new Set(DATA.map(x => x.frm))].sort();
+    let h = `<h2 style="text-align:center">OFFICIAL MASTER TIMETABLE 2026</h2>`;
 
     DAYS.forEach(day => {
-        html += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th width="60">FORM</th>`;
-        TIME_SLOTS.forEach(slot => {
-            html += `<th>${slot.id}<span class="time-label">${slot.time}</span></th>`;
-        });
-        html += `</tr>`;
+        h += `<div class="day-section"><div class="day-title" style="background:#1a237e; color:white; padding:5px; text-align:center; font-weight:bold; border:2px solid #000; border-bottom:none; margin-top:20px;">${day}</div><table><tr><th width="70">FORM</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}<span class="time-label">${s.time}</span></th>`);
+        h += `</tr>`;
         
-        forms.forEach(f => {
-            html += `<tr><td style="background:#f8f9fa"><b>${f}</b></td>`;
-            TIME_SLOTS.forEach(slot => {
-                if(slot.isB) {
-                    html += `<td class="break-col" style="font-size:8px; writing-mode: vertical-rl;">${slot.label}</td>`;
-                } else {
-                    const m = DATA.find(x => x.d === day && x.p === slot.id && x.frm === f);
-                    html += `<td>${m ? `<b>${m.sub}</b><br>${m.tea}` : ''}</td>`;
+        frms.forEach(f => {
+            h += `<tr><td><b>${f}</b></td>`;
+            SLOTS.forEach(s => {
+                if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else {
+                    const m = DATA.find(x => x.d === day && x.p === s.id && x.frm === f);
+                    h += `<td>${m ? `<b>${m.sub}</b><br><small>${m.tea}</small>` : ''}</td>`;
                 }
             });
-            html += `</tr>`;
+            h += `</tr>`;
         });
-        html += `</table></div>`;
+        h += `</table></div>`;
     });
-
-    document.getElementById('displayArea').innerHTML = html;
+    document.getElementById('timetableArea').innerHTML = h;
 }
 
-// Data Management
-function saveProject() {
-    const rows = [...document.querySelectorAll('.registry-row')].map(r => ({
-        s: r.querySelector('.reg-sub').value,
-        t: r.querySelector('.reg-tea').value,
-        r: r.querySelector('.reg-room').value,
-        f: r.querySelector('.reg-frm').value,
-        p: r.querySelector('.reg-pwk').value
-    }));
-    const blob = new Blob([JSON.stringify({rows, logo: LOGO_URL, school: document.getElementById('schoolName').value})], {type: "application/json"});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Timetable_Project.ttp`;
-    a.click();
-}
-
-function loadProject(ev) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const d = JSON.parse(e.target.result);
-        document.getElementById('registryList').innerHTML = '';
-        d.rows.forEach(r => addRow(r.s, r.t, r.r, r.f, r.p));
-        if(d.logo) { LOGO_URL = d.logo; document.getElementById('logoPrev').src=d.logo; document.getElementById('logoPrev').style.display='block'; }
-        if(d.school) document.getElementById('schoolName').value = d.school;
-    };
-    reader.readAsText(ev.target.files[0]);
-}
-
-// Initial Setup
+// Initial entry
 addRow("MATHEMATICS", "SEURI", "", "F1A", 5);
 </script>
 </body>

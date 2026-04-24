@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-Pro Diamond - Official Tanzania Suite</title>
+    <title>TT-Pro Diamond - conflict-Proof Tanzania Suite</title>
     <style>
-        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* Sidebar */
@@ -20,8 +20,8 @@
         .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
         
-        .view-bar { display: flex; gap: 12px; align-items: center; background: #fff; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
-        .view-bar select, .view-bar button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; font-size: 13px; }
+        .view-bar { display: flex; gap: 12px; align-items: center; background: #fff; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; flex-wrap: wrap; }
+        .view-bar select, .view-bar button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; font-size: 13px; font-weight: 600; }
 
         /* Timetable UI */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
@@ -40,6 +40,9 @@
         .btn-gen { background: var(--accent); color: white; }
         .btn-save { background: #455a64; color: white; }
         .btn-load { background: #607d8b; color: white; }
+        .btn-check { background: var(--danger); color: white; border: none; }
+
+        .conflict-badge { color: white; background: var(--danger); padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 8px; margin-top: 2px; display: inline-block; }
 
         @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } body { background: white; } }
     </style>
@@ -97,6 +100,8 @@
     <div class="view-bar no-print" id="viewBar" style="display:none;">
         <button onclick="renderMaster()">Master View</button>
         <button onclick="drawTeacherLoad()">Load Report</button>
+        <button class="btn-check" onclick="checkConflicts()">⚠️ Check Conflicts</button>
+        <div style="flex-grow: 1;"></div>
         <select id="selStream" onchange="renderIndividual('stream')"><option value="">-- By Stream --</option></select>
         <select id="selTeacher" onchange="renderIndividual('teacher')"><option value="">-- By Teacher --</option></select>
     </div>
@@ -190,15 +195,16 @@ function generate() {
     document.querySelectorAll('.registry-row').forEach(r => {
         const sub = r.querySelector('.r-sub').value.toUpperCase();
         const tea = r.querySelector('.r-tea').value;
+        const rm = r.querySelector('.r-room').value;
         const f = r.querySelector('.r-frm').value.toUpperCase();
         const p = parseInt(r.querySelector('.r-pwk').value);
-        if(sub && tea && f) REGISTRY.push({sub, tea, frm: f, pwk: p});
+        if(sub && tea && f) REGISTRY.push({sub, tea, room: rm, frm: f, pwk: p});
     });
 
     buildSlots();
     DATA = [];
 
-    // Prioritize Double Periods first
+    // Prioritize Double Periods first as per user priority
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
@@ -239,19 +245,27 @@ function generate() {
     renderMaster();
 }
 
-// Drag & Drop
 function onDragStart(e, idx) { draggedIdx = idx; e.dataTransfer.setData('text', idx); }
 function onDragOver(e) { e.preventDefault(); }
 function onDrop(e, day, pId, stream) {
     e.preventDefault();
     if(draggedIdx === null || getSpecial(day, pId)) return;
     const item = DATA[draggedIdx];
-    const conflict = DATA.find(x => x.d === day && x.p === pId && x.tea === item.tea && x.frm !== item.frm);
-    if(conflict) { alert(`Conflict: ${item.tea} is in ${conflict.frm}`); return; }
     
+    // Check for target index (is there already something there?)
     const targetIdx = DATA.findIndex(x => x.d === day && x.p === pId && x.frm === stream);
-    if(targetIdx !== -1) { DATA[targetIdx].d = item.d; DATA[targetIdx].p = item.p; }
-    item.d = day; item.p = pId;
+    
+    // If swapping or moving, check if we are creating a teacher collision in the NEW spot
+    // (Actual collision detection happens on button click, but we block obvious teacher doubles here)
+    const tConflict = DATA.find(x => x.d === day && x.p === pId && x.tea === item.tea && x.frm !== stream);
+    if(tConflict) { if(!confirm(`Warning: Teacher ${item.tea} is already in ${tConflict.frm}. Move anyway?`)) return; }
+
+    if(targetIdx !== -1) { 
+        DATA[targetIdx].d = item.d; 
+        DATA[targetIdx].p = item.p; 
+    }
+    item.d = day; 
+    item.p = pId;
     renderMaster();
 }
 
@@ -263,9 +277,48 @@ function updateFilters() {
     document.getElementById('selTeacher').innerHTML = '<option value="">-- By Teacher --</option>' + teas.map(t => `<option>${t}</option>`).join('');
 }
 
+// NEW FEATURE: COALITION/COLLISION CHECK
+function checkConflicts() {
+    let conflicts = [];
+    // Check Teacher Conflicts
+    DAYS.forEach(d => {
+        SLOTS.forEach(s => {
+            if(s.isB) return;
+            const periodItems = DATA.filter(x => x.d === d && x.p === s.id);
+            const teacherMap = {};
+            const roomMap = {};
+            
+            periodItems.forEach(item => {
+                // Teacher Check
+                if(teacherMap[item.tea]) {
+                    conflicts.push(`<b>Teacher Collision:</b> ${item.tea} is scheduled in both <b>${teacherMap[item.tea]}</b> and <b>${item.frm}</b> on ${d} (${s.id})`);
+                } else { teacherMap[item.tea] = item.frm; }
+                
+                // Room Check (if room provided)
+                if(item.room && item.room.trim() !== "") {
+                    if(roomMap[item.room]) {
+                        conflicts.push(`<b>Room Collision:</b> Room ${item.room} is used by both <b>${roomMap[item.room]}</b> and <b>${item.frm}</b> on ${d} (${s.id})`);
+                    } else { roomMap[item.room] = item.frm; }
+                }
+            });
+        });
+    });
+
+    let h = `<h2>COLLISION CHECK REPORT</h2>`;
+    if(conflicts.length === 0) {
+        h += `<div style="background:#e8f5e9; color:#2e7d32; padding:20px; border-radius:8px; border:1px solid #2e7d32; text-align:center;"><b>PERFECT!</b> No teacher or room collisions detected in the current timetable.</div>`;
+    } else {
+        h += `<div style="background:#ffebee; color:#c62828; padding:20px; border-radius:8px; border:1px solid #c62828;">`;
+        h += `<p>Found <b>${conflicts.length}</b> scheduling conflicts:</p><ul>`;
+        conflicts.forEach(c => h += `<li style="margin-bottom:8px;">${c}</li>`);
+        h += `</ul><p><i>Use drag-and-drop to resolve these conflicts.</i></p></div>`;
+    }
+    document.getElementById('timetableArea').innerHTML = h;
+}
+
 function renderMaster() {
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
-    let h = `<h1 style="text-align:center;">${document.getElementById('schoolName').value}</h1><p style="text-align:center;">OFFICIAL TIMETABLE ${document.getElementById('calYear').value}</p>`;
+    let h = `<h1 style="text-align:center;">${document.getElementById('schoolName').value}</h1><p style="text-align:center;">MASTER TIMETABLE ${document.getElementById('calYear').value}</p>`;
     DAYS.forEach(day => {
         h += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th width="70">FORM</th>`;
         SLOTS.forEach(s => h += `<th>${s.id}<span class="time-label">${s.time}</span></th>`);
@@ -282,6 +335,7 @@ function renderMaster() {
                     h += `<td ondragover="onDragOver(event)" ondrop="onDrop(event, '${day}', '${s.id}', '${f}')">
                         ${m ? `<div class="period-block" draggable="true" ondragstart="onDragStart(event, ${idx})">
                             <b>${m.sub}</b><small>${m.tea}</small>
+                            ${m.room ? `<br><small style="color:#1976d2">${m.room}</small>` : ''}
                         </div>` : ''}
                     </td>`;
                 }
@@ -298,7 +352,7 @@ function saveProject() {
     document.querySelectorAll('.registry-row').forEach(r => registry.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));
     const project = { registry, data: DATA, settings: { school: document.getElementById('schoolName').value, year: document.getElementById('calYear').value, start: document.getElementById('startTime').value, dur: document.getElementById('pDur').value, total: document.getElementById('pTotal').value, bA: document.getElementById('breakAfter').value, bL: document.getElementById('breakLen').value, lA: document.getElementById('lunchAfter').value, lL: document.getElementById('lunchLen').value } };
     const blob = new Blob([JSON.stringify(project)], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `TT_Project.ttpro`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `TTPRO_Save.ttpro`; a.click();
 }
 
 function loadProject(ev) {
@@ -312,45 +366,4 @@ function loadProject(ev) {
         document.getElementById('breakLen').value = s.bL; document.getElementById('lunchAfter').value = s.lA;
         document.getElementById('lunchLen').value = s.lL;
         document.getElementById('regItems').innerHTML = "";
-        p.registry.forEach(i => addRow(i.s, i.t, i.r, i.f, i.p));
-        DATA = p.data || []; buildSlots(); updateFilters(); renderMaster();
-    };
-    reader.readAsText(ev.target.files[0]);
-}
-
-function renderIndividual(type) {
-    const val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
-    if(!val) return;
-    let h = `<h2 style="text-align:center;">${val} - ${type.toUpperCase()}</h2>`;
-    h += `<table><tr><th>DAY</th>` + SLOTS.map(s => `<th>${s.id}<span class="time-label">${s.time}</span></th>`).join('') + `</tr>`;
-    DAYS.forEach(d => {
-        h += `<tr><td><b>${d}</b></td>`;
-        SLOTS.forEach(s => {
-            const spec = getSpecial(d, s.id);
-            if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
-            else if(spec) h += `<td class="special-activity">${spec}</td>`;
-            else {
-                const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
-                h += `<td>${m ? `<b>${m.sub}</b><br><small>${type==='stream' ? m.tea : m.frm}</small>` : ''}</td>`;
-            }
-        });
-        h += `</tr>`;
-    });
-    document.getElementById('timetableArea').innerHTML = h + `</table>`;
-}
-
-function drawTeacherLoad() {
-    const teas = [...new Set(REGISTRY.map(x => x.tea))].sort();
-    let h = `<h2 style="text-align:center;">TEACHER LOAD REPORT</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>LOAD</th><th>TOTAL</th></tr>`;
-    teas.forEach(t => {
-        const items = REGISTRY.filter(x => x.tea === t);
-        const total = items.reduce((sum, x) => sum + x.pwk, 0);
-        h += `<tr><td><b>${t}</b></td><td>${items.map(x => `${x.sub} (${x.frm})`).join(', ')}</td><td>${total}</td></tr>`;
-    });
-    document.getElementById('timetableArea').innerHTML = h + `</table>`;
-}
-
-addRow("MATHEMATICS", "SEURI", "L1", "F1A", 5);
-</script>
-</body>
-</html>
+        p.registry.forEach(i => addRow(i.s, i.t, i.r, i.f, i.p)

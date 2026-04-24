@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-Pro Diamond - Print Master Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TT-Pro Diamond - Subscription Edition</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -16,7 +17,7 @@
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
         .input-row input { width: 75px; padding: 5px; border-radius: 4px; border: none; }
         
-        /* Main Area */
+        /* Main Space */
         .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
         .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
@@ -31,26 +32,21 @@
         th { background: #f0f0f0; font-weight: bold; color: var(--primary); }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; border-bottom: none; margin-top: 20px; }
         
-        .slot-box { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 3px; padding: 3px; cursor: move; }
-        .slot-box b { display: block; font-size: 10px; color: var(--primary); }
         .time-label { display: block; font-size: 8px; color: #d32f2f; font-weight: bold; }
-        
         .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; width: 30px !important; }
         .special-cell { background: #fff9c4 !important; font-weight: bold; font-size: 9px; }
 
         .btn { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; }
         .btn-gen { background: var(--accent); color: white; font-size: 13px; margin-top: 15px; }
         .btn-print { background: #455a64; color: white; }
-        .btn-check { background: var(--danger); color: white; }
 
-        /* PRINT SETTINGS: Each week/day on its own page */
+        /* PRINT SETTINGS */
         @media print { 
             .no-print { display: none !important; }
             .page-break { page-break-after: always; display: block; }
             body { background: white; overflow: visible; display: block; }
             .main-content { padding: 0; overflow: visible; }
             table { page-break-inside: avoid; }
-            .day-title { margin-top: 0; }
         }
     </style>
 </head>
@@ -60,56 +56,48 @@
     <h2>TT-PRO DIAMOND</h2>
     
     <div class="config-box">
-        <h4>Setup Settings</h4>
+        <h4>Time Config</h4>
         <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
         <div class="input-row"><span>Period (m):</span> <input type="number" id="pDur" value="40"></div>
-        <div class="input-row"><span>Total Periods:</span> <input type="number" id="pTotal" value="9"></div>
+        <div class="input-row"><span>Periods:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
     <div class="config-box">
-        <h4>Break Setup</h4>
-        <div class="input-row"><span>Break After P:</span> <input type="number" id="breakAfter" value="3"></div>
-        <div class="input-row"><span>Break Mins:</span> <input type="number" id="breakLen" value="20"></div>
+        <h4>Breaks</h4>
+        <div class="input-row"><span>Short (After P):</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Mins:</span> <input type="number" id="breakLen" value="20"></div>
         <hr style="opacity:0.2">
-        <div class="input-row"><span>Lunch After P:</span> <input type="number" id="lunchAfter" value="6"></div>
-        <div class="input-row"><span>Lunch Mins:</span> <input type="number" id="lunchLen" value="45"></div>
+        <div class="input-row"><span>Lunch (After P):</span> <input type="number" id="lunchAfter" value="6"></div>
+        <div class="input-row"><span>Mins:</span> <input type="number" id="lunchLen" value="45"></div>
     </div>
 
     <div class="config-box">
-        <h4>School Branding</h4>
+        <h4>School Info</h4>
         <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="width:100%; font-size:11px; margin-bottom:5px; padding:5px; border-radius:4px; border:none;">
-        <input type="text" id="calYear" value="2026" style="width:100%; font-size:11px; padding:5px; border-radius:4px; border:none;">
     </div>
 
-    <button class="btn btn-gen" onclick="generate()">🚀 Generate Timetable</button>
-    <button class="btn btn-print" onclick="window.print()">🖨️ Print Current View</button>
-    <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save Project</button>
-    <button class="btn" style="background:#78909c; color:white;" onclick="document.getElementById('loadInput').click()">📂 Load Project</button>
-    <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
+    <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Print View</button>
+    <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save File</button>
 </div>
 
 <div class="main-content">
     <div class="card no-print">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0;">1. Subject Registry</h3>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <label style="font-size:11px; font-weight:bold;">Import CSV:</label>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0;">1. Data Entry</h3>
+            <div style="display:flex; gap:10px;">
                 <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
-                <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:8px 15px; margin:0;">+ Add Row</button>
+                <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Manual Row</button>
             </div>
         </div>
         <div id="regItems"></div>
     </div>
 
     <div class="card no-print" id="viewBar" style="display:none;">
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderMaster()">Master View</button>
-            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('stream')">Print All Streams</button>
-            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('teacher')">Print All Teachers</button>
-            <button class="btn btn-check" style="width:auto;" onclick="checkConflicts()">⚠️ Check Conflicts</button>
-            <div style="flex-grow:1"></div>
-            <select id="selStream" onchange="renderIndividual('stream')" style="padding:5px; border-radius:4px;"><option value="">-- Stream --</option></select>
-            <select id="selTeacher" onchange="renderIndividual('teacher')" style="padding:5px; border-radius:4px;"><option value="">-- Teacher --</option></select>
+        <div style="display:flex; gap:8px;">
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderMaster()">Master Grid</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('stream')">All Streams (Pages)</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('teacher')">All Teachers (Pages)</button>
         </div>
     </div>
 
@@ -117,11 +105,37 @@
 </div>
 
 <script>
+// --- LICENSE CONFIG ---
+const EXPIRY_DATE = "2026-12-31"; 
+const CONTACT_NUM = "0763418732";
+// ----------------------
+
 let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-let draggedIdx = null;
 
-// Manual Row Addition
+// EXPIRY LOCK ENGINE
+(function() {
+    const today = new Date();
+    const expiry = new Date(EXPIRY_DATE);
+    if (today > expiry) {
+        window.onload = function() {
+            document.body.innerHTML = `
+                <div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a237e; color: white; font-family: sans-serif; text-align: center;">
+                    <div style="padding: 40px; border: 2px solid #ff5252; border-radius: 15px; background: rgba(0,0,0,0.3);">
+                        <h1 style="font-size: 50px; color: #ff5252;">LICENSE EXPIRED</h1>
+                        <p style="font-size: 20px;">Please renew your subscription to continue.</p>
+                        <div style="font-size: 30px; background: #00c853; color: black; padding: 15px 40px; border-radius: 50px; font-weight: bold; margin: 20px 0;">
+                           📞 CALL: ${CONTACT_NUM}
+                        </div>
+                        <p style="opacity: 0.6;">TT-Pro Diamond Tanzania Edition</p>
+                    </div>
+                </div>`;
+            window.print = () => false;
+        };
+        throw new Error("Expired");
+    }
+})();
+
 function addRegistryRow(s="", t="", r="", f="", p=5) {
     const container = document.getElementById('regItems');
     const div = document.createElement('div');
@@ -131,26 +145,21 @@ function addRegistryRow(s="", t="", r="", f="", p=5) {
         <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
         <input type="text" class="r-room" value="${r}" placeholder="Room">
         <input type="text" class="r-frm" value="${f}" placeholder="Form">
-        <input type="number" class="r-pwk" value="${p}" title="Periods Per Week">
+        <input type="number" class="r-pwk" value="${p}">
         <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>
     `;
     container.appendChild(div);
 }
 
-// Fixed CSV Handler for Tanzania Template
 function handleCSV(e) {
     const reader = new FileReader();
     reader.onload = (ev) => {
-        const text = ev.target.result;
-        const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+        const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
         const counts = {};
-        // Detect header (Skip if first row contains "Teacher" or "Subject")
-        const startIndex = (lines[0].toLowerCase().includes("teacher") || lines[0].toLowerCase().includes("subject") || lines[0].startsWith(" ,")) ? 1 : 0;
-        
-        lines.slice(startIndex).forEach(line => {
+        const start = (lines[0].toLowerCase().includes("teacher") || lines[0].includes(" ,")) ? 1 : 0;
+        lines.slice(start).forEach(line => {
             const c = line.split(',').map(i => i.trim());
             if(c.length >= 2) {
-                // Tanzania Template: Sub, Tea, Room, Form
                 const key = `${c[0]}|${c[1]}|${c[2] || ''}|${c[3] || 'F1'}`;
                 counts[key] = (counts[key] || 0) + 1;
             }
@@ -169,25 +178,18 @@ function buildSlots() {
     let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
     const dur = parseInt(document.getElementById('pDur').value);
     const total = parseInt(document.getElementById('pTotal').value);
-    const bA = parseInt(document.getElementById('breakAfter').value);
-    const bL = parseInt(document.getElementById('breakLen').value);
-    const lA = parseInt(document.getElementById('lunchAfter').value);
-    const lL = parseInt(document.getElementById('lunchLen').value);
-
     for(let i=1; i<=total; i++) {
         let sStr = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
-        let eStr = cur.toTimeString().slice(0,5);
-        SLOTS.push({ id: 'P'+i, time: `${sStr}-${eStr}`, isB: false });
-
-        if(i === bA) {
+        SLOTS.push({ id: 'P'+i, time: `${sStr}-${cur.toTimeString().slice(0,5)}`, isB: false });
+        if(i === parseInt(document.getElementById('breakAfter').value)) {
             let bs = cur.toTimeString().slice(0,5);
-            cur.setMinutes(cur.getMinutes() + bL);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('breakLen').value));
             SLOTS.push({ id: 'BREAK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
-        if(i === lA) {
+        if(i === parseInt(document.getElementById('lunchAfter').value)) {
             let ls = cur.toTimeString().slice(0,5);
-            cur.setMinutes(cur.getMinutes() + lL);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('lunchLen').value));
             SLOTS.push({ id: 'LUNCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
     }
@@ -206,26 +208,21 @@ function generate() {
     document.querySelectorAll('.registry-row').forEach(r => {
         const sub = r.querySelector('.r-sub').value.toUpperCase();
         const tea = r.querySelector('.r-tea').value;
-        const rm = r.querySelector('.r-room').value;
-        const f = r.querySelector('.r-frm').value.toUpperCase();
-        const p = parseInt(r.querySelector('.r-pwk').value);
-        if(sub && tea && f) REGISTRY.push({sub, tea, room: rm, frm: f, pwk: p});
+        const frm = r.querySelector('.r-frm').value.toUpperCase();
+        const pwk = parseInt(r.querySelector('.r-pwk').value);
+        if(sub && tea && frm) REGISTRY.push({sub, tea, room: r.querySelector('.r-room').value, frm, pwk});
     });
-
-    if(REGISTRY.length === 0) return alert("Please add subjects first.");
 
     buildSlots();
     DATA = [];
 
-    // Memory Logic: Double Periods priority once per day
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
         let plan = [];
-        let doubles = Math.min(Math.floor(left/2), 5);
-        let singles = left - (doubles*2);
-        for(let i=0; i<doubles; i++) plan.push('double');
-        for(let i=0; i<singles; i++) plan.push('single');
+        let dbl = Math.min(Math.floor(left/2), 5);
+        for(let i=0; i<dbl; i++) plan.push('double');
+        for(let i=0; i<(left-(dbl*2)); i++) plan.push('single');
 
         plan.forEach(type => {
             let placed = false;
@@ -233,19 +230,18 @@ function generate() {
                 if (DATA.find(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
                 if(type === 'double') {
                     for(let i=0; i < SLOTS.length-1; i++) {
-                        let t1 = SLOTS[i], t2 = SLOTS[i+1];
-                        if(t1.isB || t2.isB || getSpecial(d, t1.id) || getSpecial(d, t2.id)) continue;
-                        if(!DATA.find(x => x.d===d && x.p===t1.id && (x.tea===item.tea || x.frm===item.frm)) &&
-                           !DATA.find(x => x.d===d && x.p===t2.id && (x.tea===item.tea || x.frm===item.frm))) {
-                            DATA.push({...item, d, p: t1.id}, {...item, d, p: t2.id});
+                        if(SLOTS[i].isB || SLOTS[i+1].isB || getSpecial(d, SLOTS[i].id) || getSpecial(d, SLOTS[i+1].id)) continue;
+                        if(!DATA.find(x => x.d===d && x.p===SLOTS[i].id && (x.tea===item.tea || x.frm===item.frm)) &&
+                           !DATA.find(x => x.d===d && x.p===SLOTS[i+1].id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: SLOTS[i].id}, {...item, d, p: SLOTS[i+1].id});
                             placed = true; break;
                         }
                     }
                 } else {
-                    for(let t of SLOTS) {
-                        if(t.isB || getSpecial(d, t.id)) continue;
-                        if(!DATA.find(x => x.d===d && x.p===t.id && (x.tea===item.tea || x.frm===item.frm))) {
-                            DATA.push({...item, d, p: t.id});
+                    for(let s of SLOTS) {
+                        if(s.isB || getSpecial(d, s.id)) continue;
+                        if(!DATA.find(x => x.d===d && x.p===s.id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: s.id});
                             placed = true; break;
                         }
                     }
@@ -254,37 +250,26 @@ function generate() {
             }
         });
     });
-    updateFilters();
-    renderMaster();
-}
-
-function updateFilters() {
     document.getElementById('viewBar').style.display = 'block';
-    const frms = [...new Set(DATA.map(x => x.frm))].sort();
-    const teas = [...new Set(DATA.map(x => x.tea))].sort();
-    document.getElementById('selStream').innerHTML = '<option value="">-- Stream --</option>' + frms.map(f => `<option>${f}</option>`).join('');
-    document.getElementById('selTeacher').innerHTML = '<option value="">-- Teacher --</option>' + teas.map(t => `<option>${t}</option>`).join('');
+    renderMaster();
 }
 
 function renderMaster() {
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
-    let h = `<h1 style="text-align:center;">${document.getElementById('schoolName').value}</h1>`;
+    let h = `<h1 style="text-align:center;">MASTER TIMETABLE - ${document.getElementById('schoolName').value}</h1>`;
     DAYS.forEach(day => {
-        h += `<div class="page-break"><div class="day-title">${day}</div><table><tr><th width="70">FORM</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<span class="time-label">${s.time}</span></th>`);
+        h += `<div class="page-break"><div class="day-title">${day}</div><table><tr><th>FORM</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
         h += `</tr>`;
         frms.forEach(f => {
             h += `<tr><td><b>${f}</b></td>`;
             SLOTS.forEach(s => {
-                const spec = getSpecial(day, s.id);
+                const sp = getSpecial(day, s.id);
                 if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
-                else if(spec) h += `<td class="special-cell">${spec}</td>`;
+                else if(sp) h += `<td class="special-cell">${sp}</td>`;
                 else {
-                    const idx = DATA.findIndex(x => x.d === day && x.p === s.id && x.frm === f);
-                    const m = DATA[idx];
-                    h += `<td ondragover="event.preventDefault()" ondrop="drop(event, '${day}', '${s.id}', '${f}')">
-                        ${m ? `<div class="slot-box" draggable="true" ondragstart="drag(${idx})"><b>${m.sub}</b><small>${m.tea}</small></div>` : ''}
-                    </td>`;
+                    const m = DATA.find(x => x.d === day && x.p === s.id && x.frm === f);
+                    h += `<td>${m ? `<b>${m.sub}</b><br>${m.tea}` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -294,85 +279,39 @@ function renderMaster() {
     document.getElementById('timetableArea').innerHTML = h;
 }
 
-function drag(idx) { draggedIdx = idx; }
-function drop(e, d, p, f) {
-    e.preventDefault();
-    const item = DATA[draggedIdx];
-    const targetIdx = DATA.findIndex(x => x.d === d && x.p === p && x.frm === f);
-    if(targetIdx !== -1) { DATA[targetIdx].d = item.d; DATA[targetIdx].p = item.p; }
-    item.d = d; item.p = p;
-    renderMaster();
-}
-
-function renderIndividual(type, entity = null) {
-    const val = entity || document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
-    if(!val) return;
-    let h = `<div class="page-break"><h2 style="text-align:center;">${val} - ${type.toUpperCase()} WEEKLY</h2>`;
-    h += `<table><tr><th>DAY</th>` + SLOTS.map(s => `<th>${s.id}<br><small>${s.time}</small></th>`).join('') + `</tr>`;
-    DAYS.forEach(d => {
-        h += `<tr><td><b>${d}</b></td>`;
-        SLOTS.forEach(s => {
-            const spec = getSpecial(d, s.id);
-            if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
-            else if(spec) h += `<td class="special-cell">${spec}</td>`;
-            else {
-                const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
-                h += `<td>${m ? `<b>${m.sub}</b><br><small>${type==='stream' ? m.tea : m.frm}</small>` : ''}</td>`;
-            }
-        });
-        h += `</tr>`;
-    });
-    const content = h + `</table></div>`;
-    if(!entity) document.getElementById('timetableArea').innerHTML = content;
-    return content;
-}
-
 function renderBulk(type) {
     const list = [...new Set(DATA.map(x => type === 'stream' ? x.frm : x.tea))].sort();
-    let html = `<h1 class="no-print" style="text-align:center;">Bulk Print Mode: ${type.toUpperCase()}s</h1>`;
-    list.forEach(item => html += renderIndividual(type, item));
-    document.getElementById('timetableArea').innerHTML = html;
-}
-
-function checkConflicts() {
-    let errs = [];
-    DAYS.forEach(d => {
-        SLOTS.forEach(s => {
-            if(s.isB) return;
-            const items = DATA.filter(x => x.d === d && x.p === s.id);
-            const tMap = {};
-            items.forEach(i => {
-                if(tMap[i.tea]) errs.push(`<b>Teacher Collision:</b> ${i.tea} is in both ${tMap[i.tea]} and ${i.frm} on ${d} at ${s.id}`);
-                else tMap[i.tea] = i.frm;
+    let h = `<h1 class="no-print" style="text-align:center;">Bulk Print: ${type.toUpperCase()}s</h1>`;
+    list.forEach(val => {
+        h += `<div class="page-break"><h2 style="text-align:center;">${val} - ${type.toUpperCase()}</h2><table><tr><th>DAY</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+        h += `</tr>`;
+        DAYS.forEach(d => {
+            h += `<tr><td><b>${d}</b></td>`;
+            SLOTS.forEach(s => {
+                const sp = getSpecial(d, s.id);
+                if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else if(sp) h += `<td class="special-cell">${sp}</td>`;
+                else {
+                    const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
+                    h += `<td>${m ? `<b>${m.sub}</b><br>${type==='stream'?m.tea:m.frm}` : ''}</td>`;
+                }
             });
+            h += `</tr>`;
         });
+        h += `</table></div>`;
     });
-    let out = `<h3>COLLISION REPORT</h3>`;
-    if(errs.length === 0) out += `<p style="color:green">✅ No teacher collisions detected.</p>`;
-    else out += `<ul style="color:red">` + errs.map(e => `<li>${e}</li>`).join('') + `</ul>`;
-    document.getElementById('timetableArea').innerHTML = out;
+    document.getElementById('timetableArea').innerHTML = h;
 }
 
 function saveProject() {
     const reg = [];
     document.querySelectorAll('.registry-row').forEach(r => reg.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));
-    const proj = { reg, data: DATA, school: document.getElementById('schoolName').value };
-    const blob = new Blob([JSON.stringify(proj)], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable.ttpro`; a.click();
+    const blob = new Blob([JSON.stringify({reg, data: DATA})], {type: "application/json"});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable_Backup.ttpro`; a.click();
 }
 
-function loadProject(ev) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const p = JSON.parse(e.target.result);
-        document.getElementById('regItems').innerHTML = "";
-        p.reg.forEach(i => addRegistryRow(i.s, i.t, i.r, i.f, i.p));
-        DATA = p.data; buildSlots(); updateFilters(); renderMaster();
-    };
-    reader.readAsText(ev.target.files[0]);
-}
-
-window.onload = () => addRegistryRow("MATHEMATICS", "SEURI", "L1", "F1A", 5);
+window.onload = () => addRegistryRow("MATHEMATICS", "TEACHER", "RM1", "F1A", 5);
 </script>
 </body>
 </html>

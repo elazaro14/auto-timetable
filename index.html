@@ -23,13 +23,11 @@
         .registry-row { display: grid; grid-template-columns: 1.2fr 1fr 0.7fr 0.5fr 1fr 30px; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .registry-row input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 10px; width: 100%; box-sizing: border-box; }
 
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; border: 2px solid #000; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border: 2px solid #000; margin-bottom: 20px; }
         th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 55px; }
         th { background: #f0f0f0; font-weight: bold; }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; margin-top: 15px; }
         
-        .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; color: #777; width: 25px !important; }
-
         .btn { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; }
         .btn-gen { background: var(--accent); color: white; height: 45px; margin: 15px 0; }
         .btn-wa { background: var(--whatsapp); color: white; display: none; }
@@ -58,8 +56,12 @@
     <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
     
     <div style="margin-top:auto;">
+        <button class="btn" style="background:#00897b; color:white;" onclick="downloadCSVTemplate()">📝 Download CSV Template</button>
+        <button class="btn" style="background:#00acc1; color:white;" onclick="document.getElementById('csvInput').click()">📥 Upload CSV</button>
+        <input type="file" id="csvInput" style="display:none" accept=".csv" onchange="loadCSV(event)">
+        <hr style="opacity:0.2; margin:10px 0;">
         <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save (.ttpro)</button>
-        <button class="btn" style="background:#78909c; color:white;" onclick="document.getElementById('loadInput').click()">📂 Upload/Load File</button>
+        <button class="btn" style="background:#78909c; color:white;" onclick="document.getElementById('loadInput').click()">📂 Load (.ttpro)</button>
         <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
         <button class="btn" style="background:#455a64; color:white;" onclick="window.print()">🖨️ Export PDF</button>
     </div>
@@ -69,7 +71,7 @@
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0;">Academic Registry</h3>
-            <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Add New</button>
+            <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Add Row</button>
         </div>
         <div id="regItems"></div>
     </div>
@@ -87,9 +89,7 @@
 </div>
 
 <script>
-// HIDDEN EXPIRATION LOGIC
-const EXPIRY = "2026-12-31";
-
+const EXPIRY = "2026-12-31"; // Hidden expiry
 let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
@@ -106,13 +106,37 @@ function addRegistryRow(s="", t="", f="", p=5, ph="") {
     const div = document.createElement('div');
     div.className = 'registry-row';
     div.innerHTML = `
-        <input type="text" class="r-sub" value="${s}" placeholder="Sub">
-        <input type="text" class="r-tea" value="${t}" placeholder="Tea">
-        <input type="text" class="r-frm" value="${f}" placeholder="Frm">
+        <input type="text" class="r-sub" value="${s}" placeholder="Subject">
+        <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
+        <input type="text" class="r-frm" value="${f}" placeholder="Form">
         <input type="number" class="r-pwk" value="${p}">
-        <input type="text" class="r-phone" value="${ph}" placeholder="255...">
+        <input type="text" class="r-phone" value="${ph}" placeholder="Phone">
         <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
     container.appendChild(div);
+}
+
+// --- CSV Logic ---
+function downloadCSVTemplate() {
+    let csv = "Subject,Teacher,Form,PeriodsPerWeek,Phone\nMATHEMATICS,SEURI,F1A,5,255700000000\nENGLISH,NCHIMBI,F1A,5,255700000000";
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Timetable_Template.csv';
+    a.click();
+}
+
+function loadCSV(ev) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const rows = e.target.result.split('\n').slice(1);
+        document.getElementById('regItems').innerHTML = "";
+        rows.forEach(row => {
+            const cols = row.split(',');
+            if(cols.length >= 4) addRegistryRow(cols[0], cols[1], cols[2], cols[3], cols[4] || "");
+        });
+        generate();
+    };
+    reader.readAsText(ev.target.files[0]);
 }
 
 function buildSlots() {
@@ -126,7 +150,6 @@ function buildSlots() {
 
 function generate() {
     if(checkLock()) return;
-    
     REGISTRY = [];
     document.querySelectorAll('.registry-row').forEach(r => {
         REGISTRY.push({
@@ -137,11 +160,8 @@ function generate() {
             phone: r.querySelector('.r-phone').value
         });
     });
-
     buildSlots();
     DATA = [];
-    
-    // Sort and Fill (Double Periods First)
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         DAYS.forEach(day => {
@@ -150,19 +170,12 @@ function generate() {
                 if(left <= 0) break;
                 let s = SLOTS[i], ns = SLOTS[i+1];
                 if(s.isB) continue;
-
                 if(left >= 2 && ns && !ns.isB) {
                     const c1 = DATA.find(x=>x.d===day && x.p===s.id && (x.tea===item.tea || x.frm===item.frm));
                     const c2 = DATA.find(x=>x.d===day && x.p===ns.id && (x.tea===item.tea || x.frm===item.frm));
-                    if(!c1 && !c2){
-                        DATA.push({...item, d:day, p:s.id}, {...item, d:day, p:ns.id});
-                        left -= 2; i++; continue;
-                    }
+                    if(!c1 && !c2){ DATA.push({...item, d:day, p:s.id}, {...item, d:day, p:ns.id}); left -= 2; i++; continue; }
                 }
-                
-                if(!DATA.find(x=>x.d===day && x.p===s.id && (x.tea===item.tea || x.frm===item.frm))){
-                    DATA.push({...item, d:day, p:s.id}); left--;
-                }
+                if(!DATA.find(x=>x.d===day && x.p===s.id && (x.tea===item.tea || x.frm===item.frm))){ DATA.push({...item, d:day, p:s.id}); left--; }
             }
         });
     });
@@ -189,10 +202,10 @@ function renderMaster() {
         frms.forEach(f => {
             h += `<tr><td><b>${f}</b></td>`;
             SLOTS.forEach(s => {
-                if(s.isB) h += `<td class="break-cell">BREAK</td>`;
+                if(s.isB) h += `<td style="background:#eee">BRK</td>`;
                 else {
                     const m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    h += `<td>${m ? `<b>${m.sub}</b><br><small>${m.tea}</small>` : ''}</td>`;
+                    h += `<td>${m ? `<b>${m.sub}</b><br>${m.tea}` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -206,17 +219,16 @@ function renderIndividual(type) {
     let val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
     document.getElementById('waBtn').style.display = (type === 'teacher') ? 'block' : 'none';
-    
-    let h = `<h2>${val} Timetable</h2><table><tr><th>DAY</th>`;
+    let h = `<h2>${val}</h2><table><tr><th>DAY</th>`;
     SLOTS.forEach(s => h += `<th>${s.id}</th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         SLOTS.forEach(s => {
-            if(s.isB) h += `<td class="break-cell">BREAK</td>`;
+            if(s.isB) h += `<td style="background:#eee">BRK</td>`;
             else {
                 const m = DATA.find(x => x.d===d && x.p===s.id && (type==='stream' ? x.frm===val : x.tea===val));
-                h += `<td>${m ? `<b>${m.sub}</b><br><small>${type==='teacher' ? m.frm : m.tea}</small>` : ''}</td>`;
+                h += `<td>${m ? `<b>${m.sub}</b><br>${type==='teacher' ? m.frm : m.tea}` : ''}</td>`;
             }
         });
         h += `</tr>`;
@@ -227,10 +239,10 @@ function renderIndividual(type) {
 function shareWhatsApp() {
     const teaName = document.getElementById('selTeacher').value;
     const tea = REGISTRY.find(r => r.tea === teaName);
-    if(!tea || !tea.phone) return alert("Phone number missing for this teacher!");
-    let msg = `*Timetable: ${teaName}*\n`;
+    if(!tea || !tea.phone) return alert("No phone number!");
+    let msg = `*Schedule: ${teaName}*\n`;
     DAYS.forEach(d => {
-        const p = DATA.filter(x => x.d === d && x.tea === teaName).map(x => `${x.p}: ${x.sub}(${x.frm})`).join(", ");
+        const p = DATA.filter(x => x.d === d && x.tea === teaName).map(x => `${x.p}:${x.sub}(${x.frm})`).join(", ");
         msg += `\n*${d}*: ${p || 'Free'}`;
     });
     window.open(`https://wa.me/${tea.phone}?text=${encodeURIComponent(msg)}`);
@@ -239,31 +251,17 @@ function shareWhatsApp() {
 function saveProject() {
     const p = { registry: REGISTRY, data: DATA };
     const blob = new Blob([JSON.stringify(p)], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable_Project.ttpro`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable.ttpro`; a.click();
 }
 
 function loadProject(ev) {
     const reader = new FileReader();
     reader.onload = (e) => {
-        try {
-            const p = JSON.parse(e.target.result);
-            document.getElementById('regItems').innerHTML = "";
-            
-            // Handle registry mapping from TT_Project.ttpro specifically
-            const reg = p.registry || p.reg || [];
-            reg.forEach(item => {
-                addRegistryRow(
-                    item.s || item.sub || "", 
-                    item.t || item.tea || "", 
-                    item.f || item.frm || "", 
-                    item.p || item.pwk || 5, 
-                    item.phone || ""
-                );
-            });
-            
-            // Immediately generate Master Timetable
-            generate();
-        } catch (err) { alert("Error: File structure is incorrect."); }
+        const p = JSON.parse(e.target.result);
+        document.getElementById('regItems').innerHTML = "";
+        const reg = p.registry || p.reg || [];
+        reg.forEach(i => addRegistryRow(i.s||i.sub||"", i.t||i.tea||"", i.f||i.frm||"", i.p||i.pwk||5, i.phone||""));
+        generate();
     };
     reader.readAsText(ev.target.files[0]);
 }

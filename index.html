@@ -5,50 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TT-Pro Diamond | Excellence Secondary</title>
     <style>
-        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; --danger: #d32f2f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar Controls */
         .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
         .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
+        
         .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
         .config-box h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--accent); }
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
-        .input-row input { width: 80px; padding: 4px; border-radius: 4px; border: none; }
+        .input-row input { width: 90px; padding: 4px; border-radius: 4px; border: none; }
         
-        /* Table Styling */
         .main-content { flex: 1; overflow-y: auto; padding: 20px; }
         .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        #regItems { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
-        .registry-row { display: grid; grid-template-columns: 1.2fr 1fr 0.7fr 0.7fr 1fr 30px; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        #regItems { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
+        .registry-row { display: grid; grid-template-columns: 1.2fr 1fr 0.7fr 0.5fr 1fr 30px; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .registry-row input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 10px; width: 100%; box-sizing: border-box; }
 
         table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; border: 2px solid #000; margin-bottom: 20px; }
-        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 55px; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 50px; }
         th { background: #f0f0f0; font-weight: bold; }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; margin-top: 15px; }
         
         .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; color: #777; width: 25px !important; }
 
-        .btn { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; }
+        .btn { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; transition: 0.3s; }
         .btn-gen { background: var(--accent); color: white; height: 45px; margin: 15px 0; }
-        .btn-wa { background: var(--whatsapp); color: white; margin-top: 10px; display: none; }
+        .btn-wa { background: var(--whatsapp); color: white; display: none; }
+        .expired { display: none !important; }
 
-        @media print { .no-print { display: none !important; } body { display: block; background: white; } }
+        #expiryOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
     </style>
 </head>
 <body>
+
+<div id="expiryOverlay">
+    <h1 style="color:var(--danger)">LICENSE EXPIRED</h1>
+    <p>This timetable project has reached its expiration date.</p>
+    <button class="btn" style="width:200px; background:white; color:black;" onclick="location.reload()">Retry Load</button>
+</div>
 
 <div class="sidebar no-print">
     <h2>TT-PRO DIAMOND</h2>
     
     <div class="config-box">
+        <h4>System Security</h4>
+        <div class="input-row"><span>Expiry Date:</span> <input type="date" id="expDate" value="2026-12-31"></div>
+    </div>
+
+    <div class="config-box">
         <h4>Schedule Settings</h4>
-        <div class="input-row"><span>Start:</span> <input type="time" id="startTime" value="08:00"></div>
+        <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
         <div class="input-row"><span>Period Mins:</span> <input type="number" id="pDur" value="40"></div>
-        <div class="input-row"><span>Break After P:</span> <input type="number" id="breakAfter" value="4"></div>
-        <div class="input-row"><span>Break Mins:</span> <input type="number" id="breakLen" value="30"></div>
+        <div class="input-row"><span>Break After:</span> <input type="number" id="breakAfter" value="4"></div>
     </div>
 
     <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
@@ -57,25 +67,27 @@
         <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save Project</button>
         <button class="btn" style="background:#78909c; color:white;" onclick="document.getElementById('loadInput').click()">📂 Load (.ttpro)</button>
         <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
-        <button class="btn" style="background:#455a64; color:white;" onclick="window.print()">🖨️ Print PDF</button>
+        <button class="btn" style="background:#455a64; color:white;" onclick="window.print()">🖨️ Export PDF</button>
     </div>
 </div>
 
 <div class="main-content">
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0;">Data Entry</h3>
-            <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Add Subject</button>
+            <h3 style="margin:0;">Academic Registry</h3>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Add Row</button>
+            </div>
         </div>
         <div id="regItems"></div>
     </div>
 
     <div class="card no-print" id="viewBar" style="display:none;">
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px; align-items:center;">
             <button class="btn" style="width:auto; background:#eee; color:#333; margin:0;" onclick="renderMaster()">Master Grid</button>
             <select id="selStream" onchange="renderIndividual('stream')" style="padding:5px;"><option value="">-- Stream View --</option></select>
             <select id="selTeacher" onchange="renderIndividual('teacher')" style="padding:5px;"><option value="">-- Teacher View --</option></select>
-            <button id="waBtn" class="btn btn-wa" style="width:auto; margin:0; padding:5px 15px;" onclick="shareWhatsApp()">📲 WhatsApp Schedule</button>
+            <button id="waBtn" class="btn btn-wa" style="width:auto; margin:0; padding:5px 15px;" onclick="shareWhatsApp()">📲 WhatsApp Share</button>
         </div>
     </div>
 
@@ -86,6 +98,16 @@
 let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
+function checkExpiry() {
+    const exp = new Date(document.getElementById('expDate').value);
+    const now = new Date();
+    if(now > exp) {
+        document.getElementById('expiryOverlay').style.display = 'flex';
+        return true;
+    }
+    return false;
+}
+
 function addRegistryRow(s="", t="", f="", p=5, ph="") {
     const container = document.getElementById('regItems');
     const div = document.createElement('div');
@@ -94,7 +116,7 @@ function addRegistryRow(s="", t="", f="", p=5, ph="") {
         <input type="text" class="r-sub" value="${s}" placeholder="Sub">
         <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
         <input type="text" class="r-frm" value="${f}" placeholder="Form">
-        <input type="number" class="r-pwk" value="${p}">
+        <input type="number" class="r-pwk" value="${p}" placeholder="P">
         <input type="text" class="r-phone" value="${ph}" placeholder="255...">
         <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
     container.appendChild(div);
@@ -102,11 +124,7 @@ function addRegistryRow(s="", t="", f="", p=5, ph="") {
 
 function buildSlots() {
     SLOTS = [];
-    let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
-    const dur = parseInt(document.getElementById('pDur').value);
     const bA = parseInt(document.getElementById('breakAfter').value);
-    const bL = parseInt(document.getElementById('breakLen').value);
-
     for(let i=1; i<=9; i++) {
         SLOTS.push({ id: 'P'+i, isB: false });
         if(i === bA) SLOTS.push({ id: 'BREAK', isB: true });
@@ -114,6 +132,8 @@ function buildSlots() {
 }
 
 function generate() {
+    if(checkExpiry()) return;
+    
     REGISTRY = [];
     document.querySelectorAll('.registry-row').forEach(r => {
         REGISTRY.push({
@@ -128,7 +148,7 @@ function generate() {
     buildSlots();
     DATA = [];
     
-    // Priority Generation for Double Periods
+    // Double Period Logic
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         DAYS.forEach(day => {
@@ -138,7 +158,6 @@ function generate() {
                 let s = SLOTS[i], ns = SLOTS[i+1];
                 if(s.isB) continue;
 
-                // Double Period Priority
                 if(left >= 2 && ns && !ns.isB) {
                     const c1 = DATA.find(x=>x.d===day && x.p===s.id && (x.tea===item.tea || x.frm===item.frm));
                     const c2 = DATA.find(x=>x.d===day && x.p===ns.id && (x.tea===item.tea || x.frm===item.frm));
@@ -148,7 +167,6 @@ function generate() {
                     }
                 }
                 
-                // Single Fallback
                 if(!DATA.find(x=>x.d===day && x.p===s.id && (x.tea===item.tea || x.frm===item.frm))){
                     DATA.push({...item, d:day, p:s.id}); left--;
                 }
@@ -194,10 +212,9 @@ function renderMaster() {
 function renderIndividual(type) {
     let val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
-    
     document.getElementById('waBtn').style.display = (type === 'teacher') ? 'block' : 'none';
     
-    let h = `<h2>${val} Schedule</h2><table><tr><th>DAY</th>`;
+    let h = `<h2>${val}</h2><table><tr><th>DAY</th>`;
     SLOTS.forEach(s => h += `<th>${s.id}</th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
@@ -217,37 +234,54 @@ function renderIndividual(type) {
 function shareWhatsApp() {
     const teaName = document.getElementById('selTeacher').value;
     const tea = REGISTRY.find(r => r.tea === teaName);
-    if(!tea || !tea.phone) return alert("Please enter a WhatsApp number (255...) in the registry for this teacher.");
-    
-    let msg = `*Timetable for ${teaName}*\n\n`;
+    if(!tea || !tea.phone) return alert("No phone number found!");
+    let msg = `*Timetable: ${teaName}*\n`;
     DAYS.forEach(d => {
-        msg += `*${d}*: `;
-        const periods = DATA.filter(x => x.d === d && x.tea === teaName);
-        if(periods.length > 0) {
-            msg += periods.map(p => `${p.p}: ${p.sub} (${p.frm})`).join(", ");
-        } else { msg += "No classes"; }
-        msg += "\n";
+        const p = DATA.filter(x => x.d === d && x.tea === teaName).map(x => `${x.p}: ${x.sub}(${x.frm})`).join(", ");
+        msg += `\n*${d}*: ${p || 'Free'}`;
     });
-    window.open(`https://wa.me/${tea.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(`https://wa.me/${tea.phone}?text=${encodeURIComponent(msg)}`);
 }
 
 function saveProject() {
-    const blob = new Blob([JSON.stringify({reg: REGISTRY, data: DATA})], {type: "application/json"});
+    const projectData = {
+        reg: REGISTRY, 
+        data: DATA, 
+        expiry: document.getElementById('expDate').value,
+        config: {
+            start: document.getElementById('startTime').value,
+            dur: document.getElementById('pDur').value,
+            bA: document.getElementById('breakAfter').value
+        }
+    };
+    const blob = new Blob([JSON.stringify(projectData)], {type: "application/json"});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Project.ttpro`; a.click();
 }
 
 function loadProject(ev) {
     const reader = new FileReader();
     reader.onload = (e) => {
-        const p = JSON.parse(e.target.result);
-        document.getElementById('regItems').innerHTML = "";
-        p.reg.forEach(i => addRegistryRow(i.s || i.sub, i.t || i.tea, i.f || i.frm, i.p || i.pwk, i.phone || ""));
-        DATA = p.data; buildSlots(); updateFilters(); renderMaster();
+        try {
+            const p = JSON.parse(e.target.result);
+            if(p.expiry) document.getElementById('expDate').value = p.expiry;
+            if(checkExpiry()) return;
+
+            document.getElementById('regItems').innerHTML = "";
+            p.reg.forEach(i => addRegistryRow(i.s || i.sub, i.t || i.tea, i.f || i.frm, i.p || i.pwk, i.phone || ""));
+            
+            if(p.config) {
+                document.getElementById('startTime').value = p.config.start;
+                document.getElementById('pDur').value = p.config.dur;
+                document.getElementById('breakAfter').value = p.config.bA;
+            }
+
+            DATA = p.data; buildSlots(); updateFilters(); renderMaster();
+        } catch (err) { alert("Invalid File Format"); }
     };
     reader.readAsText(ev.target.files[0]);
 }
 
-window.onload = () => addRegistryRow("MATH", "SEURI", "F1A", 5, "255700000000");
+window.onload = () => { if(REGISTRY.length === 0) addRegistryRow("MATH", "SEURI", "F1A", 5, "255..."); };
 </script>
 </body>
 </html>

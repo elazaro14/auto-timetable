@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-Pro Diamond - Tanzanian Special Edition</title>
+    <title>TT-Pro Diamond - Double Period Priority</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; --special: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -60,9 +60,9 @@
 
     <div class="config-box">
         <h4>Special Activities</h4>
-        <div class="input-row"><span>Debate (Fri) P:</span> <input type="number" id="debP" value="8"></div>
         <div class="input-row"><span>Religion P:</span> <input type="number" id="relP" value="1"></div>
         <div class="input-row"><span>Mosque (Fri) P:</span> <input type="number" id="mosP" value="6"></div>
+        <div class="input-row"><span>Debate (Fri) P:</span> <input type="number" id="debP" value="8"></div>
     </div>
 
     <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
@@ -155,7 +155,6 @@ function generate() {
     const debP = 'P' + document.getElementById('debP').value;
     const mosP = 'P' + document.getElementById('mosP').value;
 
-    // Place Hard-Locked Special Activities
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         DAYS.forEach(d => {
@@ -165,15 +164,25 @@ function generate() {
                 let s = SLOTS[i], ns = SLOTS[i+1];
                 if(s.isB) continue;
                 
-                // Block religion/debate/mosque slots
+                // Hard-Locked Special Slots
                 if(s.id === relP) continue; 
                 if(d === 'FRIDAY' && (s.id === debP || s.id === mosP)) continue;
 
-                // Double period check
-                if(left >= 2 && ns && !ns.isB && ns.id !== relP && !(d==='FRIDAY' && (ns.id===debP||ns.id===mosP)) && !DATA.find(x=>x.d===d && (x.p===s.id||x.p===ns.id) && (x.tea===item.tea||x.frm===item.frm))){
-                    DATA.push({...item, d, p: s.id}, {...item, d, p: ns.id}); left -= 2;
-                } else if(!DATA.find(x=>x.d===d && x.p===s.id && (x.tea===item.tea||x.frm===item.frm))){
-                    DATA.push({...item, d, p: s.id}); left--;
+                // DOUBLE PERIOD LOGIC (Priority)
+                if(left >= 2 && ns && !ns.isB && ns.id !== relP && !(d==='FRIDAY' && (ns.id===debP||ns.id===mosP))) {
+                    const conflict1 = DATA.find(x=>x.d===d && x.p===s.id && (x.tea===item.tea||x.frm===item.frm));
+                    const conflict2 = DATA.find(x=>x.d===d && x.p===ns.id && (x.tea===item.tea||x.frm===item.frm));
+                    
+                    if(!conflict1 && !conflict2) {
+                        DATA.push({...item, d, p: s.id}, {...item, d, p: ns.id});
+                        left -= 2; continue;
+                    }
+                } 
+
+                // SINGLE PERIOD FALLBACK
+                if(!DATA.find(x=>x.d===d && x.p===s.id && (x.tea===item.tea||x.frm===item.frm))){
+                    DATA.push({...item, d, p: s.id});
+                    left--;
                 }
             }
         });
@@ -199,7 +208,7 @@ function renderMaster() {
     let h = "";
     DAYS.forEach(day => {
         h += `<div class="day-title">${day}</div><table><tr><th>FORM</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
         h += `</tr>`;
         frms.forEach(f => {
             h += `<tr><td><b>${f}</b></td>`;
@@ -251,7 +260,7 @@ function renderIndividual(type) {
 
 function shareWhatsApp() {
     const t = REGISTRY.find(r => r.tea === document.getElementById('selTeacher').value);
-    if(t && t.phone) window.open(`https://wa.me/${t.phone}?text=Timetable%20Updated`, '_blank');
+    if(t && t.phone) window.open(`https://wa.me/${t.phone}?text=Your%20timetable%20is%20ready`, '_blank');
 }
 
 function saveProject() {
@@ -270,7 +279,7 @@ function loadProject(ev) {
     reader.readAsText(ev.target.files[0]);
 }
 
-window.onload = () => addRegistryRow("CIVICS", "MR. BAKARI", "RM1", "F1A", 4);
+window.onload = () => addRegistryRow("MATH", "MS. ANNA", "RM1", "F1A", 4);
 </script>
 </body>
 </html>

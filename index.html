@@ -2,45 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-Pro Diamond - Final Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TT-Pro Diamond - Final Suite</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
+        /* Sidebar Styles */
         .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
         .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
         
-        #expiryBanner { display: none; background: #ffeb3b; color: #333; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid #fbc02d; }
+        #expiryBanner { display: none; background: #ffeb3b; color: #333; padding: 10px; text-align: center; font-weight: bold; font-size: 13px; border-bottom: 2px solid #fbc02d; }
         
-        .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
         .config-box h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--accent); }
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
-        .input-row input, .input-row select { width: 100px; padding: 5px; border-radius: 4px; border: none; }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+        .input-row input, .input-row select { width: 90px; padding: 4px; border-radius: 4px; border: none; }
         
-        .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
+        /* Main Layout */
+        .main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
         .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
+        /* Registry Table */
         #regItems { max-height: 180px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
-        .registry-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 30px; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid #eee; }
-        .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 11px; width: 100%; box-sizing: border-box; }
+        .registry-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 30px; gap: 8px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .registry-row input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 11px; width: 100%; box-sizing: border-box; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
-        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 50px; }
-        th { background: #f0f0f0; font-weight: bold; color: var(--primary); }
-        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; margin-top: 20px; }
+        /* Timetable UI */
+        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; border: 2px solid #000; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 55px; vertical-align: middle; }
+        th { background: #f0f0f0; font-weight: bold; }
+        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; margin-top: 15px; }
         
-        .slot-box { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: grab; }
-        .slot-box b { display: block; font-size: 10px; }
+        .slot-box { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: grab; min-height: 40px; display: flex; flex-direction: column; justify-content: center; }
+        .slot-box:active { cursor: grabbing; background: #bbdefb; }
+        .slot-box b { display: block; font-size: 10px; line-height: 1.1; }
+        .slot-box small { display: block; font-size: 9px; margin-top: 2px; color: #555; }
         
-        .time-label { display: block; font-size: 8px; color: #d32f2f; font-weight: bold; }
-        .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; width: 30px !important; }
+        .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; color: #777; }
         .special-cell { background: #fff9c4 !important; font-weight: bold; font-size: 9px; }
 
-        .btn { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; }
-        .btn-gen { background: var(--accent); color: white; font-size: 13px; margin-top: 15px; }
+        .btn { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; transition: 0.2s; }
+        .btn:hover { opacity: 0.8; }
+        .btn-gen { background: var(--accent); color: white; font-size: 13px; margin: 15px 0; height: 45px; }
         .btn-print { background: #455a64; color: white; }
 
-        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; display: block; } body { display: block; background: white; } .main-content { padding: 0; } }
+        @media print { 
+            .no-print { display: none !important; } 
+            .page-break { page-break-after: always; display: block; } 
+            body { display: block; background: white; } 
+            .main-content { padding: 0; }
+            table { border: 1px solid black; }
+        }
     </style>
 </head>
 <body>
@@ -49,7 +62,7 @@
     <h2>TT-PRO DIAMOND</h2>
     
     <div class="config-box">
-        <h4>Display View</h4>
+        <h4>Visibility</h4>
         <div class="input-row">
             <span>Show:</span> 
             <select id="displayMode" onchange="refreshView()">
@@ -61,18 +74,20 @@
     </div>
 
     <div class="config-box">
-        <h4>Time Setup</h4>
+        <h4>Times & Periods</h4>
         <div class="input-row"><span>Start:</span> <input type="time" id="startTime" value="08:00"></div>
-        <div class="input-row"><span>Mins:</span> <input type="number" id="pDur" value="40"></div>
-        <div class="input-row"><span>P-Total:</span> <input type="number" id="pTotal" value="9"></div>
+        <div class="input-row"><span>Length:</span> <input type="number" id="pDur" value="40"></div>
+        <div class="input-row"><span>Total P:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
     <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
     <button class="btn btn-print" onclick="window.print()">🖨️ Print View</button>
-    <hr style="opacity:0.2; width:100%">
-    <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save Project</button>
-    <button class="btn" style="background:#78909c; color:white;" onclick="document.getElementById('loadInput').click()">📂 Load Project</button>
-    <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
+    
+    <div style="margin-top:auto;">
+        <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save Project</button>
+        <button class="btn" style="background:#78909c; color:white;" onclick="document.getElementById('loadInput').click()">📂 Load (.ttpro)</button>
+        <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
+    </div>
 </div>
 
 <div class="main-content">
@@ -80,7 +95,7 @@
     
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0;">Data Entry</h3>
+            <h3 style="margin:0;">Academic Registry</h3>
             <div style="display:flex; gap:10px;">
                 <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
                 <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Manual Row</button>
@@ -91,12 +106,12 @@
 
     <div class="card no-print" id="viewBar" style="display:none;">
         <div style="display:flex; gap:8px; align-items:center;">
-            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderMaster()">Master</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333; margin:0;" onclick="renderMaster()">Master Grid</button>
             <select id="selStream" onchange="renderIndividual('stream')" style="padding:5px;"><option value="">-- Stream --</option></select>
             <select id="selTeacher" onchange="renderIndividual('teacher')" style="padding:5px;"><option value="">-- Teacher --</option></select>
             <div style="flex-grow:1"></div>
-            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('stream')">Print All Streams</button>
-            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('teacher')">Print All Teachers</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333; margin:0;" onclick="renderBulk('stream')">Bulk Streams</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333; margin:0;" onclick="renderBulk('teacher')">Bulk Teachers</button>
         </div>
     </div>
 
@@ -104,36 +119,77 @@
 </div>
 
 <script>
+// --- CORE CONFIG ---
 const EXPIRY_DATE = "2026-12-31"; 
 const CONTACT_NUM = "0763418732";
 let DATA = [], SLOTS = [], REGISTRY = [], currentView = "master";
+let draggedIdx = null;
+const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
-// SECURITY ENGINE
+// 1. SECURITY ENGINE (Expiry & Countdown)
 (function() {
     const today = new Date();
     const expiry = new Date(EXPIRY_DATE);
     const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+    
     if (diffDays <= 0) {
         window.onload = function() {
-            document.body.innerHTML = `<div style="height:100vh; width:100vw; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#1a237e; color:white; text-align:center;"><h1>LICENSE EXPIRED</h1><div style="font-size:30px; background:#00c853; color:black; padding:15px 40px; border-radius:50px; font-weight:bold; margin:20px 0;">📞 CALL: ${CONTACT_NUM}</div></div>`;
+            document.body.innerHTML = `
+                <div style="height:100vh; width:100vw; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#1a237e; color:white; text-align:center; font-family:sans-serif;">
+                    <h1 style="font-size:50px; color:#ff5252;">SUBSCRIPTION EXPIRED</h1>
+                    <p>Contact the administrator to renew your access.</p>
+                    <div style="font-size:30px; background:#00c853; color:black; padding:15px 40px; border-radius:50px; font-weight:bold; margin:20px 0;">📞 CALL: ${CONTACT_NUM}</div>
+                </div>`;
+            window.print = () => false;
         };
-        throw new Error("Expired");
+        throw new Error("License Expired");
     } else if (diffDays <= 5) {
         window.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('expiryBanner');
-            banner.style.display = 'block'; banner.innerHTML = `⚠️ ${diffDays} day(s) remaining. Contact ${CONTACT_NUM}`;
+            banner.style.display = 'block';
+            banner.innerHTML = `⚠️ SUBSCRIPTION WARNING: ${diffDays} day(s) remaining. Call ${CONTACT_NUM} to renew!`;
         });
     }
 })();
 
+// 2. REGISTRY & FILE HANDLING
 function addRegistryRow(s="", t="", r="", f="", p=5) {
     const container = document.getElementById('regItems');
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.innerHTML = `<input type="text" class="r-sub" value="${s}"><input type="text" class="r-tea" value="${t}"><input type="text" class="r-room" value="${r}"><input type="text" class="r-frm" value="${f}"><input type="number" class="r-pwk" value="${p}"><button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
+    div.innerHTML = `
+        <input type="text" class="r-sub" value="${s}" placeholder="Subject">
+        <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
+        <input type="text" class="r-room" value="${r}" placeholder="Room">
+        <input type="text" class="r-frm" value="${f}" placeholder="Form">
+        <input type="number" class="r-pwk" value="${p}">
+        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>`;
     container.appendChild(div);
 }
 
+function handleCSV(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+        const counts = {};
+        const start = (lines[0].toLowerCase().includes("teacher")) ? 1 : 0;
+        lines.slice(start).forEach(line => {
+            const c = line.split(',').map(i => i.trim());
+            if(c.length >= 2) {
+                const key = `${c[0]}|${c[1]}|${c[2] || ''}|${c[3] || 'F1'}`;
+                counts[key] = (counts[key] || 0) + 1;
+            }
+        });
+        document.getElementById('regItems').innerHTML = "";
+        for(let k in counts) {
+            const [s,t,rm,f] = k.split('|');
+            addRegistryRow(s, t, rm, f, counts[k]);
+        }
+    };
+    reader.readAsText(e.target.files[0]);
+}
+
+// 3. ENGINE LOGIC
 function buildSlots() {
     SLOTS = [];
     let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
@@ -143,29 +199,15 @@ function buildSlots() {
         let sStr = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sStr}-${cur.toTimeString().slice(0,5)}`, isB: false });
-        if(i === 3) { // Break after P3
-            let bs = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 20);
-            SLOTS.push({ id: 'BREAK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        if(i === 3) { // Short Break
+            let b = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 20);
+            SLOTS.push({ id: 'BREAK', time: `${b}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
-        if(i === 6) { // Lunch after P6
-            let ls = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 45);
-            SLOTS.push({ id: 'LUNCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        if(i === 6) { // Lunch
+            let l = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 45);
+            SLOTS.push({ id: 'LUNCH', time: `${l}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
     }
-}
-
-function getCellContent(m) {
-    const mode = document.getElementById('displayMode').value;
-    if(!m) return '';
-    if(mode === 'sub') return `<b>${m.sub}</b>`;
-    if(mode === 'tea') return `<b>${m.tea}</b>`;
-    return `<b>${m.sub}</b><small>${m.tea}</small>`;
-}
-
-function refreshView() {
-    if(currentView === "master") renderMaster();
-    else if(currentView === "stream") renderIndividual('stream');
-    else if(currentView === "teacher") renderIndividual('teacher');
 }
 
 function generate() {
@@ -177,9 +219,10 @@ function generate() {
         const pwk = parseInt(r.querySelector('.r-pwk').value);
         if(sub && tea && frm) REGISTRY.push({sub, tea, room: r.querySelector('.r-room').value, frm, pwk});
     });
+    if(!REGISTRY.length) return alert("Registry is empty!");
     buildSlots();
     DATA = [];
-    // Auto Generation Logic (Simplified for space)
+    // Basic Distribution (Double-Period priority handled by sorting)
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         DAYS.forEach(d => {
@@ -194,6 +237,24 @@ function generate() {
     });
     updateFilters();
     renderMaster();
+}
+
+// 4. UI RENDERERS
+function getCellContent(m, idx) {
+    if(!m) return '';
+    const mode = document.getElementById('displayMode').value;
+    let text = "";
+    if(mode === 'sub') text = `<b>${m.sub}</b>`;
+    else if(mode === 'tea') text = `<b>${m.tea}</b>`;
+    else text = `<b>${m.sub}</b><small>${m.tea}</small>`;
+    
+    return `<div class="slot-box" draggable="true" ondragstart="drag(${idx})">${text}</div>`;
+}
+
+function refreshView() {
+    if(currentView === "master") renderMaster();
+    else if(currentView === "stream") renderIndividual('stream');
+    else renderIndividual('teacher');
 }
 
 function updateFilters() {
@@ -217,8 +278,8 @@ function renderMaster() {
             SLOTS.forEach(s => {
                 if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
                 else {
-                    const m = DATA.find(x => x.d === day && x.p === s.id && x.frm === f);
-                    h += `<td>${getCellContent(m)}</td>`;
+                    const idx = DATA.findIndex(x => x.d===day && x.p===s.id && x.frm===f);
+                    h += `<td ondragover="event.preventDefault()" ondrop="drop(event, '${day}', '${s.id}', '${f}')">${getCellContent(DATA[idx], idx)}</td>`;
                 }
             });
             h += `</tr>`;
@@ -241,7 +302,7 @@ function renderIndividual(type) {
             if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
             else {
                 const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
-                h += `<td>${getCellContent(m)}</td>`;
+                h += `<td>${getCellContent(m, -1)}</td>`;
             }
         });
         h += `</tr>`;
@@ -249,6 +310,44 @@ function renderIndividual(type) {
     document.getElementById('timetableArea').innerHTML = h + `</table></div>`;
 }
 
+function renderBulk(type) {
+    const list = [...new Set(DATA.map(x => type === 'stream' ? x.frm : x.tea))].sort();
+    let h = "";
+    list.forEach(v => {
+        h += `<div class="page-break"><h2 style="text-align:center;">${v}</h2><table><tr><th>DAY</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+        h += `</tr>`;
+        DAYS.forEach(d => {
+            h += `<tr><td><b>${d}</b></td>`;
+            SLOTS.forEach(s => {
+                if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else {
+                    const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === v : x.tea === v));
+                    h += `<td>${getCellContent(m, -1)}</td>`;
+                }
+            });
+            h += `</tr>`;
+        });
+        h += `</table></div>`;
+    });
+    document.getElementById('timetableArea').innerHTML = h;
+}
+
+// 5. DRAG & DROP
+function drag(idx) { if(idx !== -1) draggedIdx = idx; }
+function drop(e, d, p, f) {
+    e.preventDefault();
+    if(draggedIdx === null) return;
+    const item = DATA[draggedIdx];
+    const targetIdx = DATA.findIndex(x => x.d === d && x.p === p && x.frm === f);
+    if(targetIdx !== -1) {
+        DATA[targetIdx].d = item.d; DATA[targetIdx].p = item.p;
+    }
+    item.d = d; item.p = p; item.frm = f;
+    renderMaster();
+}
+
+// 6. SAVE/LOAD
 function saveProject() {
     const reg = [];
     document.querySelectorAll('.registry-row').forEach(r => reg.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));
@@ -267,7 +366,7 @@ function loadProject(ev) {
     reader.readAsText(ev.target.files[0]);
 }
 
-window.onload = () => addRegistryRow("MATH", "TEACHER", "RM1", "F1A", 5);
+window.onload = () => addRegistryRow("MATHEMATICS", "TEACHER A", "RM 1", "F1A", 5);
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-Pro Diamond - Subscription Edition</title>
+    <title>TT-Pro Diamond - Countdown Edition</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -11,6 +11,9 @@
         /* Sidebar */
         .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
         .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
+        
+        /* Countdown Banner */
+        #expiryBanner { display: none; background: #ffeb3b; color: #333; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid #fbc02d; }
         
         .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
         .config-box h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--accent); }
@@ -40,14 +43,7 @@
         .btn-gen { background: var(--accent); color: white; font-size: 13px; margin-top: 15px; }
         .btn-print { background: #455a64; color: white; }
 
-        /* PRINT SETTINGS */
-        @media print { 
-            .no-print { display: none !important; }
-            .page-break { page-break-after: always; display: block; }
-            body { background: white; overflow: visible; display: block; }
-            .main-content { padding: 0; overflow: visible; }
-            table { page-break-inside: avoid; }
-        }
+        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; display: block; } body { background: white; overflow: visible; display: block; } .main-content { padding: 0; } }
     </style>
 </head>
 <body>
@@ -82,6 +78,8 @@
 </div>
 
 <div class="main-content">
+    <div id="expiryBanner" class="no-print"></div>
+    
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0;">1. Data Entry</h3>
@@ -106,33 +104,41 @@
 
 <script>
 // --- LICENSE CONFIG ---
-const EXPIRY_DATE = "2026-04-23"; 
+const EXPIRY_DATE = "2026-12-31"; 
 const CONTACT_NUM = "0763418732";
 // ----------------------
 
 let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
-// EXPIRY LOCK ENGINE
+// SECURITY & COUNTDOWN ENGINE
 (function() {
     const today = new Date();
     const expiry = new Date(EXPIRY_DATE);
-    if (today > expiry) {
+    const diffTime = expiry - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
         window.onload = function() {
             document.body.innerHTML = `
                 <div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a237e; color: white; font-family: sans-serif; text-align: center;">
                     <div style="padding: 40px; border: 2px solid #ff5252; border-radius: 15px; background: rgba(0,0,0,0.3);">
-                        <h1 style="font-size: 50px; color: #ff5252;">LICENSE EXPIRED</h1>
-                        <p style="font-size: 20px;">Please renew your subscription to continue.</p>
+                        <h1 style="font-size: 50px; color: #ff5252;">SUBSCRIPTION EXPIRED</h1>
+                        <p style="font-size: 20px;">Please renew your subscription to continue using TT-Pro Diamond.</p>
                         <div style="font-size: 30px; background: #00c853; color: black; padding: 15px 40px; border-radius: 50px; font-weight: bold; margin: 20px 0;">
                            📞 CALL: ${CONTACT_NUM}
                         </div>
-                        <p style="opacity: 0.6;">TT-Pro Diamond Tanzania Edition</p>
                     </div>
                 </div>`;
             window.print = () => false;
         };
         throw new Error("Expired");
+    } else if (diffDays <= 5) {
+        window.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('expiryBanner');
+            banner.style.display = 'block';
+            banner.innerHTML = `⚠️ SUBSCRIPTION WARNING: ${diffDays} day(s) remaining. Contact ${CONTACT_NUM} to renew!`;
+        });
     }
 })();
 
@@ -212,10 +218,8 @@ function generate() {
         const pwk = parseInt(r.querySelector('.r-pwk').value);
         if(sub && tea && frm) REGISTRY.push({sub, tea, room: r.querySelector('.r-room').value, frm, pwk});
     });
-
     buildSlots();
     DATA = [];
-
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
@@ -308,7 +312,7 @@ function saveProject() {
     const reg = [];
     document.querySelectorAll('.registry-row').forEach(r => reg.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));
     const blob = new Blob([JSON.stringify({reg, data: DATA})], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable_Backup.ttpro`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `TT_Backup.ttpro`; a.click();
 }
 
 window.onload = () => addRegistryRow("MATHEMATICS", "TEACHER", "RM1", "F1A", 5);

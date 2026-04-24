@@ -2,98 +2,109 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-Pro Enterprise - Tanzania Gold</title>
+    <title>TT-Pro Platinum - Ultimate Enterprise Edition</title>
     <style>
-        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f8f9fa; }
-        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f0f2f5; --text: #263238; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* Sidebar */
-        .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.2); z-index: 100; overflow-y: auto; }
-        .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
+        .sidebar { width: 340px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.2); z-index: 100; overflow-y: auto; }
+        .sidebar h2 { font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
         
-        .config-box { background: rgba(255,255,255,0.08); padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .config-box h4 { margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: var(--accent); }
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
-        .input-row input { width: 85px; padding: 5px; border-radius: 4px; border: none; font-size: 12px; }
+        .config-box { background: rgba(255,255,255,0.08); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .config-box h4 { margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+        .input-row input { width: 90px; padding: 6px; border-radius: 5px; border: none; font-size: 12px; outline: none; }
         
         /* Main Workspace */
-        .main-content { flex: 1; overflow-y: auto; padding: 25px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
+        .card { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e0e0e0; }
         
-        /* Filter Bar */
-        .view-bar { display: flex; gap: 10px; align-items: center; background: #e3f2fd; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #90caf9; }
-        .view-bar select, .view-bar button { padding: 8px; border-radius: 4px; border: 1px solid #90caf9; cursor: pointer; }
+        /* Interactive Elements */
+        .view-bar { display: flex; gap: 12px; align-items: center; background: #fff; padding: 12px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .view-bar select, .view-bar button { padding: 10px 15px; border-radius: 6px; border: 1px solid #cfd8dc; cursor: pointer; font-weight: 500; font-size: 13px; }
+        .view-bar button:hover { background: #f5f5f5; }
 
-        /* Timetable Grid */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
-        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 48px; }
-        th { background: #f8f9fa; font-weight: 800; }
-        .time-sub { display: block; font-size: 8px; color: #c62828; }
-        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; margin-top: 25px; text-align: center; border: 2px solid #000; border-bottom: none; }
-        .break-cell { background: #eee !important; font-weight: bold; writing-mode: vertical-rl; width: 30px !important; }
-        .special-activity { background: #fff9c4 !important; font-weight: bold; font-size: 9px; }
+        /* Timetable UI */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #000; padding: 5px; text-align: center; font-size: 10px; height: 55px; vertical-align: middle; position: relative; }
+        th { background: #f1f3f4; font-weight: 800; font-size: 11px; color: var(--primary); }
+        
+        /* Draggable Period Block */
+        .period-block { background: #e8eaf6; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: move; transition: 0.2s; user-select: none; }
+        .period-block:hover { background: #c5cae9; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .period-block b { display: block; font-size: 11px; color: var(--primary); }
+        .period-block small { color: #546e7a; font-weight: 600; }
+        
+        .time-label { display: block; font-size: 8px; color: #d32f2f; font-weight: bold; margin-top: 3px; }
+        .day-title { background: var(--primary); color: white; padding: 10px; font-weight: 800; margin-top: 30px; text-align: center; border: 2px solid #000; border-bottom: none; border-radius: 8px 8px 0 0; }
+        .break-cell { background: #f5f5f5 !important; font-weight: bold; writing-mode: vertical-rl; width: 32px !important; color: #78909c; }
+        .special-activity { background: #fff9c4 !important; font-weight: bold; font-size: 9px; color: #5d4037; border: 1px dashed #d4e157; }
 
-        .btn { padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 8px; text-transform: uppercase; }
-        .btn-gen { background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(0,200,83,0.3); }
-        .btn-save { background: #546e7a; color: white; }
-        .btn-load { background: #78909c; color: white; }
+        .btn { padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-gen { background: var(--accent); color: white; font-size: 15px; box-shadow: 0 5px 15px rgba(0,200,83,0.3); }
+        .btn-gen:hover { background: #00a844; transform: translateY(-2px); }
+        .btn-save { background: #455a64; color: white; }
+        .btn-load { background: #607d8b; color: white; }
 
-        @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } body { background: white; } }
+        @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } body { background: white; } .card { box-shadow: none; border: none; } }
     </style>
 </head>
 <body>
 
 <div class="sidebar no-print">
-    <h2>TT-PRO GOLD</h2>
+    <h2>TT-PRO PLATINUM</h2>
     
     <div class="config-box">
-        <h4>System Storage</h4>
-        <button class="btn btn-save" onclick="saveProject()">💾 Save Project (.ttpro)</button>
-        <button class="btn btn-load" onclick="document.getElementById('loadInput').click()">📂 Load Project</button>
+        <h4>Data Persistence</h4>
+        <button class="btn btn-save" onclick="saveProject()">💾 Save Full Project</button>
+        <button class="btn btn-load" onclick="document.getElementById('loadInput').click()">📂 Open Saved File</button>
         <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
     </div>
 
     <div class="config-box">
-        <h4>Base Settings</h4>
-        <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
+        <h4>Global Setup</h4>
+        <div class="input-row"><span>Start:</span> <input type="time" id="startTime" value="08:00"></div>
         <div class="input-row"><span>Period (m):</span> <input type="number" id="pDur" value="40"></div>
-        <div class="input-row"><span>Total:</span> <input type="number" id="pTotal" value="9"></div>
+        <div class="input-row"><span>Periods:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
     <div class="config-box">
-        <h4>Official Breaks</h4>
-        <div class="input-row"><span>Break after P:</span> <input type="number" id="breakAfter" value="3"></div>
-        <div class="input-row"><span>Lunch after P:</span> <input type="number" id="lunchAfter" value="6"></div>
+        <h4>Rest Breaks</h4>
+        <div class="input-row"><span>Short Break:</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Lunch Break:</span> <input type="number" id="lunchAfter" value="6"></div>
     </div>
 
     <div class="config-box">
-        <h4>Identity</h4>
-        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="width:100%; font-size:11px; margin-bottom:5px; border-radius:4px; border:none; padding:5px;">
-        <input type="text" id="calYear" value="2026" style="width:100%; font-size:11px; border-radius:4px; border:none; padding:5px;">
+        <h4>Institutional Info</h4>
+        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="width:100%; font-size:11px; margin-bottom:5px; border-radius:5px; border:none; padding:8px;">
+        <input type="text" id="calYear" value="2026" style="width:100%; font-size:11px; border-radius:5px; border:none; padding:8px;">
     </div>
 
-    <button class="btn btn-gen" onclick="generate()">🚀 Generate Timetable</button>
-    <button class="btn" style="background:#fff; color:#333; border:1px solid #ccc;" onclick="window.print()">🖨️ Print PDF</button>
+    <button class="btn btn-gen" onclick="generate()">🚀 Generate Master Schedule</button>
+    <button class="btn" style="background:#fff; color:#333; border:1px solid #ddd;" onclick="window.print()">🖨️ Export PDF</button>
 </div>
 
 <div class="main-content">
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0; color:var(--primary);">Teacher & Subject Registry</h3>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <small>CSV Import: </small><input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
-                <button class="btn" style="background:var(--secondary); color:white; width:auto; padding:6px 15px; margin:0;" onclick="addRow()">+ Row</button>
+            <h3 style="margin:0; color:var(--primary);">Staff & Course Registry</h3>
+            <div style="display:flex; gap:12px; align-items:center;">
+                <label style="font-size:11px; font-weight:bold;">CSV Link:</label>
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
+                <button class="btn" style="background:var(--secondary); color:white; width:auto; padding:8px 20px; margin:0;" onclick="addRow()">+ New Entry</button>
             </div>
         </div>
-        <div id="regItems" style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
+        <div id="regItems" style="max-height: 220px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 15px; border-radius: 10px; background: #fafafa;"></div>
     </div>
 
     <div class="view-bar no-print" id="viewBar" style="display:none;">
-        <strong>🔍 View Options:</strong>
-        <button onclick="renderMaster()">Master Grid</button>
-        <button onclick="drawTeacherLoad()">Load Report</button>
-        <select id="selStream" onchange="renderIndividual('stream')"><option value="">-- By Stream --</option></select>
+        <button onclick="renderMaster()">Master Grid View</button>
+        <button onclick="drawTeacherLoad()">Teacher Load Summary</button>
+        <div style="border-left: 1px solid #ccc; height: 25px; margin: 0 10px;"></div>
+        <select id="selStream" onchange="renderIndividual('stream')"><option value="">-- By Form/Stream --</option></select>
         <select id="selTeacher" onchange="renderIndividual('teacher')"><option value="">-- By Teacher --</option></select>
+        <div style="margin-left: auto; font-size: 11px; color: #666;">💡 <i>Tip: Drag subject blocks to adjust slots manually.</i></div>
     </div>
 
     <div id="timetableArea"></div>
@@ -103,22 +114,25 @@
 let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
+// DRAG AND DROP STATE
+let draggedItem = null;
+
 function addRow(s="", t="", r="", f="", p=5) {
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.style = "display:grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 40px; gap:8px; margin-bottom:5px;";
+    div.style = "display:grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 40px; gap:10px; margin-bottom:8px;";
     div.innerHTML = `
         <input type="text" class="r-sub" value="${s}" placeholder="Subject">
         <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
         <input type="text" class="r-room" value="${r}" placeholder="Room">
         <input type="text" class="r-frm" value="${f}" placeholder="Form">
         <input type="number" class="r-pwk" value="${p}">
-        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>
+        <button onclick="this.parentElement.remove()" style="color:#ff5252; background:none; border:none; cursor:pointer; font-weight:bold; font-size:18px;">✕</button>
     `;
     document.getElementById('regItems').appendChild(div);
 }
 
-// SAVE PROJECT LOGIC
+// SAVE & LOAD
 function saveProject() {
     const registryData = [];
     document.querySelectorAll('.registry-row').forEach(r => {
@@ -130,45 +144,29 @@ function saveProject() {
             p: r.querySelector('.r-pwk').value
         });
     });
-
-    const project = {
-        registry: registryData,
-        settings: {
-            school: document.getElementById('schoolName').value,
-            year: document.getElementById('calYear').value,
-            start: document.getElementById('startTime').value,
-            dur: document.getElementById('pDur').value,
-            total: document.getElementById('pTotal').value,
-            break: document.getElementById('breakAfter').value,
-            lunch: document.getElementById('lunchAfter').value
-        }
-    };
-
-    const blob = new Blob([JSON.stringify(project)], {type: "application/json"});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Timetable_${project.settings.school.replace(/\s+/g, '_')}.ttpro`;
-    a.click();
+    const blob = new Blob([JSON.stringify({ registry: registryData, data: DATA, 
+        settings: { school: document.getElementById('schoolName').value, year: document.getElementById('calYear').value, 
+                    start: document.getElementById('startTime').value, dur: document.getElementById('pDur').value, 
+                    total: document.getElementById('pTotal').value, brk: document.getElementById('breakAfter').value, lnc: document.getElementById('lunchAfter').value } })], {type: "application/json"});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `TTPRO_${document.getElementById('schoolName').value.replace(/\s/g,'_')}.ttpro`; a.click();
 }
 
-// LOAD PROJECT LOGIC
 function loadProject(ev) {
     const reader = new FileReader();
     reader.onload = (e) => {
-        const proj = JSON.parse(e.target.result);
-        // Load Settings
-        document.getElementById('schoolName').value = proj.settings.school;
-        document.getElementById('calYear').value = proj.settings.year;
-        document.getElementById('startTime').value = proj.settings.start;
-        document.getElementById('pDur').value = proj.settings.dur;
-        document.getElementById('pTotal').value = proj.settings.total;
-        document.getElementById('breakAfter').value = proj.settings.break;
-        document.getElementById('lunchAfter').value = proj.settings.lunch;
-        
-        // Load Registry
+        const p = JSON.parse(e.target.result);
+        document.getElementById('schoolName').value = p.settings.school;
+        document.getElementById('calYear').value = p.settings.year;
+        document.getElementById('startTime').value = p.settings.start;
+        document.getElementById('pDur').value = p.settings.dur;
+        document.getElementById('pTotal').value = p.settings.total;
+        document.getElementById('breakAfter').value = p.settings.brk;
+        document.getElementById('lunchAfter').value = p.settings.lnc;
         document.getElementById('regItems').innerHTML = "";
-        proj.registry.forEach(item => addRow(item.s, item.t, item.rm, item.f, item.p));
-        alert("Project Loaded Successfully!");
+        p.registry.forEach(i => addRow(i.s, i.t, i.rm, i.f, i.p));
+        DATA = p.data || [];
+        if(DATA.length > 0) { updateFilters(); buildSlots(); renderMaster(); }
     };
     reader.readAsText(ev.target.files[0]);
 }
@@ -236,16 +234,14 @@ function generate() {
     document.querySelectorAll('.registry-row').forEach(r => {
         const sub = r.querySelector('.r-sub').value.toUpperCase();
         const tea = r.querySelector('.r-tea').value;
-        const rm = r.querySelector('.r-room').value;
         const f = r.querySelector('.r-frm').value.toUpperCase();
         const p = parseInt(r.querySelector('.r-pwk').value);
-        if(sub && tea && f) REGISTRY.push({sub, tea, rm, frm: f, pwk: p});
+        if(sub && tea && f) REGISTRY.push({sub, tea, frm: f, pwk: p});
     });
 
     buildSlots();
     DATA = [];
 
-    // Scheduling Engine
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
@@ -282,32 +278,68 @@ function generate() {
             }
         });
     });
-
-    document.getElementById('viewBar').style.display = 'flex';
     updateFilters();
     renderMaster();
 }
 
 function updateFilters() {
+    document.getElementById('viewBar').style.display = 'flex';
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
     const teas = [...new Set(DATA.map(x => x.tea))].sort();
     document.getElementById('selStream').innerHTML = '<option value="">-- By Stream --</option>' + frms.map(f => `<option>${f}</option>`).join('');
     document.getElementById('selTeacher').innerHTML = '<option value="">-- By Teacher --</option>' + teas.map(t => `<option>${t}</option>`).join('');
 }
 
-function getHeader() {
-    return `<div style="text-align:center; border-bottom: 3px solid var(--primary); margin-bottom: 20px;">
-                <h1 style="margin:0;">${document.getElementById('schoolName').value}</h1>
-                <p>ACADEMIC YEAR ${document.getElementById('calYear').value}</p>
-            </div>`;
+// DRAG AND DROP ENGINE
+function handleDragStart(e, idx) {
+    draggedItem = idx;
+    e.dataTransfer.setData('text/plain', idx);
+    e.target.style.opacity = '0.4';
+}
+
+function handleDragEnd(e) {
+    e.target.style.opacity = '1';
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+}
+
+function handleDrop(e, day, pId, stream) {
+    e.preventDefault();
+    const sourceIdx = draggedItem;
+    if (sourceIdx === null) return;
+
+    // Check for target availability
+    if (getSpecial(day, pId)) { alert("Cannot move to a Special Activity slot."); return; }
+
+    const item = DATA[sourceIdx];
+    
+    // Conflict Check: Is teacher busy elsewhere in this slot?
+    const conflict = DATA.find(x => x.d === day && x.p === pId && x.tea === item.tea && x.frm !== item.frm);
+    if (conflict) { alert(`Teacher Conflict! ${item.tea} is already in ${conflict.frm} at this time.`); return; }
+
+    // Execute Swap or Move
+    const targetItemIdx = DATA.findIndex(x => x.d === day && x.p === pId && x.frm === stream);
+    
+    if (targetItemIdx !== -1) {
+        // Swap slots between the two subjects in this stream
+        DATA[targetItemIdx].d = item.d;
+        DATA[targetItemIdx].p = item.p;
+    }
+    
+    item.d = day;
+    item.p = pId;
+
+    renderMaster(); // Refresh UI
 }
 
 function renderMaster() {
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
-    let h = getHeader();
+    let h = `<div style="text-align:center;"><h1>${document.getElementById('schoolName').value}</h1><p>MASTER GRID ${document.getElementById('calYear').value}</p></div>`;
     DAYS.forEach(day => {
         h += `<div class="day-section"><div class="day-title">${day}</div><table><tr><th width="70">FORM</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<span class="time-sub">${s.time}</span></th>`);
+        SLOTS.forEach(s => h += `<th>${s.id}<span class="time-label">${s.time}</span></th>`);
         h += `</tr>`;
         frms.forEach(f => {
             h += `<tr><td><b>${f}</b></td>`;
@@ -316,8 +348,13 @@ function renderMaster() {
                 if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
                 else if(spec) h += `<td class="special-activity">${spec}</td>`;
                 else {
-                    const m = DATA.find(x => x.d === day && x.p === s.id && x.frm === f);
-                    h += `<td>${m ? `<b>${m.sub}</b><br><small>${m.tea}</small>` : ''}</td>`;
+                    const idx = DATA.findIndex(x => x.d === day && x.p === s.id && x.frm === f);
+                    const m = DATA[idx];
+                    h += `<td ondragover="handleDragOver(event)" ondrop="handleDrop(event, '${day}', '${s.id}', '${f}')">
+                        ${m ? `<div class="period-block" draggable="true" ondragstart="handleDragStart(event, ${idx})" ondragend="handleDragEnd(event)">
+                            <b>${m.sub}</b><small>${m.tea}</small>
+                        </div>` : ''}
+                    </td>`;
                 }
             });
             h += `</tr>`;
@@ -330,8 +367,8 @@ function renderMaster() {
 function renderIndividual(type) {
     const val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
     if(!val) return;
-    let h = getHeader() + `<h2 style="text-align:center;">${type.toUpperCase()}: ${val}</h2>`;
-    h += `<table><tr><th>DAY</th>` + SLOTS.map(s => `<th>${s.id}<span class="time-sub">${s.time}</span></th>`).join('') + `</tr>`;
+    let h = `<h2 style="text-align:center;">${type.toUpperCase()}: ${val}</h2>`;
+    h += `<table><tr><th>DAY</th>` + SLOTS.map(s => `<th>${s.id}<span class="time-label">${s.time}</span></th>`).join('') + `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         SLOTS.forEach(s => {
@@ -350,17 +387,15 @@ function renderIndividual(type) {
 
 function drawTeacherLoad() {
     const teas = [...new Set(REGISTRY.map(x => x.tea))].sort();
-    let h = getHeader() + `<h2 style="text-align:center;">TEACHER LOAD REPORT</h2><table style="width:70%; margin:auto;"><tr><th>TEACHER</th><th>LOAD DETAILS</th><th>TOTAL PERIODS</th></tr>`;
+    let h = `<h2 style="text-align:center;">TEACHER LOAD SUMMARY</h2><table style="width:80%; margin:auto;"><tr><th>TEACHER</th><th>LOAD DETAILS</th><th>PERIODS/WK</th></tr>`;
     teas.forEach(t => {
         const items = REGISTRY.filter(x => x.tea === t);
         const total = items.reduce((sum, x) => sum + x.pwk, 0);
-        const detail = items.map(x => `${x.sub} (${x.frm})`).join(', ');
-        h += `<tr><td><b>${t}</b></td><td style="text-align:left; padding:8px;">${detail}</td><td>${total}</td></tr>`;
+        h += `<tr><td><b>${t}</b></td><td style="text-align:left; padding:10px;">${items.map(x => `${x.sub} (${x.frm})`).join(', ')}</td><td>${total}</td></tr>`;
     });
     document.getElementById('timetableArea').innerHTML = h + `</table>`;
 }
 
-// Initial entry
 addRow("MATHEMATICS", "SEURI", "L1", "F1A", 5);
 </script>
 </body>

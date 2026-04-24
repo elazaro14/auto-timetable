@@ -3,34 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-Pro Diamond - Final Build</title>
+    <title>TT-Pro Diamond - Tanzanian Special Edition</title>
     <style>
-        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; --special: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar */
         .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
         .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
         
         .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
         .config-box h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--accent); }
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
-        .input-row input, .input-row select { width: 90px; padding: 4px; border-radius: 4px; border: none; }
+        .input-row input { width: 80px; padding: 4px; border-radius: 4px; border: none; }
         
-        /* Layout */
         .main-content { flex: 1; overflow-y: auto; padding: 20px; }
         .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
         #regItems { max-height: 180px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
-        .registry-row { display: grid; grid-template-columns: 1.5fr 1.5fr 1.2fr 0.8fr 0.8fr 1.2fr 30px; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .registry-row { display: grid; grid-template-columns: 1.5fr 1.5fr 0.8fr 0.8fr 0.8fr 1fr 30px; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .registry-row input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 10px; width: 100%; box-sizing: border-box; }
 
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; border: 2px solid #000; }
+        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; border: 2px solid #000; margin-bottom: 20px; }
         th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 55px; }
         th { background: #f0f0f0; font-weight: bold; }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; margin-top: 15px; }
         
         .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; color: #777; width: 25px !important; }
+        .special-block { background: #fff3e0 !important; color: #e65100; font-weight: bold; font-size: 9px; border: 1px dashed #ff9800; }
 
         .btn { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; }
         .btn-gen { background: var(--accent); color: white; height: 45px; margin: 15px 0; }
@@ -45,28 +44,25 @@
     <h2>TT-PRO DIAMOND</h2>
     
     <div class="config-box">
-        <h4>Visibility</h4>
-        <div class="input-row">
-            <span>Show:</span> 
-            <select id="displayMode" onchange="refreshView()">
-                <option value="both">Sub + Teacher</option>
-                <option value="sub">Subject Only</option>
-                <option value="tea">Teacher Only</option>
-            </select>
-        </div>
+        <h4>Time & Intervals</h4>
+        <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
+        <div class="input-row"><span>Period Mins:</span> <input type="number" id="pDur" value="40"></div>
+        <div class="input-row"><span>Total Periods:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
     <div class="config-box">
-        <h4>Time Setup</h4>
-        <div class="input-row"><span>Start:</span> <input type="time" id="startTime" value="08:00"></div>
-        <div class="input-row"><span>Mins/P:</span> <input type="number" id="pDur" value="40"></div>
-        <div class="input-row"><span>Total P:</span> <input type="number" id="pTotal" value="9"></div>
+        <h4>Break Placement</h4>
+        <div class="input-row"><span>Break After P:</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Break Mins:</span> <input type="number" id="breakLen" value="20"></div>
+        <div class="input-row"><span>Lunch After P:</span> <input type="number" id="lunchAfter" value="6"></div>
+        <div class="input-row"><span>Lunch Mins:</span> <input type="number" id="lunchLen" value="45"></div>
     </div>
 
     <div class="config-box">
-        <h4>Break Setup (Mins)</h4>
-        <div class="input-row"><span>Short Break:</span> <input type="number" id="breakLen" value="20"></div>
-        <div class="input-row"><span>Lunch:</span> <input type="number" id="lunchLen" value="45"></div>
+        <h4>Special Activities</h4>
+        <div class="input-row"><span>Debate (Fri) P:</span> <input type="number" id="debP" value="8"></div>
+        <div class="input-row"><span>Religion P:</span> <input type="number" id="relP" value="1"></div>
+        <div class="input-row"><span>Mosque (Fri) P:</span> <input type="number" id="mosP" value="6"></div>
     </div>
 
     <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
@@ -82,7 +78,7 @@
 <div class="main-content">
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0;">Data Entry</h3>
+            <h3 style="margin:0;">Academic Data</h3>
             <div style="display:flex; gap:10px;">
                 <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
                 <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Add Row</button>
@@ -96,7 +92,7 @@
             <button class="btn" style="width:auto; background:#eee; color:#333; margin:0;" onclick="renderMaster()">Master Grid</button>
             <select id="selStream" onchange="renderIndividual('stream')" style="padding:5px;"><option value="">-- Stream --</option></select>
             <select id="selTeacher" onchange="renderIndividual('teacher')" style="padding:5px;"><option value="">-- Teacher --</option></select>
-            <button id="waBtn" class="btn btn-wa" style="width:auto; margin:0; padding:5px 15px;" onclick="shareWhatsApp()">📲 WhatsApp Teacher</button>
+            <button id="waBtn" class="btn btn-wa" style="width:auto; margin:0; padding:5px 15px;" onclick="shareWhatsApp()">📲 WhatsApp</button>
         </div>
     </div>
 
@@ -104,15 +100,14 @@
 </div>
 
 <script>
-const EXPIRY_DATE = "2026-12-31"; 
-let DATA = [], SLOTS = [], REGISTRY = [], currentView = "master", currentTarget = "";
+let DATA = [], SLOTS = [], REGISTRY = [], currentView = "master";
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 
 function addRegistryRow(s="", t="", r="", f="", p=5, ph="") {
     const container = document.getElementById('regItems');
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.innerHTML = `<input type="text" class="r-sub" value="${s}" placeholder="Sub"><input type="text" class="r-tea" value="${t}" placeholder="Teacher"><input type="text" class="r-room" value="${r}" placeholder="Rm"><input type="text" class="r-frm" value="${f}" placeholder="Frm"><input type="number" class="r-pwk" value="${p}"><input type="text" class="r-phone" value="${ph}" placeholder="255..."><button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
+    div.innerHTML = `<input type="text" class="r-sub" value="${s}" placeholder="Sub"><input type="text" class="r-tea" value="${t}" placeholder="Tea"><input type="text" class="r-room" value="${r}" placeholder="Rm"><input type="text" class="r-frm" value="${f}" placeholder="Frm"><input type="number" class="r-pwk" value="${p}"><input type="text" class="r-phone" value="${ph}" placeholder="255..."><button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
     container.appendChild(div);
 }
 
@@ -121,7 +116,7 @@ function handleCSV(e) {
     reader.onload = (ev) => {
         const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
         document.getElementById('regItems').innerHTML = "";
-        lines.slice(lines[0].toLowerCase().includes("tea") ? 1 : 0).forEach(line => {
+        lines.slice(lines[0].toLowerCase().includes("sub") ? 1 : 0).forEach(line => {
             const c = line.split(',').map(i => i.trim());
             if(c.length >= 2) addRegistryRow(c[0], c[1], c[2]||"", c[3]||"F1", c[4]||5, c[5]||"");
         });
@@ -133,16 +128,18 @@ function buildSlots() {
     SLOTS = [];
     let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
     const dur = parseInt(document.getElementById('pDur').value);
-    const bL = parseInt(document.getElementById('breakLen').value);
-    const lL = parseInt(document.getElementById('lunchLen').value);
     const total = parseInt(document.getElementById('pTotal').value);
+    const bA = parseInt(document.getElementById('breakAfter').value);
+    const bL = parseInt(document.getElementById('breakLen').value);
+    const lA = parseInt(document.getElementById('lunchAfter').value);
+    const lL = parseInt(document.getElementById('lunchLen').value);
 
     for(let i=1; i<=total; i++) {
         let sStr = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sStr}-${cur.toTimeString().slice(0,5)}`, isB: false });
-        if(i === 3) { cur.setMinutes(cur.getMinutes() + bL); SLOTS.push({ id: 'BREAK', isB: true }); }
-        if(i === 6) { cur.setMinutes(cur.getMinutes() + lL); SLOTS.push({ id: 'LUNCH', isB: true }); }
+        if(i === bA) { let bS = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + bL); SLOTS.push({ id: 'BREAK', time: `${bS}-${cur.toTimeString().slice(0,5)}`, isB: true }); }
+        if(i === lA) { let lS = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + lL); SLOTS.push({ id: 'LUNCH', time: `${lS}-${cur.toTimeString().slice(0,5)}`, isB: true }); }
     }
 }
 
@@ -154,17 +151,26 @@ function generate() {
     buildSlots();
     DATA = [];
     
-    // Double Period Logic
+    const relP = 'P' + document.getElementById('relP').value;
+    const debP = 'P' + document.getElementById('debP').value;
+    const mosP = 'P' + document.getElementById('mosP').value;
+
+    // Place Hard-Locked Special Activities
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         DAYS.forEach(d => {
             if(left <= 0) return;
-            for(let i=0; i<SLOTS.length; i++){
+            for(let i=0; i<SLOTS.length; i++) {
                 if(left <= 0) break;
                 let s = SLOTS[i], ns = SLOTS[i+1];
                 if(s.isB) continue;
-                // Try Double
-                if(left >= 2 && ns && !ns.isB && !DATA.find(x=>x.d===d && (x.p===s.id||x.p===ns.id) && (x.tea===item.tea||x.frm===item.frm))){
+                
+                // Block religion/debate/mosque slots
+                if(s.id === relP) continue; 
+                if(d === 'FRIDAY' && (s.id === debP || s.id === mosP)) continue;
+
+                // Double period check
+                if(left >= 2 && ns && !ns.isB && ns.id !== relP && !(d==='FRIDAY' && (ns.id===debP||ns.id===mosP)) && !DATA.find(x=>x.d===d && (x.p===s.id||x.p===ns.id) && (x.tea===item.tea||x.frm===item.frm))){
                     DATA.push({...item, d, p: s.id}, {...item, d, p: ns.id}); left -= 2;
                 } else if(!DATA.find(x=>x.d===d && x.p===s.id && (x.tea===item.tea||x.frm===item.frm))){
                     DATA.push({...item, d, p: s.id}); left--;
@@ -186,15 +192,22 @@ function updateFilters() {
 function renderMaster() {
     currentView = "master"; document.getElementById('waBtn').style.display = 'none';
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
+    const relP = 'P' + document.getElementById('relP').value;
+    const debP = 'P' + document.getElementById('debP').value;
+    const mosP = 'P' + document.getElementById('mosP').value;
+    
     let h = "";
     DAYS.forEach(day => {
         h += `<div class="day-title">${day}</div><table><tr><th>FORM</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
         h += `</tr>`;
         frms.forEach(f => {
             h += `<tr><td><b>${f}</b></td>`;
             SLOTS.forEach(s => {
                 if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else if(s.id === relP) h += `<td class="special-block">RELIGION</td>`;
+                else if(day === 'FRIDAY' && s.id === debP) h += `<td class="special-block">DEBATE</td>`;
+                else if(day === 'FRIDAY' && s.id === mosP) h += `<td class="special-block">MOSQUE</td>`;
                 else {
                     const m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
                     const mode = document.getElementById('displayMode').value;
@@ -209,18 +222,25 @@ function renderMaster() {
 }
 
 function renderIndividual(type) {
-    currentView = type; currentTarget = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
-    if(!currentTarget) return;
+    currentView = type; let val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
+    if(!val) return;
     document.getElementById('waBtn').style.display = (type === 'teacher') ? 'block' : 'none';
-    let h = `<h2>${currentTarget}</h2><table><tr><th>DAY</th>`;
+    const relP = 'P' + document.getElementById('relP').value;
+    const debP = 'P' + document.getElementById('debP').value;
+    const mosP = 'P' + document.getElementById('mosP').value;
+
+    let h = `<h2>${val}</h2><table><tr><th>DAY</th>`;
     SLOTS.forEach(s => h += `<th>${s.id}</th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         SLOTS.forEach(s => {
             if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+            else if(s.id === relP) h += `<td class="special-block">RELIGION</td>`;
+            else if(d === 'FRIDAY' && s.id === debP) h += `<td class="special-block">DEBATE</td>`;
+            else if(d === 'FRIDAY' && s.id === mosP) h += `<td class="special-block">MOSQUE</td>`;
             else {
-                const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === currentTarget : x.tea === currentTarget));
+                const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
                 h += `<td>${m ? `<b>${m.sub}</b>` : ''}</td>`;
             }
         });
@@ -230,14 +250,13 @@ function renderIndividual(type) {
 }
 
 function shareWhatsApp() {
-    const teacherData = REGISTRY.find(r => r.tea === currentTarget);
-    if(!teacherData || !teacherData.phone) return alert("Add phone (255...) in registry.");
-    window.open(`https://wa.me/${teacherData.phone}?text=${encodeURIComponent("Your timetable is ready.")}`, '_blank');
+    const t = REGISTRY.find(r => r.tea === document.getElementById('selTeacher').value);
+    if(t && t.phone) window.open(`https://wa.me/${t.phone}?text=Timetable%20Updated`, '_blank');
 }
 
 function saveProject() {
     const blob = new Blob([JSON.stringify({reg: REGISTRY, data: DATA})], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Project.ttpro`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable.ttpro`; a.click();
 }
 
 function loadProject(ev) {
@@ -251,7 +270,7 @@ function loadProject(ev) {
     reader.readAsText(ev.target.files[0]);
 }
 
-window.onload = () => addRegistryRow("MATH", "MR. JUMA", "RM1", "F1A", 5);
+window.onload = () => addRegistryRow("CIVICS", "MR. BAKARI", "RM1", "F1A", 4);
 </script>
 </body>
 </html>

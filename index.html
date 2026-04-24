@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-Pro Diamond - Double Period Priority</title>
+    <title>TT-Pro Diamond - Auto-Master Build</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; --special: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -163,31 +163,23 @@ function generate() {
                 if(left <= 0) break;
                 let s = SLOTS[i], ns = SLOTS[i+1];
                 if(s.isB) continue;
-                
-                // Hard-Locked Special Slots
                 if(s.id === relP) continue; 
                 if(d === 'FRIDAY' && (s.id === debP || s.id === mosP)) continue;
 
-                // DOUBLE PERIOD LOGIC (Priority)
                 if(left >= 2 && ns && !ns.isB && ns.id !== relP && !(d==='FRIDAY' && (ns.id===debP||ns.id===mosP))) {
                     const conflict1 = DATA.find(x=>x.d===d && x.p===s.id && (x.tea===item.tea||x.frm===item.frm));
                     const conflict2 = DATA.find(x=>x.d===d && x.p===ns.id && (x.tea===item.tea||x.frm===item.frm));
-                    
-                    if(!conflict1 && !conflict2) {
-                        DATA.push({...item, d, p: s.id}, {...item, d, p: ns.id});
-                        left -= 2; continue;
-                    }
+                    if(!conflict1 && !conflict2) { DATA.push({...item, d, p: s.id}, {...item, d, p: ns.id}); left -= 2; continue; }
                 } 
 
-                // SINGLE PERIOD FALLBACK
                 if(!DATA.find(x=>x.d===d && x.p===s.id && (x.tea===item.tea||x.frm===item.frm))){
-                    DATA.push({...item, d, p: s.id});
-                    left--;
+                    DATA.push({...item, d, p: s.id}); left--;
                 }
             }
         });
     });
-    updateFilters(); renderMaster();
+    updateFilters(); 
+    renderMaster(); // Automatically show master view after generation
 }
 
 function updateFilters() {
@@ -199,7 +191,8 @@ function updateFilters() {
 }
 
 function renderMaster() {
-    currentView = "master"; document.getElementById('waBtn').style.display = 'none';
+    currentView = "master"; 
+    document.getElementById('waBtn').style.display = 'none';
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
     const relP = 'P' + document.getElementById('relP').value;
     const debP = 'P' + document.getElementById('debP').value;
@@ -219,8 +212,7 @@ function renderMaster() {
                 else if(day === 'FRIDAY' && s.id === mosP) h += `<td class="special-block">MOSQUE</td>`;
                 else {
                     const m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    const mode = document.getElementById('displayMode').value;
-                    h += `<td>${m ? `<b>${m.sub}</b>${mode!=='sub'?`<br><small>${m.tea}</small>` : ''}` : ''}</td>`;
+                    h += `<td>${m ? `<b>${m.sub}</b><br><small>${m.tea}</small>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -260,7 +252,7 @@ function renderIndividual(type) {
 
 function shareWhatsApp() {
     const t = REGISTRY.find(r => r.tea === document.getElementById('selTeacher').value);
-    if(t && t.phone) window.open(`https://wa.me/${t.phone}?text=Your%20timetable%20is%20ready`, '_blank');
+    if(t && t.phone) window.open(`https://wa.me/${t.phone}?text=Timetable%20Updated`, '_blank');
 }
 
 function saveProject() {

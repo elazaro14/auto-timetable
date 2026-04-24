@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TT-Pro Diamond | Excellence Secondary</title>
     <style>
-        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; --danger: #d32f2f; }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
@@ -69,7 +69,7 @@
 <div class="main-content">
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0;">Registry Data</h3>
+            <h3 style="margin:0;">Academic Data</h3>
             <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Add Row</button>
         </div>
         <div id="regItems"></div>
@@ -78,9 +78,9 @@
     <div class="card no-print" id="viewBar" style="display:none;">
         <div style="display:flex; gap:8px; align-items:center;">
             <button class="btn" style="width:auto; background:#eee; color:#333; margin:0;" onclick="renderMaster()">Master Grid</button>
-            <select id="selStream" onchange="renderIndividual('stream')" style="padding:5px;"><option value="">-- Form --</option></select>
+            <select id="selStream" onchange="renderIndividual('stream')" style="padding:5px;"><option value="">-- Stream --</option></select>
             <select id="selTeacher" onchange="renderIndividual('teacher')" style="padding:5px;"><option value="">-- Teacher --</option></select>
-            <button id="waBtn" class="btn btn-wa" style="width:auto; margin:0; padding:5px 15px;" onclick="shareWhatsApp()">📲 WhatsApp</button>
+            <button id="waBtn" class="btn btn-wa" style="width:auto; margin:0; padding:5px 15px;" onclick="shareWhatsApp()">📲 WhatsApp Share</button>
         </div>
     </div>
 
@@ -88,7 +88,7 @@
 </div>
 
 <script>
-// HIDDEN SECURITY CONFIG
+// BACKGROUND SECURITY (Not visible in UI)
 const EXPIRY_DATE = "2026-12-31"; 
 
 let DATA = [], SLOTS = [], REGISTRY = [];
@@ -142,7 +142,7 @@ function generate() {
     buildSlots();
     DATA = [];
     
-    // Logic: 2 Consecutive periods priority
+    // PRIORITY: Double periods (Appear once daily)
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         DAYS.forEach(day => {
@@ -175,7 +175,7 @@ function updateFilters() {
     document.getElementById('viewBar').style.display = 'block';
     const f = [...new Set(DATA.map(x => x.frm))].sort();
     const t = [...new Set(DATA.map(x => x.tea))].sort();
-    document.getElementById('selStream').innerHTML = '<option value="">-- Form --</option>' + f.map(x => `<option>${x}</option>`).join('');
+    document.getElementById('selStream').innerHTML = '<option value="">-- Stream --</option>' + f.map(x => `<option>${x}</option>`).join('');
     document.getElementById('selTeacher').innerHTML = '<option value="">-- Teacher --</option>' + t.map(x => `<option>${x}</option>`).join('');
 }
 
@@ -208,7 +208,7 @@ function renderIndividual(type) {
     if(!val) return;
     document.getElementById('waBtn').style.display = (type === 'teacher') ? 'block' : 'none';
     
-    let h = `<h2>${val}</h2><table><tr><th>DAY</th>`;
+    let h = `<h2>${val} Schedule</h2><table><tr><th>DAY</th>`;
     SLOTS.forEach(s => h += `<th>${s.id}</th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
@@ -228,19 +228,19 @@ function renderIndividual(type) {
 function shareWhatsApp() {
     const teaName = document.getElementById('selTeacher').value;
     const tea = REGISTRY.find(r => r.tea === teaName);
-    if(!tea || !tea.phone) return alert("Missing phone number!");
+    if(!tea || !tea.phone) return alert("Teacher phone number missing!");
     let msg = `*Timetable: ${teaName}*\n`;
     DAYS.forEach(d => {
-        const p = DATA.filter(x => x.d === d && x.tea === teaName).map(x => `${x.p}:${x.sub}(${x.frm})`).join(", ");
+        const p = DATA.filter(x => x.d === d && x.tea === teaName).map(x => `${x.p}: ${x.sub}(${x.frm})`).join(", ");
         msg += `\n*${d}*: ${p || 'Free'}`;
     });
     window.open(`https://wa.me/${tea.phone}?text=${encodeURIComponent(msg)}`);
 }
 
 function saveProject() {
-    const p = { reg: REGISTRY, data: DATA, conf: { start: document.getElementById('startTime').value, bA: document.getElementById('breakAfter').value } };
+    const p = { registry: REGISTRY, data: DATA };
     const blob = new Blob([JSON.stringify(p)], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable.ttpro`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable_Project.ttpro`; a.click();
 }
 
 function loadProject(ev) {
@@ -250,21 +250,15 @@ function loadProject(ev) {
             const p = JSON.parse(e.target.result);
             document.getElementById('regItems').innerHTML = "";
             
-            // Map file keys (s,t,f,p) to UI inputs
-            const sourceReg = p.registry || p.reg || [];
-            sourceReg.forEach(i => {
+            // Fixed Upload Mapping: specifically for TT_Project.ttpro
+            const source = p.registry || p.reg || [];
+            source.forEach(i => {
                 addRegistryRow(i.s || i.sub || "", i.t || i.tea || "", i.f || i.frm || "", i.p || i.pwk || 5, i.phone || "");
             });
             
-            if(p.conf || p.settings) {
-                const c = p.conf || p.settings;
-                document.getElementById('startTime').value = c.start || "08:00";
-                document.getElementById('breakAfter').value = c.bA || 4;
-            }
-
-            // Trigger generation after load
+            // Auto-trigger generation
             generate();
-        } catch (err) { alert("Format Error: Ensure this is a valid .ttpro file"); }
+        } catch (err) { alert("Invalid .ttpro file structure."); }
     };
     reader.readAsText(ev.target.files[0]);
 }

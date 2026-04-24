@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-Pro Diamond - Countdown Edition</title>
+    <title>TT-Pro Diamond - Drag & Drop Edition</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar */
         .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
         .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
         
-        /* Countdown Banner */
         #expiryBanner { display: none; background: #ffeb3b; color: #333; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid #fbc02d; }
         
         .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
@@ -20,20 +18,22 @@
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
         .input-row input { width: 75px; padding: 5px; border-radius: 4px; border: none; }
         
-        /* Main Space */
         .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
         .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* Registry */
         #regItems { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
         .registry-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 30px; gap: 8px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
         .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
 
-        /* Timetable Grid */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
         th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 50px; }
         th { background: #f0f0f0; font-weight: bold; color: var(--primary); }
         .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; border-bottom: none; margin-top: 20px; }
+        
+        /* Drag UI */
+        .slot-box { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: grab; user-select: none; }
+        .slot-box:active { cursor: grabbing; background: #bbdefb; }
+        .slot-box b { display: block; font-size: 10px; color: var(--primary); }
         
         .time-label { display: block; font-size: 8px; color: #d32f2f; font-weight: bold; }
         .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; width: 30px !important; }
@@ -110,13 +110,13 @@ const CONTACT_NUM = "0763418732";
 
 let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+let draggedIdx = null;
 
-// SECURITY & COUNTDOWN ENGINE
+// SECURITY ENGINE
 (function() {
     const today = new Date();
     const expiry = new Date(EXPIRY_DATE);
-    const diffTime = expiry - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
 
     if (diffDays <= 0) {
         window.onload = function() {
@@ -124,10 +124,7 @@ const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
                 <div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a237e; color: white; font-family: sans-serif; text-align: center;">
                     <div style="padding: 40px; border: 2px solid #ff5252; border-radius: 15px; background: rgba(0,0,0,0.3);">
                         <h1 style="font-size: 50px; color: #ff5252;">SUBSCRIPTION EXPIRED</h1>
-                        <p style="font-size: 20px;">Please renew your subscription to continue using TT-Pro Diamond.</p>
-                        <div style="font-size: 30px; background: #00c853; color: black; padding: 15px 40px; border-radius: 50px; font-weight: bold; margin: 20px 0;">
-                           📞 CALL: ${CONTACT_NUM}
-                        </div>
+                        <div style="font-size: 30px; background: #00c853; color: black; padding: 15px 40px; border-radius: 50px; font-weight: bold; margin: 20px 0;">📞 CALL: ${CONTACT_NUM}</div>
                     </div>
                 </div>`;
             window.print = () => false;
@@ -137,7 +134,7 @@ const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
         window.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('expiryBanner');
             banner.style.display = 'block';
-            banner.innerHTML = `⚠️ SUBSCRIPTION WARNING: ${diffDays} day(s) remaining. Contact ${CONTACT_NUM} to renew!`;
+            banner.innerHTML = `⚠️ SUBSCRIPTION WARNING: ${diffDays} day(s) remaining. Contact ${CONTACT_NUM}`;
         });
     }
 })();
@@ -146,14 +143,7 @@ function addRegistryRow(s="", t="", r="", f="", p=5) {
     const container = document.getElementById('regItems');
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.innerHTML = `
-        <input type="text" class="r-sub" value="${s}" placeholder="Subject">
-        <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
-        <input type="text" class="r-room" value="${r}" placeholder="Room">
-        <input type="text" class="r-frm" value="${f}" placeholder="Form">
-        <input type="number" class="r-pwk" value="${p}">
-        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>
-    `;
+    div.innerHTML = `<input type="text" class="r-sub" value="${s}" placeholder="Sub"><input type="text" class="r-tea" value="${t}" placeholder="Tea"><input type="text" class="r-room" value="${r}" placeholder="Rm"><input type="text" class="r-frm" value="${f}" placeholder="Frm"><input type="number" class="r-pwk" value="${p}"><button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
     container.appendChild(div);
 }
 
@@ -162,7 +152,7 @@ function handleCSV(e) {
     reader.onload = (ev) => {
         const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
         const counts = {};
-        const start = (lines[0].toLowerCase().includes("teacher") || lines[0].includes(" ,")) ? 1 : 0;
+        const start = (lines[0].toLowerCase().includes("teacher")) ? 1 : 0;
         lines.slice(start).forEach(line => {
             const c = line.split(',').map(i => i.trim());
             if(c.length >= 2) {
@@ -258,9 +248,27 @@ function generate() {
     renderMaster();
 }
 
+// DRAG & DROP LOGIC
+function drag(idx) { draggedIdx = idx; }
+function drop(e, d, p, f) {
+    e.preventDefault();
+    const item = DATA[draggedIdx];
+    const targetIdx = DATA.findIndex(x => x.d === d && x.p === p && x.frm === f);
+    
+    // Swap or Move
+    if(targetIdx !== -1) {
+        DATA[targetIdx].d = item.d;
+        DATA[targetIdx].p = item.p;
+    }
+    item.d = d;
+    item.p = p;
+    item.frm = f;
+    renderMaster();
+}
+
 function renderMaster() {
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
-    let h = `<h1 style="text-align:center;">MASTER TIMETABLE - ${document.getElementById('schoolName').value}</h1>`;
+    let h = `<h1 style="text-align:center;">MASTER TIMETABLE</h1>`;
     DAYS.forEach(day => {
         h += `<div class="page-break"><div class="day-title">${day}</div><table><tr><th>FORM</th>`;
         SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
@@ -272,8 +280,11 @@ function renderMaster() {
                 if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
                 else if(sp) h += `<td class="special-cell">${sp}</td>`;
                 else {
-                    const m = DATA.find(x => x.d === day && x.p === s.id && x.frm === f);
-                    h += `<td>${m ? `<b>${m.sub}</b><br>${m.tea}` : ''}</td>`;
+                    const idx = DATA.findIndex(x => x.d === day && x.p === s.id && x.frm === f);
+                    const m = DATA[idx];
+                    h += `<td ondragover="event.preventDefault()" ondrop="drop(event, '${day}', '${s.id}', '${f}')">
+                        ${m ? `<div class="slot-box" draggable="true" ondragstart="drag(${idx})"><b>${m.sub}</b><br><small>${m.tea}</small></div>` : ''}
+                    </td>`;
                 }
             });
             h += `</tr>`;
@@ -285,10 +296,10 @@ function renderMaster() {
 
 function renderBulk(type) {
     const list = [...new Set(DATA.map(x => type === 'stream' ? x.frm : x.tea))].sort();
-    let h = `<h1 class="no-print" style="text-align:center;">Bulk Print: ${type.toUpperCase()}s</h1>`;
+    let h = `<h1 class="no-print" style="text-align:center;">Bulk Print</h1>`;
     list.forEach(val => {
-        h += `<div class="page-break"><h2 style="text-align:center;">${val} - ${type.toUpperCase()}</h2><table><tr><th>DAY</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+        h += `<div class="page-break"><h2 style="text-align:center;">${val}</h2><table><tr><th>DAY</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
         h += `</tr>`;
         DAYS.forEach(d => {
             h += `<tr><td><b>${d}</b></td>`;
@@ -298,7 +309,7 @@ function renderBulk(type) {
                 else if(sp) h += `<td class="special-cell">${sp}</td>`;
                 else {
                     const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
-                    h += `<td>${m ? `<b>${m.sub}</b><br>${type==='stream'?m.tea:m.frm}` : ''}</td>`;
+                    h += `<td>${m ? `<b>${m.sub}</b>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -312,7 +323,7 @@ function saveProject() {
     const reg = [];
     document.querySelectorAll('.registry-row').forEach(r => reg.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));
     const blob = new Blob([JSON.stringify({reg, data: DATA})], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `TT_Backup.ttpro`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Backup.ttpro`; a.click();
 }
 
 window.onload = () => addRegistryRow("MATHEMATICS", "TEACHER", "RM1", "F1A", 5);

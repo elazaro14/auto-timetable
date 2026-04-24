@@ -3,39 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-Pro Diamond | Excellence Secondary School</title>
+    <title>TT-Pro Diamond - Drag & Drop Edition</title>
     <style>
-        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --whatsapp: #25D366; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
         .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
         
-        .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
-        .config-box h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
-        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
-        .input-row input { width: 80px; padding: 4px; border-radius: 4px; border: none; outline: none; }
+        #expiryBanner { display: none; background: #ffeb3b; color: #333; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid #fbc02d; }
         
-        .main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .config-box h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--accent); }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+        .input-row input { width: 75px; padding: 5px; border-radius: 4px; border: none; }
+        
+        .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
         .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
         #regItems { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
-        .registry-row { display: grid; grid-template-columns: 1.5fr 1.2fr 0.8fr 1fr 30px; gap: 8px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .registry-row input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 11px; width: 100%; box-sizing: border-box; }
+        .registry-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 30px; gap: 8px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+        .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
 
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; border: 2px solid #000; margin-bottom: 30px; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: center; font-size: 11px; height: 60px; vertical-align: middle; }
-        th { background: #f0f0f0; font-weight: bold; }
-        .day-title { background: var(--primary); color: white; padding: 10px; font-weight: bold; text-align: center; border: 2px solid #000; margin-top: 20px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 50px; }
+        th { background: #f0f0f0; font-weight: bold; color: var(--primary); }
+        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; border-bottom: none; margin-top: 20px; }
         
-        .break-cell { background: #e0e0e0 !important; writing-mode: vertical-rl; font-size: 10px; font-weight: bold; color: #555; width: 30px !important; }
-        .special-block { background: #fff3e0 !important; color: #e65100; font-weight: bold; border: 1px dashed #ff9800; }
+        /* Drag UI */
+        .slot-box { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: grab; user-select: none; }
+        .slot-box:active { cursor: grabbing; background: #bbdefb; }
+        .slot-box b { display: block; font-size: 10px; color: var(--primary); }
+        
+        .time-label { display: block; font-size: 8px; color: #d32f2f; font-weight: bold; }
+        .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; width: 30px !important; }
+        .special-cell { background: #fff9c4 !important; font-weight: bold; font-size: 9px; }
 
-        .btn { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; transition: 0.2s; }
-        .btn-gen { background: var(--accent); color: white; height: 45px; margin: 15px 0; font-size: 13px; }
-        .btn-gen:hover { background: #00a844; }
-        
-        @media print { .no-print { display: none !important; } body { display: block; overflow: visible; } .main-content { padding: 0; } }
+        .btn { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; }
+        .btn-gen { background: var(--accent); color: white; font-size: 13px; margin-top: 15px; }
+        .btn-print { background: #455a64; color: white; }
+
+        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; display: block; } body { background: white; overflow: visible; display: block; } .main-content { padding: 0; } }
     </style>
 </head>
 <body>
@@ -44,42 +52,50 @@
     <h2>TT-PRO DIAMOND</h2>
     
     <div class="config-box">
-        <h4>Time & Intervals</h4>
+        <h4>Time Config</h4>
         <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
-        <div class="input-row"><span>Period Mins:</span> <input type="number" id="pDur" value="40"></div>
-        <div class="input-row"><span>Total Periods:</span> <input type="number" id="pTotal" value="9"></div>
+        <div class="input-row"><span>Period (m):</span> <input type="number" id="pDur" value="40"></div>
+        <div class="input-row"><span>Periods:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
     <div class="config-box">
-        <h4>Break Placement</h4>
-        <div class="input-row"><span>Break After P:</span> <input type="number" id="breakAfter" value="4"></div>
-        <div class="input-row"><span>Break Mins:</span> <input type="number" id="breakLen" value="30"></div>
+        <h4>Breaks</h4>
+        <div class="input-row"><span>Short (After P):</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Mins:</span> <input type="number" id="breakLen" value="20"></div>
+        <hr style="opacity:0.2">
+        <div class="input-row"><span>Lunch (After P):</span> <input type="number" id="lunchAfter" value="6"></div>
+        <div class="input-row"><span>Mins:</span> <input type="number" id="lunchLen" value="45"></div>
+    </div>
+
+    <div class="config-box">
+        <h4>School Info</h4>
+        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="width:100%; font-size:11px; margin-bottom:5px; padding:5px; border-radius:4px; border:none;">
     </div>
 
     <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
-    <button class="btn" style="background:#455a64; color:white;" onclick="window.print()">🖨️ Print Timetable</button>
-    
-    <div style="margin-top:auto;">
-        <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save Project</button>
-        <button class="btn" style="background:#78909c; color:white;" onclick="document.getElementById('loadInput').click()">📂 Load (.ttpro)</button>
-        <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
-    </div>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Print View</button>
+    <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save File</button>
 </div>
 
 <div class="main-content">
+    <div id="expiryBanner" class="no-print"></div>
+    
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0;">Academic Registry</h3>
-            <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Add Row</button>
+            <h3 style="margin:0;">1. Data Entry</h3>
+            <div style="display:flex; gap:10px;">
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
+                <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Manual Row</button>
+            </div>
         </div>
         <div id="regItems"></div>
     </div>
 
     <div class="card no-print" id="viewBar" style="display:none;">
-        <div style="display:flex; gap:10px; align-items:center;">
-            <button class="btn" style="width:auto; background:#eee; color:#333; margin:0;" onclick="renderMaster()">Master Grid</button>
-            <select id="selStream" onchange="renderIndividual('stream')" style="padding:6px; border-radius:4px;"><option value="">-- View by Form --</option></select>
-            <select id="selTeacher" onchange="renderIndividual('teacher')" style="padding:6px; border-radius:4px;"><option value="">-- View by Teacher --</option></select>
+        <div style="display:flex; gap:8px;">
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderMaster()">Master Grid</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('stream')">All Streams (Pages)</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('teacher')">All Teachers (Pages)</button>
         </div>
     </div>
 
@@ -87,21 +103,70 @@
 </div>
 
 <script>
+// --- LICENSE CONFIG ---
+const EXPIRY_DATE = "2026-12-31"; 
+const CONTACT_NUM = "0763418732";
+// ----------------------
+
 let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+let draggedIdx = null;
 
-function addRegistryRow(s="", t="", f="", p=5) {
+// SECURITY ENGINE
+(function() {
+    const today = new Date();
+    const expiry = new Date(EXPIRY_DATE);
+    const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+        window.onload = function() {
+            document.body.innerHTML = `
+                <div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a237e; color: white; font-family: sans-serif; text-align: center;">
+                    <div style="padding: 40px; border: 2px solid #ff5252; border-radius: 15px; background: rgba(0,0,0,0.3);">
+                        <h1 style="font-size: 50px; color: #ff5252;">SUBSCRIPTION EXPIRED</h1>
+                        <div style="font-size: 30px; background: #00c853; color: black; padding: 15px 40px; border-radius: 50px; font-weight: bold; margin: 20px 0;">📞 CALL: ${CONTACT_NUM}</div>
+                    </div>
+                </div>`;
+            window.print = () => false;
+        };
+        throw new Error("Expired");
+    } else if (diffDays <= 5) {
+        window.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('expiryBanner');
+            banner.style.display = 'block';
+            banner.innerHTML = `⚠️ SUBSCRIPTION WARNING: ${diffDays} day(s) remaining. Contact ${CONTACT_NUM}`;
+        });
+    }
+})();
+
+function addRegistryRow(s="", t="", r="", f="", p=5) {
     const container = document.getElementById('regItems');
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.innerHTML = `
-        <input type="text" class="r-sub" value="${s}" placeholder="Subject">
-        <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
-        <input type="text" class="r-frm" value="${f}" placeholder="Form">
-        <input type="number" class="r-pwk" value="${p}" title="Periods Per Week">
-        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>
-    `;
+    div.innerHTML = `<input type="text" class="r-sub" value="${s}" placeholder="Sub"><input type="text" class="r-tea" value="${t}" placeholder="Tea"><input type="text" class="r-room" value="${r}" placeholder="Rm"><input type="text" class="r-frm" value="${f}" placeholder="Frm"><input type="number" class="r-pwk" value="${p}"><button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
     container.appendChild(div);
+}
+
+function handleCSV(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+        const counts = {};
+        const start = (lines[0].toLowerCase().includes("teacher")) ? 1 : 0;
+        lines.slice(start).forEach(line => {
+            const c = line.split(',').map(i => i.trim());
+            if(c.length >= 2) {
+                const key = `${c[0]}|${c[1]}|${c[2] || ''}|${c[3] || 'F1'}`;
+                counts[key] = (counts[key] || 0) + 1;
+            }
+        });
+        document.getElementById('regItems').innerHTML = "";
+        for(let k in counts) {
+            const [s,t,rm,f] = k.split('|');
+            addRegistryRow(s, t, rm, f, counts[k]);
+        }
+    };
+    reader.readAsText(e.target.files[0]);
 }
 
 function buildSlots() {
@@ -109,164 +174,159 @@ function buildSlots() {
     let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
     const dur = parseInt(document.getElementById('pDur').value);
     const total = parseInt(document.getElementById('pTotal').value);
-    const bA = parseInt(document.getElementById('breakAfter').value);
-    const bL = parseInt(document.getElementById('breakLen').value);
-
     for(let i=1; i<=total; i++) {
-        let startStr = cur.toTimeString().slice(0,5);
+        let sStr = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
-        SLOTS.push({ id: 'P'+i, time: `${startStr}-${cur.toTimeString().slice(0,5)}`, isB: false });
-        
-        if(i === bA) {
-            let breakStart = cur.toTimeString().slice(0,5);
-            cur.setMinutes(cur.getMinutes() + bL);
-            SLOTS.push({ id: 'BREAK', time: `${breakStart}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        SLOTS.push({ id: 'P'+i, time: `${sStr}-${cur.toTimeString().slice(0,5)}`, isB: false });
+        if(i === parseInt(document.getElementById('breakAfter').value)) {
+            let bs = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('breakLen').value));
+            SLOTS.push({ id: 'BREAK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        }
+        if(i === parseInt(document.getElementById('lunchAfter').value)) {
+            let ls = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('lunchLen').value));
+            SLOTS.push({ id: 'LUNCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, isB: true });
         }
     }
+}
+
+function getSpecial(d, pId) {
+    const p = parseInt(pId.replace('P',''));
+    if(d === "WEDNESDAY" && p >= 8) return "RELIGION";
+    if(d === "THURSDAY" && p >= 8) return "DEBATE";
+    if(d === "FRIDAY" && p >= 7) return "MOSQUE";
+    return null;
 }
 
 function generate() {
     REGISTRY = [];
     document.querySelectorAll('.registry-row').forEach(r => {
-        REGISTRY.push({
-            sub: r.querySelector('.r-sub').value.toUpperCase(),
-            tea: r.querySelector('.r-tea').value.toUpperCase(),
-            frm: r.querySelector('.r-frm').value.toUpperCase(),
-            pwk: parseInt(r.querySelector('.r-pwk').value)
-        });
+        const sub = r.querySelector('.r-sub').value.toUpperCase();
+        const tea = r.querySelector('.r-tea').value;
+        const frm = r.querySelector('.r-frm').value.toUpperCase();
+        const pwk = parseInt(r.querySelector('.r-pwk').value);
+        if(sub && tea && frm) REGISTRY.push({sub, tea, room: r.querySelector('.r-room').value, frm, pwk});
     });
-
     buildSlots();
     DATA = [];
-    
-    // Sort by periods per week (highest first) to prioritize doubles
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
-        DAYS.forEach(day => {
-            if(left <= 0) return;
-            for(let i=0; i<SLOTS.length; i++) {
-                if(left <= 0) break;
-                let s = SLOTS[i], ns = SLOTS[i+1];
-                if(s.isB) continue;
+        let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
+        let plan = [];
+        let dbl = Math.min(Math.floor(left/2), 5);
+        for(let i=0; i<dbl; i++) plan.push('double');
+        for(let i=0; i<(left-(dbl*2)); i++) plan.push('single');
 
-                // DOUBLE PERIOD LOGIC: Priority 1
-                if(left >= 2 && ns && !ns.isB) {
-                    const c1 = DATA.find(x => x.d===day && x.p===s.id && (x.tea===item.tea || x.frm===item.frm));
-                    const c2 = DATA.find(x => x.d===day && x.p===ns.id && (x.tea===item.tea || x.frm===item.frm));
-                    
-                    if(!c1 && !c2) {
-                        DATA.push({...item, d: day, p: s.id}, {...item, d: day, p: ns.id});
-                        left -= 2; i++; // Skip next slot as it's filled
-                        continue;
+        plan.forEach(type => {
+            let placed = false;
+            for(let d of shuffledDays) {
+                if (DATA.find(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
+                if(type === 'double') {
+                    for(let i=0; i < SLOTS.length-1; i++) {
+                        if(SLOTS[i].isB || SLOTS[i+1].isB || getSpecial(d, SLOTS[i].id) || getSpecial(d, SLOTS[i+1].id)) continue;
+                        if(!DATA.find(x => x.d===d && x.p===SLOTS[i].id && (x.tea===item.tea || x.frm===item.frm)) &&
+                           !DATA.find(x => x.d===d && x.p===SLOTS[i+1].id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: SLOTS[i].id}, {...item, d, p: SLOTS[i+1].id});
+                            placed = true; break;
+                        }
                     }
-                } 
-
-                // SINGLE PERIOD FALLBACK
-                const conflict = DATA.find(x => x.d===day && x.p===s.id && (x.tea===item.tea || x.frm===item.frm));
-                if(!conflict) {
-                    DATA.push({...item, d: day, p: s.id});
-                    left--;
+                } else {
+                    for(let s of SLOTS) {
+                        if(s.isB || getSpecial(d, s.id)) continue;
+                        if(!DATA.find(x => x.d===d && x.p===s.id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: s.id});
+                            placed = true; break;
+                        }
+                    }
                 }
+                if(placed) break;
             }
         });
     });
-
-    updateFilters();
+    document.getElementById('viewBar').style.display = 'block';
     renderMaster();
 }
 
-function updateFilters() {
-    document.getElementById('viewBar').style.display = 'block';
-    const f = [...new Set(DATA.map(x => x.frm))].sort();
-    const t = [...new Set(DATA.map(x => x.tea))].sort();
-    document.getElementById('selStream').innerHTML = '<option value="">-- View by Form --</option>' + f.map(x => `<option>${x}</option>`).join('');
-    document.getElementById('selTeacher').innerHTML = '<option value="">-- View by Teacher --</option>' + t.map(x => `<option>${x}</option>`).join('');
+// DRAG & DROP LOGIC
+function drag(idx) { draggedIdx = idx; }
+function drop(e, d, p, f) {
+    e.preventDefault();
+    const item = DATA[draggedIdx];
+    const targetIdx = DATA.findIndex(x => x.d === d && x.p === p && x.frm === f);
+    
+    // Swap or Move
+    if(targetIdx !== -1) {
+        DATA[targetIdx].d = item.d;
+        DATA[targetIdx].p = item.p;
+    }
+    item.d = d;
+    item.p = p;
+    item.frm = f;
+    renderMaster();
 }
 
 function renderMaster() {
     const frms = [...new Set(DATA.map(x => x.frm))].sort();
-    let html = "";
+    let h = `<h1 style="text-align:center;">MASTER TIMETABLE</h1>`;
     DAYS.forEach(day => {
-        html += `<div class="day-title">${day}</div><table><tr><th style="width:80px">FORM</th>`;
-        SLOTS.forEach(s => html += `<th>${s.id}<br><small>${s.time}</small></th>`);
-        html += `</tr>`;
+        h += `<div class="page-break"><div class="day-title">${day}</div><table><tr><th>FORM</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+        h += `</tr>`;
         frms.forEach(f => {
-            html += `<tr><td><b>${f}</b></td>`;
+            h += `<tr><td><b>${f}</b></td>`;
             SLOTS.forEach(s => {
-                if(s.isB) html += `<td class="break-cell">BREAK</td>`;
+                const sp = getSpecial(day, s.id);
+                if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else if(sp) h += `<td class="special-cell">${sp}</td>`;
                 else {
-                    const m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    html += `<td>${m ? `<b>${m.sub}</b><br><small>${m.tea}</small>` : ''}</td>`;
+                    const idx = DATA.findIndex(x => x.d === day && x.p === s.id && x.frm === f);
+                    const m = DATA[idx];
+                    h += `<td ondragover="event.preventDefault()" ondrop="drop(event, '${day}', '${s.id}', '${f}')">
+                        ${m ? `<div class="slot-box" draggable="true" ondragstart="drag(${idx})"><b>${m.sub}</b><br><small>${m.tea}</small></div>` : ''}
+                    </td>`;
                 }
             });
-            html += `</tr>`;
+            h += `</tr>`;
         });
-        html += `</table>`;
+        h += `</table></div>`;
     });
-    document.getElementById('timetableArea').innerHTML = html;
+    document.getElementById('timetableArea').innerHTML = h;
 }
 
-function renderIndividual(type) {
-    let val = document.getElementById(type === 'stream' ? 'selStream' : 'selTeacher').value;
-    if(!val) return;
-
-    let html = `<h2>${val} Timetable</h2><table><tr><th>DAY</th>`;
-    SLOTS.forEach(s => html += `<th>${s.id}<br><small>${s.time}</small></th>`);
-    html += `</tr>`;
-    DAYS.forEach(d => {
-        html += `<tr><td><b>${d}</b></td>`;
-        SLOTS.forEach(s => {
-            if(s.isB) html += `<td class="break-cell">BREAK</td>`;
-            else {
-                const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
-                html += `<td>${m ? `<b>${m.sub}</b>${type==='teacher' ? `<br><small>${m.frm}</small>` : ''}` : ''}</td>`;
-            }
+function renderBulk(type) {
+    const list = [...new Set(DATA.map(x => type === 'stream' ? x.frm : x.tea))].sort();
+    let h = `<h1 class="no-print" style="text-align:center;">Bulk Print</h1>`;
+    list.forEach(val => {
+        h += `<div class="page-break"><h2 style="text-align:center;">${val}</h2><table><tr><th>DAY</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+        h += `</tr>`;
+        DAYS.forEach(d => {
+            h += `<tr><td><b>${d}</b></td>`;
+            SLOTS.forEach(s => {
+                const sp = getSpecial(d, s.id);
+                if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else if(sp) h += `<td class="special-cell">${sp}</td>`;
+                else {
+                    const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
+                    h += `<td>${m ? `<b>${m.sub}</b>` : ''}</td>`;
+                }
+            });
+            h += `</tr>`;
         });
-        html += `</tr>`;
+        h += `</table></div>`;
     });
-    document.getElementById('timetableArea').innerHTML = html + `</table>`;
+    document.getElementById('timetableArea').innerHTML = h;
 }
 
 function saveProject() {
-    const project = {
-        registry: REGISTRY,
-        data: DATA,
-        settings: {
-            school: "EXCELLENCE SECONDARY SCHOOL",
-            start: document.getElementById('startTime').value,
-            dur: document.getElementById('pDur').value,
-            total: document.getElementById('pTotal').value,
-            bA: document.getElementById('breakAfter').value,
-            bL: document.getElementById('breakLen').value
-        }
-    };
-    const blob = new Blob([JSON.stringify(project)], {type: "application/json"});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Timetable_Backup.ttpro`; a.click();
+    const reg = [];
+    document.querySelectorAll('.registry-row').forEach(r => reg.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));
+    const blob = new Blob([JSON.stringify({reg, data: DATA})], {type: "application/json"});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Backup.ttpro`; a.click();
 }
 
-function loadProject(ev) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const p = JSON.parse(e.target.result);
-        document.getElementById('regItems').innerHTML = "";
-        // Mapping file keys (s, t, f, p) to internal keys
-        p.registry.forEach(i => addRegistryRow(i.s || i.sub, i.t || i.tea, i.f || i.frm, i.p || i.pwk));
-        
-        if(p.settings) {
-            document.getElementById('startTime').value = p.settings.start;
-            document.getElementById('pDur').value = p.settings.dur;
-            document.getElementById('pTotal').value = p.settings.total;
-            document.getElementById('breakAfter').value = p.settings.bA;
-            document.getElementById('breakLen').value = p.settings.bL;
-        }
-        
-        generate(); // Auto-generate and display master grid
-    };
-    reader.readAsText(ev.target.files[0]);
-}
-
-// Initial placeholder
-window.onload = () => { if(document.querySelectorAll('.registry-row').length === 0) addRegistryRow("MATH", "SEURI", "F1A", 5); };
+window.onload = () => addRegistryRow("MATHEMATICS", "TEACHER", "RM1", "F1A", 5);
 </script>
 </body>
 </html>

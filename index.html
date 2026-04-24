@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-Pro Diamond - conflict-Proof Tanzania Suite</title>
+    <title>TT-Pro Diamond - Official Tanzania Suite</title>
     <style>
         :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* Sidebar */
         .sidebar { width: 340px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
@@ -16,35 +16,38 @@
         .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
         .input-row input { width: 80px; padding: 6px; border-radius: 5px; border: none; font-size: 12px; }
         
-        /* Main Area */
+        /* Main Workspace */
         .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee; }
         
         .view-bar { display: flex; gap: 12px; align-items: center; background: #fff; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; flex-wrap: wrap; }
         .view-bar select, .view-bar button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; font-size: 13px; font-weight: 600; }
 
+        /* Registry Styling */
+        #regItems { max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fafafa; min-height: 50px; }
+        .registry-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 40px; gap: 8px; margin-bottom: 8px; background: white; padding: 5px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .registry-row input { padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
+
         /* Timetable UI */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
-        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 50px; position: relative; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 55px; position: relative; }
         th { background: #f1f3f4; font-weight: 800; color: var(--primary); }
         
-        .period-block { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: move; }
+        .period-block { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: move; min-height: 40px; display: flex; flex-direction: column; justify-content: center; }
         .period-block b { display: block; font-size: 10px; color: var(--primary); }
         
         .time-label { display: block; font-size: 8px; color: #d32f2f; font-weight: bold; margin-top: 2px; }
-        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; margin-top: 20px; text-align: center; border: 2px solid #000; border-bottom: none; }
-        .break-cell { background: #eeeeee !important; font-weight: bold; writing-mode: vertical-rl; width: 30px !important; font-size: 9px; }
+        .day-title { background: var(--primary); color: white; padding: 10px; font-weight: bold; margin-top: 25px; text-align: center; border: 2px solid #000; border-bottom: none; border-radius: 8px 8px 0 0; }
+        .break-cell { background: #eeeeee !important; font-weight: bold; writing-mode: vertical-rl; width: 30px !important; font-size: 9px; color: #666; }
         .special-activity { background: #fff9c4 !important; font-weight: bold; font-size: 9px; }
 
         .btn { padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 8px; text-transform: uppercase; }
-        .btn-gen { background: var(--accent); color: white; }
+        .btn-gen { background: var(--accent); color: white; font-size: 14px; box-shadow: 0 4px 10px rgba(0,200,83,0.3); }
         .btn-save { background: #455a64; color: white; }
         .btn-load { background: #607d8b; color: white; }
-        .btn-check { background: var(--danger); color: white; border: none; }
+        .btn-check { background: var(--danger); color: white; }
 
-        .conflict-badge { color: white; background: var(--danger); padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 8px; margin-top: 2px; display: inline-block; }
-
-        @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } body { background: white; } }
+        @media print { .no-print { display: none !important; } .day-section { page-break-after: always; } body { background: white; } .card { box-shadow: none; border: none; } }
     </style>
 </head>
 <body>
@@ -53,54 +56,55 @@
     <h2>TT-PRO DIAMOND</h2>
     
     <div class="config-box">
-        <h4>Storage & Files</h4>
-        <button class="btn btn-save" onclick="saveProject()">💾 Save Project (.ttpro)</button>
-        <button class="btn btn-load" onclick="document.getElementById('loadInput').click()">📂 Load Project</button>
+        <h4>Project Controls</h4>
+        <button class="btn btn-save" onclick="saveProject()">💾 Save (.ttpro)</button>
+        <button class="btn btn-load" onclick="document.getElementById('loadInput').click()">📂 Open Saved</button>
         <input type="file" id="loadInput" style="display:none" accept=".ttpro" onchange="loadProject(event)">
     </div>
 
     <div class="config-box">
-        <h4>Daily Timing</h4>
-        <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
-        <div class="input-row"><span>Period (min):</span> <input type="number" id="pDur" value="40"></div>
-        <div class="input-row"><span>Total Periods:</span> <input type="number" id="pTotal" value="9"></div>
+        <h4>Daily Setup</h4>
+        <div class="input-row"><span>Start:</span> <input type="time" id="startTime" value="08:00"></div>
+        <div class="input-row"><span>Mins:</span> <input type="number" id="pDur" value="40"></div>
+        <div class="input-row"><span>Periods:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
     <div class="config-box">
-        <h4>Break Intervals</h4>
-        <div class="input-row"><span>Short Break After P:</span> <input type="number" id="breakAfter" value="3"></div>
-        <div class="input-row"><span>Break Duration (m):</span> <input type="number" id="breakLen" value="20"></div>
+        <h4>Break Configuration</h4>
+        <div class="input-row"><span>Short (After P):</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Duration (m):</span> <input type="number" id="breakLen" value="20"></div>
         <hr style="opacity:0.2">
-        <div class="input-row"><span>Lunch After P:</span> <input type="number" id="lunchAfter" value="6"></div>
-        <div class="input-row"><span>Lunch Duration (m):</span> <input type="number" id="lunchLen" value="45"></div>
+        <div class="input-row"><span>Lunch (After P):</span> <input type="number" id="lunchAfter" value="6"></div>
+        <div class="input-row"><span>Duration (m):</span> <input type="number" id="lunchLen" value="45"></div>
     </div>
 
     <div class="config-box">
-        <h4>School Branding</h4>
-        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="width:100%; font-size:11px; margin-bottom:5px; border-radius:4px; border:none; padding:5px;">
-        <input type="text" id="calYear" value="2026" style="width:100%; font-size:11px; border-radius:4px; border:none; padding:5px;">
+        <h4>Identification</h4>
+        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="width:100%; font-size:11px; margin-bottom:5px; border-radius:4px; border:none; padding:8px;">
+        <input type="text" id="calYear" value="2026" style="width:100%; font-size:11px; border-radius:4px; border:none; padding:8px;">
     </div>
 
-    <button class="btn btn-gen" onclick="generate()">🚀 Generate Timetable</button>
-    <button class="btn" style="background:#fff; color:#333; border:1px solid #ccc;" onclick="window.print()">🖨️ Print to PDF</button>
+    <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
+    <button class="btn" style="background:#fff; color:#333; border:1px solid #ccc;" onclick="window.print()">🖨️ Print PDF</button>
 </div>
 
 <div class="main-content">
     <div class="card no-print">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0; color:var(--primary);">Registry (CSV Import)</h3>
+            <h3 style="margin:0; color:var(--primary);">Registry Setup</h3>
             <div style="display:flex; gap:10px; align-items:center;">
+                <label style="font-size:11px; font-weight:bold;">CSV Import:</label>
                 <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
-                <button class="btn" style="background:var(--secondary); color:white; width:auto; padding:6px 15px; margin:0;" onclick="addRow()">+ Manual Row</button>
+                <button class="btn" style="background:var(--secondary); color:white; width:auto; padding:8px 20px; margin:0;" onclick="addRow()">+ Manual Row</button>
             </div>
         </div>
-        <div id="regItems" style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px;"></div>
+        <div id="regItems"></div>
     </div>
 
     <div class="view-bar no-print" id="viewBar" style="display:none;">
-        <button onclick="renderMaster()">Master View</button>
+        <button onclick="renderMaster()">Master Grid</button>
         <button onclick="drawTeacherLoad()">Load Report</button>
-        <button class="btn-check" onclick="checkConflicts()">⚠️ Check Conflicts</button>
+        <button class="btn-check" onclick="checkConflicts()">⚠️ Collision Check</button>
         <div style="flex-grow: 1;"></div>
         <select id="selStream" onchange="renderIndividual('stream')"><option value="">-- By Stream --</option></select>
         <select id="selTeacher" onchange="renderIndividual('teacher')"><option value="">-- By Teacher --</option></select>
@@ -114,42 +118,56 @@ let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 let draggedIdx = null;
 
+// Ensure Manual Row works on click
 function addRow(s="", t="", r="", f="", p=5) {
+    const container = document.getElementById('regItems');
+    if(!container) return;
     const div = document.createElement('div');
     div.className = 'registry-row';
-    div.style = "display:grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 40px; gap:8px; margin-bottom:5px;";
     div.innerHTML = `
         <input type="text" class="r-sub" value="${s}" placeholder="Subject">
         <input type="text" class="r-tea" value="${t}" placeholder="Teacher">
         <input type="text" class="r-room" value="${r}" placeholder="Room">
         <input type="text" class="r-frm" value="${f}" placeholder="Form">
-        <input type="number" class="r-pwk" value="${p}">
-        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>
+        <input type="number" class="r-pwk" value="${p}" title="Periods Per Week">
+        <button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold; font-size:16px;">✕</button>
     `;
-    document.getElementById('regItems').appendChild(div);
+    container.appendChild(div);
 }
 
+// Improved CSV Handler for "Official Tanzania Template"
 function handleCSV(e) {
+    const file = e.target.files[0];
+    if(!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
         const text = ev.target.result;
         const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
         const counts = {};
-        const startIndex = lines[0].toLowerCase().includes("teacher") ? 1 : 0;
+        
+        // Skip header if it contains "Teacher" or "Room"
+        const startIndex = (lines[0].toLowerCase().includes("teacher") || lines[0].toLowerCase().includes("form")) ? 1 : 0;
+        
         lines.slice(startIndex).forEach(line => {
-            const c = line.split(',').map(i => i.trim());
-            if(c.length >= 2) {
-                const key = `${c[0]}|${c[1]}|${c[2] || ''}|${c[3] || 'F1'}`;
+            const cols = line.split(',').map(c => c.trim());
+            if(cols.length >= 2) {
+                // Template: Subject, Teacher, Room, Form
+                const sub = cols[0] || "Unknown";
+                const tea = cols[1] || "Staff";
+                const rm = cols[2] || "";
+                const frm = cols[3] || "F1";
+                const key = `${sub}|${tea}|${rm}|${frm}`;
                 counts[key] = (counts[key] || 0) + 1;
             }
         });
+
         document.getElementById('regItems').innerHTML = "";
         for(let key in counts) {
             const [s,t,rm,f] = key.split('|');
             addRow(s, t, rm, f, counts[key]);
         }
     };
-    reader.readAsText(e.target.files[0]);
+    reader.readAsText(file);
 }
 
 function buildSlots() {
@@ -157,7 +175,6 @@ function buildSlots() {
     let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
     const dur = parseInt(document.getElementById('pDur').value);
     const total = parseInt(document.getElementById('pTotal').value);
-    
     const bAft = parseInt(document.getElementById('breakAfter').value);
     const bLen = parseInt(document.getElementById('breakLen').value);
     const lAft = parseInt(document.getElementById('lunchAfter').value);
@@ -193,18 +210,20 @@ function getSpecial(d, pId) {
 function generate() {
     REGISTRY = [];
     document.querySelectorAll('.registry-row').forEach(r => {
-        const sub = r.querySelector('.r-sub').value.toUpperCase();
-        const tea = r.querySelector('.r-tea').value;
-        const rm = r.querySelector('.r-room').value;
-        const f = r.querySelector('.r-frm').value.toUpperCase();
+        const sub = r.querySelector('.r-sub').value.toUpperCase().trim();
+        const tea = r.querySelector('.r-tea').value.trim();
+        const rm = r.querySelector('.r-room').value.trim();
+        const f = r.querySelector('.r-frm').value.toUpperCase().trim();
         const p = parseInt(r.querySelector('.r-pwk').value);
         if(sub && tea && f) REGISTRY.push({sub, tea, room: rm, frm: f, pwk: p});
     });
 
+    if(REGISTRY.length === 0) { alert("Please add subjects/teachers first."); return; }
+
     buildSlots();
     DATA = [];
 
-    // Prioritize Double Periods first as per user priority
+    // Scheduling Logic prioritizing Double Periods once per day
     REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
         let left = item.pwk;
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
@@ -217,7 +236,9 @@ function generate() {
         plan.forEach(type => {
             let placed = false;
             for(let d of shuffledDays) {
+                // Rule: Subject appears only once per day (either as a double or single)
                 if (DATA.find(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
+                
                 if(type === 'double') {
                     for(let i=0; i < SLOTS.length-1; i++) {
                         let t1 = SLOTS[i], t2 = SLOTS[i+1];
@@ -245,27 +266,16 @@ function generate() {
     renderMaster();
 }
 
+// Drag/Drop logic
 function onDragStart(e, idx) { draggedIdx = idx; e.dataTransfer.setData('text', idx); }
 function onDragOver(e) { e.preventDefault(); }
 function onDrop(e, day, pId, stream) {
     e.preventDefault();
     if(draggedIdx === null || getSpecial(day, pId)) return;
     const item = DATA[draggedIdx];
-    
-    // Check for target index (is there already something there?)
     const targetIdx = DATA.findIndex(x => x.d === day && x.p === pId && x.frm === stream);
-    
-    // If swapping or moving, check if we are creating a teacher collision in the NEW spot
-    // (Actual collision detection happens on button click, but we block obvious teacher doubles here)
-    const tConflict = DATA.find(x => x.d === day && x.p === pId && x.tea === item.tea && x.frm !== stream);
-    if(tConflict) { if(!confirm(`Warning: Teacher ${item.tea} is already in ${tConflict.frm}. Move anyway?`)) return; }
-
-    if(targetIdx !== -1) { 
-        DATA[targetIdx].d = item.d; 
-        DATA[targetIdx].p = item.p; 
-    }
-    item.d = day; 
-    item.p = pId;
+    if(targetIdx !== -1) { DATA[targetIdx].d = item.d; DATA[targetIdx].p = item.p; }
+    item.d = day; item.p = pId;
     renderMaster();
 }
 
@@ -277,42 +287,25 @@ function updateFilters() {
     document.getElementById('selTeacher').innerHTML = '<option value="">-- By Teacher --</option>' + teas.map(t => `<option>${t}</option>`).join('');
 }
 
-// NEW FEATURE: COALITION/COLLISION CHECK
 function checkConflicts() {
     let conflicts = [];
-    // Check Teacher Conflicts
     DAYS.forEach(d => {
         SLOTS.forEach(s => {
             if(s.isB) return;
             const periodItems = DATA.filter(x => x.d === d && x.p === s.id);
             const teacherMap = {};
             const roomMap = {};
-            
             periodItems.forEach(item => {
-                // Teacher Check
-                if(teacherMap[item.tea]) {
-                    conflicts.push(`<b>Teacher Collision:</b> ${item.tea} is scheduled in both <b>${teacherMap[item.tea]}</b> and <b>${item.frm}</b> on ${d} (${s.id})`);
-                } else { teacherMap[item.tea] = item.frm; }
-                
-                // Room Check (if room provided)
-                if(item.room && item.room.trim() !== "") {
-                    if(roomMap[item.room]) {
-                        conflicts.push(`<b>Room Collision:</b> Room ${item.room} is used by both <b>${roomMap[item.room]}</b> and <b>${item.frm}</b> on ${d} (${s.id})`);
-                    } else { roomMap[item.room] = item.frm; }
-                }
+                if(teacherMap[item.tea]) conflicts.push(`<b>Teacher:</b> ${item.tea} is in both ${teacherMap[item.tea]} and ${item.frm} on ${d} (${s.id})`);
+                else teacherMap[item.tea] = item.frm;
+                if(item.room && roomMap[item.room]) conflicts.push(`<b>Room:</b> ${item.room} is used by ${roomMap[item.room]} and ${item.frm} on ${d} (${s.id})`);
+                else if(item.room) roomMap[item.room] = item.frm;
             });
         });
     });
-
-    let h = `<h2>COLLISION CHECK REPORT</h2>`;
-    if(conflicts.length === 0) {
-        h += `<div style="background:#e8f5e9; color:#2e7d32; padding:20px; border-radius:8px; border:1px solid #2e7d32; text-align:center;"><b>PERFECT!</b> No teacher or room collisions detected in the current timetable.</div>`;
-    } else {
-        h += `<div style="background:#ffebee; color:#c62828; padding:20px; border-radius:8px; border:1px solid #c62828;">`;
-        h += `<p>Found <b>${conflicts.length}</b> scheduling conflicts:</p><ul>`;
-        conflicts.forEach(c => h += `<li style="margin-bottom:8px;">${c}</li>`);
-        h += `</ul><p><i>Use drag-and-drop to resolve these conflicts.</i></p></div>`;
-    }
+    let h = `<h3>COALITION/COLLISION REPORT</h3>`;
+    if(conflicts.length === 0) h += `<p style="color:green; font-weight:bold;">✅ No collisions detected!</p>`;
+    else h += `<div style="color:red;"><ul>` + conflicts.map(c => `<li>${c}</li>`).join('') + `</ul></div>`;
     document.getElementById('timetableArea').innerHTML = h;
 }
 
@@ -335,7 +328,7 @@ function renderMaster() {
                     h += `<td ondragover="onDragOver(event)" ondrop="onDrop(event, '${day}', '${s.id}', '${f}')">
                         ${m ? `<div class="period-block" draggable="true" ondragstart="onDragStart(event, ${idx})">
                             <b>${m.sub}</b><small>${m.tea}</small>
-                            ${m.room ? `<br><small style="color:#1976d2">${m.room}</small>` : ''}
+                            ${m.room ? `<i style="font-size:8px;">${m.room}</i>` : ''}
                         </div>` : ''}
                     </td>`;
                 }
@@ -366,4 +359,7 @@ function loadProject(ev) {
         document.getElementById('breakLen').value = s.bL; document.getElementById('lunchAfter').value = s.lA;
         document.getElementById('lunchLen').value = s.lL;
         document.getElementById('regItems').innerHTML = "";
-        p.registry.forEach(i => addRow(i.s, i.t, i.r, i.f, i.p)
+        p.registry.forEach(i => addRow(i.s, i.t, i.r, i.f, i.p));
+        DATA = p.data || []; buildSlots(); updateFilters(); renderMaster();
+    };
+    reader.r

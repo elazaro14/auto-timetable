@@ -2,34 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-PRO Diamond | Advanced Master System</title>
+    <title>TT-PRO Platinum | 2026 Professional Edition</title>
     <style>
-        :root { --row-height: 45px; --font-size: 11px; --cell-padding: 5px; --primary: #2c3e50; --accent: #28a745; }
-        body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 10px; }
-        .container { max-width: 1450px; margin: 0 auto; }
-        .panel { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        :root { --row-height: 48px; --font-size: 11px; --primary: #2c3e50; --accent: #28a745; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid var(--primary); }
         
-        .print-header { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px; }
-        .header-text { text-align: center; }
-        .header-text h1 { margin: 0; font-size: 22px; text-transform: uppercase; }
+        .header-main { text-align: center; margin-bottom: 20px; }
+        .header-main h1 { margin: 0; color: var(--primary); font-size: 24px; letter-spacing: 1px; }
+        .expiry-tag { color: #d9534f; font-weight: bold; font-size: 12px; margin-top: 5px; display: block; }
 
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 25px; border: 1px solid #444; }
-        th, td { border: 1px solid #444; padding: var(--cell-padding); text-align: center; font-size: var(--font-size); height: var(--row-height); overflow: hidden; }
-        th { background: var(--primary); color: white; }
+        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 30px; border: 2px solid #333; }
+        th, td { border: 1px solid #444; padding: 5px; text-align: center; font-size: var(--font-size); height: var(--row-height); }
+        th { background: var(--primary); color: white; font-weight: 600; text-transform: uppercase; }
         
-        .day-title { background: #34495e; color: white; padding: 8px; font-size: 16px; text-align: center; margin: 15px 0 5px; border-radius: 4px; }
-        .break-cell { background: #f1f3f5; font-weight: bold; color: #777; width: 25px !important; font-size: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
-        .unavailable-block { background: #ffcdd2; color: #b71c1c; font-weight: bold; font-size: 9px; }
+        .break-cell { background: #e9ecef; font-weight: bold; color: #555; width: 30px !important; font-size: 9px; writing-mode: vertical-rl; text-orientation: mixed; }
+        .day-label { background: #34495e; color: white; font-size: 16px; padding: 10px; text-align: center; margin-top: 20px; border-radius: 6px 6px 0 0; }
         
-        .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
-        .view-bar { background: #e9ecef; padding: 12px; border-radius: 6px; display: none; text-align: center; margin-bottom: 10px; }
-        .avail-panel { background: #fdfdfe; border: 1px dashed #ccc; padding: 10px; margin: 10px 0; display: none; }
-        
-        button, select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
-        .btn-gen { background: var(--accent); color: white; border: none; }
+        .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
+        .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; color: white; }
+        .btn-blue { background: #007bff; }
+        .btn-green { background: var(--accent); }
+        .btn-wa { background: #25D366; display: flex; align-items: center; gap: 5px; margin: 10px auto; }
 
+        .view-bar { background: #fff; padding: 15px; border-radius: 8px; display: none; text-align: center; border: 1px solid #ddd; }
+        
         @media print { 
-            .panel, .view-bar, .avail-panel, .no-print { display: none !important; } 
+            .panel, .view-bar, .no-print { display: none !important; } 
             body { background: white; padding: 0; }
             .day-section { page-break-after: always; }
         }
@@ -38,122 +38,93 @@
 <body>
 
 <div class="panel container no-print">
-    <div class="header-text" style="margin-bottom: 20px;">
-        <h1>TT-PRO Diamond Edition 2026</h1>
+    <div class="header-main">
+        <h1>SCHOOL MANAGEMENT TIMETABLE 2026</h1>
+        <span id="expiryStatus" class="expiry-tag"></span>
     </div>
 
     <div class="controls">
         <input type="file" id="ttproFile" accept=".ttpro" hidden onchange="loadProject(event)">
-        <button onclick="document.getElementById('ttproFile').click()" style="background:#007bff; color:white;">📂 Load .ttpro</button>
-        
-        <input type="file" id="csvFile" accept=".csv" hidden onchange="loadCSV(event)">
-        <button onclick="document.getElementById('csvFile').click()" style="background:#17a2b8; color:white;">📥 Upload CSV</button>
-        
-        <button onclick="toggleAvail()" style="background:#6c757d; color:white;">Set Teacher Off-Times</button>
-        <button class="btn-gen" onclick="generate()">🚀 Generate Timetable</button>
-        <button onclick="window.print()" style="background:#455a64; color:white;">🖨️ Print PDF</button>
-    </div>
-
-    <div id="availPanel" class="avail-panel">
-        <h4 style="margin:0 0 10px 0">Teacher Unavailability Rules</h4>
-        <select id="avTea"></select>
-        <select id="avDay"></select>
-        <select id="avPer"></select>
-        <button onclick="addUnavailability()">Add Rule</button>
-        <div id="availList" style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;"></div>
+        <button class="btn btn-blue" onclick="document.getElementById('ttproFile').click()">📂 Load Data (.ttpro)</button>
+        <button class="btn btn-green" id="genBtn" onclick="generate()" style="display:none;">🚀 Generate Full School</button>
+        <button class="btn" onclick="window.print()" style="background:#455a64;">🖨️ Print to PDF</button>
     </div>
     
     <div class="view-bar" id="viewBar">
-        <button onclick="renderMaster()">Master View</button>
-        <select id="selStream" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
+        <button onclick="renderMaster()">Full School View</button>
         <select id="selTeacher" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
-        <button onclick="renderLoadSummary()" style="background:#6f42c1; color:white;">Load Summary</button>
+        <select id="selStream" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
     </div>
 </div>
 
 <div id="output" class="container"></div>
 
 <script>
+// CONFIGURATION
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
 const PERIODS = [
     {p:"P1", t:"08:00"}, {p:"P2", t:"08:40"}, {p:"P3", t:"09:20"}, {p:"P4", t:"10:00"},
     {p:"BREAK", t:"10:40"},
     {p:"P5", t:"11:10"}, {p:"P6", t:"11:50"}, {p:"P7", t:"12:30"}, {p:"P8", t:"13:10"}, {p:"P9", t:"13:50"}
 ];
-let REGISTRY = [], TIMETABLE = [], UNAVAIL = [];
+const EXPIRY_DATE = new Date("2026-12-31"); // Professional expiry logic
 
-function toggleAvail() { const p = document.getElementById('availPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
+let REGISTRY = [], TIMETABLE = [];
+
+function checkExpiry() {
+    const now = new Date();
+    const diff = Math.ceil((EXPIRY_DATE - now) / (1000 * 60 * 60 * 24));
+    const tag = document.getElementById('expiryStatus');
+    if (diff <= 0) {
+        tag.innerHTML = "❌ LICENSE EXPIRED: Please contact administrator for 2027 renewal.";
+        document.body.innerHTML = `<h1 style='color:red; text-align:center; margin-top:100px;'>${tag.innerHTML}</h1>`;
+    } else {
+        tag.innerHTML = `✔ License Active (${diff} days remaining)`;
+    }
+}
+checkExpiry();
 
 function loadProject(ev) {
     const reader = new FileReader();
     reader.onload = (e) => {
         const p = JSON.parse(e.target.result);
         const source = p.registry || p.reg || [];
-        // Map shorthand keys (s, t, f, p) from your .ttpro file 
         REGISTRY = source.map(i => ({
             subject: i.s || i.sub || "",
             teacher: i.t || i.tea || "",
             form: i.f || i.frm || "",
             pwk: parseInt(i.p || i.pwk || 0)
         }));
-        initFilters();
-        alert("Project Loaded. Click Generate to build.");
+        initUI();
+        document.getElementById('genBtn').style.display = 'inline-block';
+        alert("System Synchronized: " + REGISTRY.length + " entries loaded.");
     };
     reader.readAsText(ev.target.files[0]);
 }
 
-function loadCSV(ev) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const lines = e.target.result.split('\n').slice(1).filter(l => l.trim());
-        REGISTRY = lines.map(l => {
-            const c = l.split(',');
-            return { subject: c[0].trim(), teacher: c[1].trim(), form: c[2].trim(), pwk: parseInt(c[3]) };
-        });
-        initFilters();
-        generate();
-    };
-    reader.readAsText(ev.target.files[0]);
-}
-
-function initFilters() {
+function initUI() {
     const ts = [...new Set(REGISTRY.map(x => x.teacher))].sort();
     const fs = [...new Set(REGISTRY.map(x => x.form))].sort();
     document.getElementById('selTeacher').innerHTML = '<option value="">-- View Teacher --</option>' + ts.map(t => `<option>${t}</option>`).join('');
     document.getElementById('selStream').innerHTML = '<option value="">-- View Class --</option>' + fs.map(f => `<option>${f}</option>`).join('');
-    document.getElementById('avTea').innerHTML = ts.map(t => `<option>${t}</option>`).join('');
-    document.getElementById('avDay').innerHTML = DAYS.map(d => `<option>${d}</option>`).join('');
-    document.getElementById('avPer').innerHTML = PERIODS.filter(p=>p.p!=="BREAK").map(p => `<option>${p.p}</option>`).join('');
-}
-
-function addUnavailability() {
-    const t = document.getElementById('avTea').value, d = document.getElementById('avDay').value, p = document.getElementById('avPer').value;
-    if(!UNAVAIL.some(u => u.t===t && u.d===d && u.p===p)) {
-        UNAVAIL.push({t, d, p});
-        updateAvailList();
-    }
-}
-
-function updateAvailList() {
-    document.getElementById('availList').innerHTML = UNAVAIL.map((u, i) => 
-        `<span style="background:#eee; padding:4px; font-size:10px;">${u.t}(${u.d} ${u.p}) <b onclick="UNAVAIL.splice(${i},1);updateAvailList()" style="color:red;cursor:pointer">×</b></span>`
-    ).join('');
 }
 
 function generate() {
     TIMETABLE = [];
-    const validSlots = ["P1","P2","P3","P4","P5","P6","P7","P8","P9"];
+    const slots = PERIODS.filter(p => p.p !== "BREAK").map(p => p.p);
     
-    // Sort by workload to place heavier subjects first
-    REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
+    // Sort REGISTRY: Heavy workloads first to ensure they get space
+    const sorted = [...REGISTRY].sort((a,b) => b.pwk - a.pwk);
+
+    sorted.forEach(item => {
         let remaining = item.pwk;
         
-        // Strategy: Try placing double periods first (but not spanning the break) 
+        // Pass 1: Try placing double periods (not spanning break)
         for(let d of DAYS) {
             if(remaining < 2) break;
-            for(let i=0; i<validSlots.length-1; i++) {
-                const p1 = validSlots[i], p2 = validSlots[i+1];
-                if(p1 === "P4" && p2 === "P5") continue; // Skip break span 
+            for(let i=0; i<slots.length-1; i++) {
+                const p1 = slots[i], p2 = slots[i+1];
+                if(p1 === "P4" && p2 === "P5") continue; // The "Break Yes" constraint 
                 
                 if(canPlace(d, p1, item) && canPlace(d, p2, item)) {
                     TIMETABLE.push({...item, day: d, period: p1}, {...item, day: d, period: p2});
@@ -162,10 +133,10 @@ function generate() {
             }
         }
         
-        // Place remaining single periods
+        // Pass 2: Place remaining singles
         for(let d of DAYS) {
             if(remaining <= 0) break;
-            for(let p of validSlots) {
+            for(let p of slots) {
                 if(remaining <= 0) break;
                 if(canPlace(d, p, item)) {
                     TIMETABLE.push({...item, day: d, period: p});
@@ -180,20 +151,19 @@ function generate() {
 }
 
 function canPlace(d, p, l) {
-    const teacherBusy = TIMETABLE.some(t => t.day === d && t.period === p && t.teacher === l.teacher);
-    const formBusy = TIMETABLE.some(t => t.day === d && t.period === p && t.form === l.form);
-    const offTime = UNAVAIL.some(u => u.t === l.teacher && u.d === d && u.p === p);
-    return !teacherBusy && !formBusy && !offTime;
+    const tBusy = TIMETABLE.some(t => t.day === d && t.period === p && t.teacher === l.teacher);
+    const fBusy = TIMETABLE.some(t => t.day === d && t.period === p && t.form === l.form);
+    return !tBusy && !fBusy;
 }
 
 function renderMaster() {
     const forms = [...new Set(REGISTRY.map(x => x.form))].sort();
     let html = "";
     DAYS.forEach(day => {
-        html += `<div class="day-section"><div class="day-title">${day}</div>`;
-        html += `<table><tr><th>CLASS</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
+        html += `<div class="day-section"><div class="day-label">${day}</div>`;
+        html += `<table><tr><th>CLASS</th>` + PERIODS.map(p => `<th>${p.p}<br><small>${p.t}</small></th>`).join('') + `</tr>`;
         forms.forEach(f => {
-            html += `<tr><td style="font-weight:bold">${f}</td>`;
+            html += `<tr><td style="font-weight:bold; background:#f8f9fa;">${f}</td>`;
             PERIODS.forEach(p => {
                 if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
                 else {
@@ -209,33 +179,34 @@ function renderMaster() {
 }
 
 function renderIndividual(type) {
-    const val = type === 'stream' ? document.getElementById('selStream').value : document.getElementById('selTeacher').value;
+    const val = type === 'teacher' ? document.getElementById('selTeacher').value : document.getElementById('selStream').value;
     if(!val) return;
-    let html = `<h2 style="text-align:center">${val} TIMETABLE</h2><table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
+    
+    let whatsappText = `*OFFICIAL TIMETABLE: ${val}*%0A%0A`;
+    let html = `<div class="panel" style="max-width:900px; margin:auto;">`;
+    html += `<h2 style="text-align:center; color:var(--primary);">${val} PERSONAL SCHEDULE</h2>`;
+    html += `<table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
+    
     DAYS.forEach(day => {
-        html += `<tr><td><b>${day}</b></td>`;
+        html += `<tr><td style="font-weight:bold">${day}</td>`;
+        whatsappText += `*${day}:*%0A`;
         PERIODS.forEach(p => {
-            const isOff = type === 'teacher' && UNAVAIL.some(u => u.t === val && u.d === day && u.p === p.p);
-            if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
-            else if(isOff) html += `<td class="unavailable-block">OFF</td>`;
-            else {
-                const m = TIMETABLE.find(x => x.day === day && x.period === p.p && (type === 'stream' ? x.form === val : x.teacher === val));
-                html += `<td>${m ? `<b>${m.subject}</b><br>${type==='stream'?m.teacher:'Form: '+m.form}` : ''}</td>`;
+            if(p.p === "BREAK") {
+                html += `<td class="break-cell">BREAK</td>`;
+            } else {
+                const m = TIMETABLE.find(x => x.day === day && x.period === p.p && (type === 'teacher' ? x.teacher === val : x.form === val));
+                const content = m ? (type === 'teacher' ? `${m.subject} (${m.form})` : `${m.subject} [${m.teacher}]`) : '-';
+                html += `<td>${content}</td>`;
+                if(m) whatsappText += `${p.p} (${p.t}): ${content}%0A`;
             }
         });
+        whatsappText += `%0A`;
         html += `</tr>`;
     });
-    document.getElementById('output').innerHTML = html + `</table>`;
-}
-
-function renderLoadSummary() {
-    let html = `<h2 style="text-align:center">TEACHER WORKLOAD SUMMARY</h2><table style="width:600px; margin:auto;"><tr><th>Teacher</th><th>Periods / Week</th></tr>`;
-    const load = {};
-    REGISTRY.forEach(r => load[r.teacher] = (load[r.teacher] || 0) + r.pwk);
-    Object.keys(load).sort().forEach(t => {
-        html += `<tr><td>${t}</td><td>${load[t]}</td></tr>`;
-    });
-    document.getElementById('output').innerHTML = html + `</table>`;
+    
+    html += `</table>`;
+    html += `<button class="btn btn-wa no-print" onclick="window.open('https://wa.me/?text=${whatsappText}')">📲 Share via WhatsApp</button></div>`;
+    document.getElementById('output').innerHTML = html;
 }
 </script>
 </body>

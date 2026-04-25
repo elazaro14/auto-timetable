@@ -2,212 +2,331 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TT-PRO Platinum | 2026 Professional Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TT-Pro Diamond - Drag & Drop Edition</title>
     <style>
-        :root { --row-height: 48px; --font-size: 11px; --primary: #2c3e50; --accent: #28a745; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid var(--primary); }
+        :root { --primary: #1a237e; --secondary: #0d47a1; --accent: #00c853; --bg: #f4f7f9; --danger: #d32f2f; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        .header-main { text-align: center; margin-bottom: 20px; }
-        .header-main h1 { margin: 0; color: var(--primary); font-size: 24px; letter-spacing: 1px; }
-        .expiry-tag { color: #d9534f; font-weight: bold; font-size: 12px; margin-top: 5px; display: block; }
+        .sidebar { width: 320px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; overflow-y: auto; }
+        .sidebar h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
+        
+        #expiryBanner { display: none; background: #ffeb3b; color: #333; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid #fbc02d; }
+        
+        .config-box { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .config-box h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--accent); }
+        .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+        .input-row input { width: 75px; padding: 5px; border-radius: 4px; border: none; }
+        
+        .main-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
+        .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        #regItems { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; background: #fff; }
+        .registry-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 0.8fr 30px; gap: 8px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+        .registry-row input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
 
-        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; margin-bottom: 30px; border: 2px solid #333; }
-        th, td { border: 1px solid #444; padding: 5px; text-align: center; font-size: var(--font-size); height: var(--row-height); }
-        th { background: var(--primary); color: white; font-weight: 600; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; border: 2px solid #000; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 50px; }
+        th { background: #f0f0f0; font-weight: bold; color: var(--primary); }
+        .day-title { background: var(--primary); color: white; padding: 8px; font-weight: bold; text-align: center; border: 2px solid #000; border-bottom: none; margin-top: 20px; }
         
-        .break-cell { background: #e9ecef; font-weight: bold; color: #555; width: 30px !important; font-size: 9px; writing-mode: vertical-rl; text-orientation: mixed; }
-        .day-label { background: #34495e; color: white; font-size: 16px; padding: 10px; text-align: center; margin-top: 20px; border-radius: 6px 6px 0 0; }
+        /* Drag UI */
+        .slot-box { background: #e3f2fd; border: 1px solid var(--secondary); border-radius: 4px; padding: 4px; cursor: grab; user-select: none; }
+        .slot-box:active { cursor: grabbing; background: #bbdefb; }
+        .slot-box b { display: block; font-size: 10px; color: var(--primary); }
         
-        .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
-        .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; color: white; }
-        .btn-blue { background: #007bff; }
-        .btn-green { background: var(--accent); }
-        .btn-wa { background: #25D366; display: flex; align-items: center; gap: 5px; margin: 10px auto; }
+        .time-label { display: block; font-size: 8px; color: #d32f2f; font-weight: bold; }
+        .break-cell { background: #eee !important; writing-mode: vertical-rl; font-size: 9px; font-weight: bold; width: 30px !important; }
+        .special-cell { background: #fff9c4 !important; font-weight: bold; font-size: 9px; }
 
-        .view-bar { background: #fff; padding: 15px; border-radius: 8px; display: none; text-align: center; border: 1px solid #ddd; }
-        
-        @media print { 
-            .panel, .view-bar, .no-print { display: none !important; } 
-            body { background: white; padding: 0; }
-            .day-section { page-break-after: always; }
-        }
+        .btn { padding: 10px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; text-transform: uppercase; font-size: 11px; }
+        .btn-gen { background: var(--accent); color: white; font-size: 13px; margin-top: 15px; }
+        .btn-print { background: #455a64; color: white; }
+
+        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; display: block; } body { background: white; overflow: visible; display: block; } .main-content { padding: 0; } }
     </style>
 </head>
 <body>
 
-<div class="panel container no-print">
-    <div class="header-main">
-        <h1>SCHOOL MANAGEMENT TIMETABLE 2026</h1>
-        <span id="expiryStatus" class="expiry-tag"></span>
+<div class="sidebar no-print">
+    <h2>TT-PRO DIAMOND</h2>
+    
+    <div class="config-box">
+        <h4>Time Config</h4>
+        <div class="input-row"><span>Start Time:</span> <input type="time" id="startTime" value="08:00"></div>
+        <div class="input-row"><span>Period (m):</span> <input type="number" id="pDur" value="40"></div>
+        <div class="input-row"><span>Periods:</span> <input type="number" id="pTotal" value="9"></div>
     </div>
 
-    <div class="controls">
-        <input type="file" id="ttproFile" accept=".ttpro" hidden onchange="loadProject(event)">
-        <button class="btn btn-blue" onclick="document.getElementById('ttproFile').click()">📂 Load Data (.ttpro)</button>
-        <button class="btn btn-green" id="genBtn" onclick="generate()" style="display:none;">🚀 Generate Full School</button>
-        <button class="btn" onclick="window.print()" style="background:#455a64;">🖨️ Print to PDF</button>
+    <div class="config-box">
+        <h4>Breaks</h4>
+        <div class="input-row"><span>Short (After P):</span> <input type="number" id="breakAfter" value="3"></div>
+        <div class="input-row"><span>Mins:</span> <input type="number" id="breakLen" value="20"></div>
+        <hr style="opacity:0.2">
+        <div class="input-row"><span>Lunch (After P):</span> <input type="number" id="lunchAfter" value="6"></div>
+        <div class="input-row"><span>Mins:</span> <input type="number" id="lunchLen" value="45"></div>
     </div>
-    
-    <div class="view-bar" id="viewBar">
-        <button onclick="renderMaster()">Full School View</button>
-        <select id="selTeacher" onchange="renderIndividual('teacher')"><option value="">-- View Teacher --</option></select>
-        <select id="selStream" onchange="renderIndividual('stream')"><option value="">-- View Class --</option></select>
+
+    <div class="config-box">
+        <h4>School Info</h4>
+        <input type="text" id="schoolName" value="EXCELLENCE SECONDARY SCHOOL" style="width:100%; font-size:11px; margin-bottom:5px; padding:5px; border-radius:4px; border:none;">
     </div>
+
+    <button class="btn btn-gen" onclick="generate()">🚀 Generate Master</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Print View</button>
+    <button class="btn" style="background:#607d8b; color:white;" onclick="saveProject()">💾 Save File</button>
 </div>
 
-<div id="output" class="container"></div>
+<div class="main-content">
+    <div id="expiryBanner" class="no-print"></div>
+    
+    <div class="card no-print">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0;">1. Data Entry</h3>
+            <div style="display:flex; gap:10px;">
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)" style="font-size:11px;">
+                <button class="btn" onclick="addRegistryRow()" style="background:var(--secondary); color:white; width:auto; padding:5px 15px; margin:0;">+ Manual Row</button>
+            </div>
+        </div>
+        <div id="regItems"></div>
+    </div>
+
+    <div class="card no-print" id="viewBar" style="display:none;">
+        <div style="display:flex; gap:8px;">
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderMaster()">Master Grid</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('stream')">All Streams (Pages)</button>
+            <button class="btn" style="width:auto; background:#eee; color:#333;" onclick="renderBulk('teacher')">All Teachers (Pages)</button>
+        </div>
+    </div>
+
+    <div id="timetableArea"></div>
+</div>
 
 <script>
-// CONFIGURATION
+// --- LICENSE CONFIG ---
+const EXPIRY_DATE = "2026-12-31"; 
+const CONTACT_NUM = "0763418732";
+// ----------------------
+
+let DATA = [], SLOTS = [], REGISTRY = [];
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
-const PERIODS = [
-    {p:"P1", t:"08:00"}, {p:"P2", t:"08:40"}, {p:"P3", t:"09:20"}, {p:"P4", t:"10:00"},
-    {p:"BREAK", t:"10:40"},
-    {p:"P5", t:"11:10"}, {p:"P6", t:"11:50"}, {p:"P7", t:"12:30"}, {p:"P8", t:"13:10"}, {p:"P9", t:"13:50"}
-];
-const EXPIRY_DATE = new Date("2026-12-31"); // Professional expiry logic
+let draggedIdx = null;
 
-let REGISTRY = [], TIMETABLE = [];
+// SECURITY ENGINE
+(function() {
+    const today = new Date();
+    const expiry = new Date(EXPIRY_DATE);
+    const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
 
-function checkExpiry() {
-    const now = new Date();
-    const diff = Math.ceil((EXPIRY_DATE - now) / (1000 * 60 * 60 * 24));
-    const tag = document.getElementById('expiryStatus');
-    if (diff <= 0) {
-        tag.innerHTML = "❌ LICENSE EXPIRED: Please contact administrator for 2027 renewal.";
-        document.body.innerHTML = `<h1 style='color:red; text-align:center; margin-top:100px;'>${tag.innerHTML}</h1>`;
-    } else {
-        tag.innerHTML = `✔ License Active (${diff} days remaining)`;
+    if (diffDays <= 0) {
+        window.onload = function() {
+            document.body.innerHTML = `
+                <div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a237e; color: white; font-family: sans-serif; text-align: center;">
+                    <div style="padding: 40px; border: 2px solid #ff5252; border-radius: 15px; background: rgba(0,0,0,0.3);">
+                        <h1 style="font-size: 50px; color: #ff5252;">SUBSCRIPTION EXPIRED</h1>
+                        <div style="font-size: 30px; background: #00c853; color: black; padding: 15px 40px; border-radius: 50px; font-weight: bold; margin: 20px 0;">📞 CALL: ${CONTACT_NUM}</div>
+                    </div>
+                </div>`;
+            window.print = () => false;
+        };
+        throw new Error("Expired");
+    } else if (diffDays <= 5) {
+        window.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('expiryBanner');
+            banner.style.display = 'block';
+            banner.innerHTML = `⚠️ SUBSCRIPTION WARNING: ${diffDays} day(s) remaining. Contact ${CONTACT_NUM}`;
+        });
+    }
+})();
+
+function addRegistryRow(s="", t="", r="", f="", p=5) {
+    const container = document.getElementById('regItems');
+    const div = document.createElement('div');
+    div.className = 'registry-row';
+    div.innerHTML = `<input type="text" class="r-sub" value="${s}" placeholder="Sub"><input type="text" class="r-tea" value="${t}" placeholder="Tea"><input type="text" class="r-room" value="${r}" placeholder="Rm"><input type="text" class="r-frm" value="${f}" placeholder="Frm"><input type="number" class="r-pwk" value="${p}"><button onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">✕</button>`;
+    container.appendChild(div);
+}
+
+function handleCSV(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+        const counts = {};
+        const start = (lines[0].toLowerCase().includes("teacher")) ? 1 : 0;
+        lines.slice(start).forEach(line => {
+            const c = line.split(',').map(i => i.trim());
+            if(c.length >= 2) {
+                const key = `${c[0]}|${c[1]}|${c[2] || ''}|${c[3] || 'F1'}`;
+                counts[key] = (counts[key] || 0) + 1;
+            }
+        });
+        document.getElementById('regItems').innerHTML = "";
+        for(let k in counts) {
+            const [s,t,rm,f] = k.split('|');
+            addRegistryRow(s, t, rm, f, counts[k]);
+        }
+    };
+    reader.readAsText(e.target.files[0]);
+}
+
+function buildSlots() {
+    SLOTS = [];
+    let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
+    const dur = parseInt(document.getElementById('pDur').value);
+    const total = parseInt(document.getElementById('pTotal').value);
+    for(let i=1; i<=total; i++) {
+        let sStr = cur.toTimeString().slice(0,5);
+        cur.setMinutes(cur.getMinutes() + dur);
+        SLOTS.push({ id: 'P'+i, time: `${sStr}-${cur.toTimeString().slice(0,5)}`, isB: false });
+        if(i === parseInt(document.getElementById('breakAfter').value)) {
+            let bs = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('breakLen').value));
+            SLOTS.push({ id: 'BREAK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        }
+        if(i === parseInt(document.getElementById('lunchAfter').value)) {
+            let ls = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('lunchLen').value));
+            SLOTS.push({ id: 'LUNCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, isB: true });
+        }
     }
 }
-checkExpiry();
 
-function loadProject(ev) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const p = JSON.parse(e.target.result);
-        const source = p.registry || p.reg || [];
-        REGISTRY = source.map(i => ({
-            subject: i.s || i.sub || "",
-            teacher: i.t || i.tea || "",
-            form: i.f || i.frm || "",
-            pwk: parseInt(i.p || i.pwk || 0)
-        }));
-        initUI();
-        document.getElementById('genBtn').style.display = 'inline-block';
-        alert("System Synchronized: " + REGISTRY.length + " entries loaded.");
-    };
-    reader.readAsText(ev.target.files[0]);
-}
-
-function initUI() {
-    const ts = [...new Set(REGISTRY.map(x => x.teacher))].sort();
-    const fs = [...new Set(REGISTRY.map(x => x.form))].sort();
-    document.getElementById('selTeacher').innerHTML = '<option value="">-- View Teacher --</option>' + ts.map(t => `<option>${t}</option>`).join('');
-    document.getElementById('selStream').innerHTML = '<option value="">-- View Class --</option>' + fs.map(f => `<option>${f}</option>`).join('');
+function getSpecial(d, pId) {
+    const p = parseInt(pId.replace('P',''));
+    if(d === "WEDNESDAY" && p >= 8) return "RELIGION";
+    if(d === "THURSDAY" && p >= 8) return "DEBATE";
+    if(d === "FRIDAY" && p >= 7) return "MOSQUE";
+    return null;
 }
 
 function generate() {
-    TIMETABLE = [];
-    const slots = PERIODS.filter(p => p.p !== "BREAK").map(p => p.p);
-    
-    // Sort REGISTRY: Heavy workloads first to ensure they get space
-    const sorted = [...REGISTRY].sort((a,b) => b.pwk - a.pwk);
-
-    sorted.forEach(item => {
-        let remaining = item.pwk;
-        
-        // Pass 1: Try placing double periods (not spanning break)
-        for(let d of DAYS) {
-            if(remaining < 2) break;
-            for(let i=0; i<slots.length-1; i++) {
-                const p1 = slots[i], p2 = slots[i+1];
-                if(p1 === "P4" && p2 === "P5") continue; // The "Break Yes" constraint 
-                
-                if(canPlace(d, p1, item) && canPlace(d, p2, item)) {
-                    TIMETABLE.push({...item, day: d, period: p1}, {...item, day: d, period: p2});
-                    remaining -= 2; break; 
-                }
-            }
-        }
-        
-        // Pass 2: Place remaining singles
-        for(let d of DAYS) {
-            if(remaining <= 0) break;
-            for(let p of slots) {
-                if(remaining <= 0) break;
-                if(canPlace(d, p, item)) {
-                    TIMETABLE.push({...item, day: d, period: p});
-                    remaining--;
-                }
-            }
-        }
+    REGISTRY = [];
+    document.querySelectorAll('.registry-row').forEach(r => {
+        const sub = r.querySelector('.r-sub').value.toUpperCase();
+        const tea = r.querySelector('.r-tea').value;
+        const frm = r.querySelector('.r-frm').value.toUpperCase();
+        const pwk = parseInt(r.querySelector('.r-pwk').value);
+        if(sub && tea && frm) REGISTRY.push({sub, tea, room: r.querySelector('.r-room').value, frm, pwk});
     });
+    buildSlots();
+    DATA = [];
+    REGISTRY.sort((a,b) => b.pwk - a.pwk).forEach(item => {
+        let left = item.pwk;
+        let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
+        let plan = [];
+        let dbl = Math.min(Math.floor(left/2), 5);
+        for(let i=0; i<dbl; i++) plan.push('double');
+        for(let i=0; i<(left-(dbl*2)); i++) plan.push('single');
 
+        plan.forEach(type => {
+            let placed = false;
+            for(let d of shuffledDays) {
+                if (DATA.find(x => x.d === d && x.sub === item.sub && x.frm === item.frm)) continue;
+                if(type === 'double') {
+                    for(let i=0; i < SLOTS.length-1; i++) {
+                        if(SLOTS[i].isB || SLOTS[i+1].isB || getSpecial(d, SLOTS[i].id) || getSpecial(d, SLOTS[i+1].id)) continue;
+                        if(!DATA.find(x => x.d===d && x.p===SLOTS[i].id && (x.tea===item.tea || x.frm===item.frm)) &&
+                           !DATA.find(x => x.d===d && x.p===SLOTS[i+1].id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: SLOTS[i].id}, {...item, d, p: SLOTS[i+1].id});
+                            placed = true; break;
+                        }
+                    }
+                } else {
+                    for(let s of SLOTS) {
+                        if(s.isB || getSpecial(d, s.id)) continue;
+                        if(!DATA.find(x => x.d===d && x.p===s.id && (x.tea===item.tea || x.frm===item.frm))) {
+                            DATA.push({...item, d, p: s.id});
+                            placed = true; break;
+                        }
+                    }
+                }
+                if(placed) break;
+            }
+        });
+    });
     document.getElementById('viewBar').style.display = 'block';
     renderMaster();
 }
 
-function canPlace(d, p, l) {
-    const tBusy = TIMETABLE.some(t => t.day === d && t.period === p && t.teacher === l.teacher);
-    const fBusy = TIMETABLE.some(t => t.day === d && t.period === p && t.form === l.form);
-    return !tBusy && !fBusy;
+// DRAG & DROP LOGIC
+function drag(idx) { draggedIdx = idx; }
+function drop(e, d, p, f) {
+    e.preventDefault();
+    const item = DATA[draggedIdx];
+    const targetIdx = DATA.findIndex(x => x.d === d && x.p === p && x.frm === f);
+    
+    // Swap or Move
+    if(targetIdx !== -1) {
+        DATA[targetIdx].d = item.d;
+        DATA[targetIdx].p = item.p;
+    }
+    item.d = d;
+    item.p = p;
+    item.frm = f;
+    renderMaster();
 }
 
 function renderMaster() {
-    const forms = [...new Set(REGISTRY.map(x => x.form))].sort();
-    let html = "";
+    const frms = [...new Set(DATA.map(x => x.frm))].sort();
+    let h = `<h1 style="text-align:center;">MASTER TIMETABLE</h1>`;
     DAYS.forEach(day => {
-        html += `<div class="day-section"><div class="day-label">${day}</div>`;
-        html += `<table><tr><th>CLASS</th>` + PERIODS.map(p => `<th>${p.p}<br><small>${p.t}</small></th>`).join('') + `</tr>`;
-        forms.forEach(f => {
-            html += `<tr><td style="font-weight:bold; background:#f8f9fa;">${f}</td>`;
-            PERIODS.forEach(p => {
-                if(p.p === "BREAK") html += `<td class="break-cell">TEA BREAK</td>`;
+        h += `<div class="page-break"><div class="day-title">${day}</div><table><tr><th>FORM</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+        h += `</tr>`;
+        frms.forEach(f => {
+            h += `<tr><td><b>${f}</b></td>`;
+            SLOTS.forEach(s => {
+                const sp = getSpecial(day, s.id);
+                if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else if(sp) h += `<td class="special-cell">${sp}</td>`;
                 else {
-                    const m = TIMETABLE.find(x => x.day === day && x.period === p.p && x.form === f);
-                    html += `<td>${m ? `<b>${m.subject}</b><br>${m.teacher}` : ''}</td>`;
+                    const idx = DATA.findIndex(x => x.d === day && x.p === s.id && x.frm === f);
+                    const m = DATA[idx];
+                    h += `<td ondragover="event.preventDefault()" ondrop="drop(event, '${day}', '${s.id}', '${f}')">
+                        ${m ? `<div class="slot-box" draggable="true" ondragstart="drag(${idx})"><b>${m.sub}</b><br><small>${m.tea}</small></div>` : ''}
+                    </td>`;
                 }
             });
-            html += `</tr>`;
+            h += `</tr>`;
         });
-        html += `</table></div>`;
+        h += `</table></div>`;
     });
-    document.getElementById('output').innerHTML = html;
+    document.getElementById('timetableArea').innerHTML = h;
 }
 
-function renderIndividual(type) {
-    const val = type === 'teacher' ? document.getElementById('selTeacher').value : document.getElementById('selStream').value;
-    if(!val) return;
-    
-    let whatsappText = `*OFFICIAL TIMETABLE: ${val}*%0A%0A`;
-    let html = `<div class="panel" style="max-width:900px; margin:auto;">`;
-    html += `<h2 style="text-align:center; color:var(--primary);">${val} PERSONAL SCHEDULE</h2>`;
-    html += `<table><tr><th>DAY</th>` + PERIODS.map(p => `<th>${p.p}</th>`).join('') + `</tr>`;
-    
-    DAYS.forEach(day => {
-        html += `<tr><td style="font-weight:bold">${day}</td>`;
-        whatsappText += `*${day}:*%0A`;
-        PERIODS.forEach(p => {
-            if(p.p === "BREAK") {
-                html += `<td class="break-cell">BREAK</td>`;
-            } else {
-                const m = TIMETABLE.find(x => x.day === day && x.period === p.p && (type === 'teacher' ? x.teacher === val : x.form === val));
-                const content = m ? (type === 'teacher' ? `${m.subject} (${m.form})` : `${m.subject} [${m.teacher}]`) : '-';
-                html += `<td>${content}</td>`;
-                if(m) whatsappText += `${p.p} (${p.t}): ${content}%0A`;
-            }
+function renderBulk(type) {
+    const list = [...new Set(DATA.map(x => type === 'stream' ? x.frm : x.tea))].sort();
+    let h = `<h1 class="no-print" style="text-align:center;">Bulk Print</h1>`;
+    list.forEach(val => {
+        h += `<div class="page-break"><h2 style="text-align:center;">${val}</h2><table><tr><th>DAY</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+        h += `</tr>`;
+        DAYS.forEach(d => {
+            h += `<tr><td><b>${d}</b></td>`;
+            SLOTS.forEach(s => {
+                const sp = getSpecial(d, s.id);
+                if(s.isB) h += `<td class="break-cell">${s.id}</td>`;
+                else if(sp) h += `<td class="special-cell">${sp}</td>`;
+                else {
+                    const m = DATA.find(x => x.d === d && x.p === s.id && (type==='stream' ? x.frm === val : x.tea === val));
+                    h += `<td>${m ? `<b>${m.sub}</b>` : ''}</td>`;
+                }
+            });
+            h += `</tr>`;
         });
-        whatsappText += `%0A`;
-        html += `</tr>`;
+        h += `</table></div>`;
     });
-    
-    html += `</table>`;
-    html += `<button class="btn btn-wa no-print" onclick="window.open('https://wa.me/?text=${whatsappText}')">📲 Share via WhatsApp</button></div>`;
-    document.getElementById('output').innerHTML = html;
+    document.getElementById('timetableArea').innerHTML = h;
 }
+
+function saveProject() {
+    const reg = [];
+    document.querySelectorAll('.registry-row').forEach(r => reg.push({ s: r.querySelector('.r-sub').value, t: r.querySelector('.r-tea').value, r: r.querySelector('.r-room').value, f: r.querySelector('.r-frm').value, p: r.querySelector('.r-pwk').value }));
+    const blob = new Blob([JSON.stringify({reg, data: DATA})], {type: "application/json"});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Backup.ttpro`; a.click();
+}
+
+window.onload = () => addRegistryRow("MATHEMATICS", "TEACHER", "RM1", "F1A", 5);
 </script>
 </body>
 </html>

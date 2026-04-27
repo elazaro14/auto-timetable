@@ -3,281 +3,264 @@
 <head>
 <meta charset="UTF-8">
 <title>TT-PRO Admin System</title>
-
 <style>
 :root {
   --primary:#0f172a;
   --secondary:#1e293b;
   --accent:#22c55e;
   --bg:#f1f5f9;
+  --danger:#ef4444;
 }
 
-body { margin:0; font-family:Segoe UI; display:flex; }
+body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display:flex; height: 100vh; }
 
-.sidebar {
-  width:220px; background:var(--secondary); color:white; padding:15px;
-}
+.sidebar { width:220px; background:var(--secondary); color:white; padding:15px; display: flex; flex-direction: column; }
+.sidebar h3 { text-align: center; border-bottom: 1px solid #334155; padding-bottom: 10px; color: var(--accent); }
 .sidebar button {
   width:100%; margin:5px 0; padding:10px;
   background:#334155; color:white; border:none; border-radius:6px;
-  cursor:pointer;
+  cursor:pointer; text-align: left; transition: 0.3s;
+}
+.sidebar button:hover { background: #475569; }
+
+.main { flex:1; padding:20px; background:var(--bg); overflow-y: auto; }
+
+#expiryBanner { 
+    display: none; background: #fef08a; color: #854d0e; 
+    padding: 10px; margin-bottom: 15px; border-radius: 8px; 
+    text-align: center; font-weight: bold; border: 1px solid #facc15; 
 }
 
-.main { flex:1; padding:20px; background:var(--bg); }
+.card { background:white; padding:20px; border-radius:10px; margin-bottom:15px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+h2, h3 { margin-top: 0; color: var(--primary); }
 
-.card {
-  background:white; padding:15px; border-radius:10px;
-  margin-bottom:15px;
-}
+table { width:100%; border-collapse:collapse; margin-top: 10px; }
+th, td { border:1px solid #e2e8f0; padding:10px; text-align:center; font-size: 13px; }
+th { background: #f8fafc; }
 
-table { width:100%; border-collapse:collapse; }
-th,td { border:1px solid #ccc; padding:6px; text-align:center; }
+.slot { padding:8px; border-radius:6px; cursor:grab; font-weight: 500; font-size: 11px; }
+.overload { color: var(--danger); font-weight: bold; }
+.btn-add { background: var(--accent); color: white; padding: 5px 15px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 10px; }
 
-.slot {
-  padding:5px; border-radius:6px; cursor:grab;
-}
+@media print { .sidebar, .btn-add, .no-print { display: none !important; } .main { padding: 0; } .card { box-shadow: none; border: 1px solid #eee; } }
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-<h3>TT-PRO</h3>
-
+<h3>TT-PRO DIAMOND</h3>
 <button onclick="renderDashboard()">📊 Dashboard</button>
 <button onclick="renderRegistry()">🗂 Registry</button>
-<button onclick="generate()">⚙️ Generate</button>
+<button onclick="generate()">⚙️ Generate Timetable</button>
+<button onclick="renderWorkload()">⚖️ Check Workload</button>
 
-<hr>
+<hr style="width:100%; opacity:0.1">
 
 <button onclick="renderTeachers()">👨‍🏫 Teachers</button>
 <button onclick="renderClasses()">🏫 Classes</button>
-<button onclick="renderSubjects()">📚 Subjects</button>
-<button onclick="renderRooms()">🚪 Rooms</button>
 
-<hr>
-
-<button onclick="saveData()">💾 Save</button>
-<input type="file" onchange="loadData(event)">
+<div style="margin-top: auto;">
+    <button onclick="saveData()" style="background:var(--primary)">💾 Save Project</button>
+    <input type="file" id="fileIn" style="display:none" onchange="loadData(event)">
+    <button onclick="document.getElementById('fileIn').click()">📂 Load Project</button>
+</div>
 </div>
 
 <div class="main">
-<div id="app"></div>
+    <div id="expiryBanner"></div>
+    <div id="app"></div>
 </div>
 
 <script>
+const EXPIRY_DATE = "2026-12-31";
+const CONTACT = "0763418732";
+
 let DATA=[];
 let REGISTRY=[];
 let TEACHERS=[];
 let CLASSES=[];
-let SUBJECTS=[];
-let ROOMS=[];
 
 const DAYS=["MON","TUE","WED","THU","FRI"];
-const PERIODS=["P1","P2","P3","P4","P5","P6","P7"];
+const PERIODS=["P1","P2","P3","P4","P5","P6","P7","P8"];
 
 let dragIndex=null;
 
+/* SECURITY & COUNTDOWN */
+(function() {
+    const today = new Date();
+    const expiry = new Date(EXPIRY_DATE);
+    const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+    
+    window.onload = () => {
+        if (diffDays <= 0) {
+            document.body.innerHTML = `<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--primary);color:white;"><h1>SUBSCRIPTION EXPIRED</h1><p>Contact: ${CONTACT}</p></div>`;
+        } else if (diffDays <= 5) {
+            const b = document.getElementById('expiryBanner');
+            b.style.display = 'block';
+            b.innerHTML = `⚠️ Subscription expires in ${diffDays} days. Contact ${CONTACT} for renewal.`;
+        }
+        renderDashboard();
+    };
+})();
+
 /* DASHBOARD */
 function renderDashboard(){
-let conflicts=0;
-DATA.forEach((a,i)=>{
- DATA.forEach((b,j)=>{
-  if(i!==j && a.d===b.d && a.p===b.p){
-   if(a.tea===b.tea||a.frm===b.frm) conflicts++;
-  }
- });
-});
-
-let html=`
-<div class="card">
-<h2>Dashboard</h2>
-<p>Teachers: ${TEACHERS.length}</p>
-<p>Classes: ${CLASSES.length}</p>
-<p>Subjects: ${SUBJECTS.length}</p>
-<p>Total Slots: ${DATA.length}</p>
-<p>Conflicts: ${conflicts}</p>
-</div>`;
-document.getElementById("app").innerHTML=html;
-}
-
-/* TEACHERS */
-function renderTeachers(){
-let h=`<div class="card"><h2>Teachers</h2>
-<button onclick="addTeacher()">+ Add</button><table>`;
-TEACHERS.forEach((t,i)=>{
-h+=`<tr><td>${t}</td><td><button onclick="TEACHERS.splice(${i},1);renderTeachers()">❌</button></td></tr>`;
-});
-h+="</table></div>";
-app.innerHTML=h;
-}
-function addTeacher(){
-let n=prompt("Name"); if(n) TEACHERS.push(n.toUpperCase());
-renderTeachers();
-}
-
-/* CLASSES */
-function renderClasses(){
-let h=`<div class="card"><h2>Classes</h2>
-<button onclick="addClass()">+ Add</button><table>`;
-CLASSES.forEach((c,i)=>{
-h+=`<tr><td>${c}</td><td><button onclick="CLASSES.splice(${i},1);renderClasses()">❌</button></td></tr>`;
-});
-h+="</table></div>";
-app.innerHTML=h;
-}
-function addClass(){
-let n=prompt("Class"); if(n) CLASSES.push(n.toUpperCase());
-renderClasses();
-}
-
-/* SUBJECTS */
-function renderSubjects(){
-let h=`<div class="card"><h2>Subjects</h2>
-<button onclick="addSubject()">+ Add</button><table>`;
-SUBJECTS.forEach((s,i)=>{
-h+=`<tr><td>${s}</td><td><button onclick="SUBJECTS.splice(${i},1);renderSubjects()">❌</button></td></tr>`;
-});
-h+="</table></div>";
-app.innerHTML=h;
-}
-function addSubject(){
-let n=prompt("Subject"); if(n) SUBJECTS.push(n.toUpperCase());
-renderSubjects();
-}
-
-/* ROOMS */
-function renderRooms(){
-let h=`<div class="card"><h2>Rooms</h2>
-<button onclick="addRoom()">+ Add</button><table>`;
-ROOMS.forEach((r,i)=>{
-h+=`<tr><td>${r}</td><td><button onclick="ROOMS.splice(${i},1);renderRooms()">❌</button></td></tr>`;
-});
-h+="</table></div>";
-app.innerHTML=h;
-}
-function addRoom(){
-let n=prompt("Room"); if(n) ROOMS.push(n.toUpperCase());
-renderRooms();
+    let html=`
+    <div class="card">
+        <h2>School Overview</h2>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+            <div style="background:var(--bg); padding:15px; border-radius:8px;"><b>Teachers:</b> ${TEACHERS.length}</div>
+            <div style="background:var(--bg); padding:15px; border-radius:8px;"><b>Classes:</b> ${CLASSES.length}</div>
+            <div style="background:var(--bg); padding:15px; border-radius:8px;"><b>Registry:</b> ${REGISTRY.length} Items</div>
+        </div>
+    </div>`;
+    document.getElementById("app").innerHTML=html;
 }
 
 /* REGISTRY */
 function renderRegistry(){
-let h=`<div class="card"><h2>Registry</h2>
-<button onclick="addReg()">+ Add</button><table>
-<tr><th>Sub</th><th>Teacher</th><th>Class</th><th>Periods</th></tr>`;
-
-REGISTRY.forEach((r,i)=>{
-h+=`<tr>
-<td>${r.sub}</td>
-<td>${r.tea}</td>
-<td>${r.frm}</td>
-<td>${r.pwk}</td>
-</tr>`;
-});
-
-h+="</table></div>";
-app.innerHTML=h;
+    let h=`<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+        <h2>Subject Registry</h2>
+        <button class="btn-add" onclick="addReg()">+ Add Subject Allocation</button>
+    </div>
+    <table><tr><th>Subject</th><th>Teacher</th><th>Class</th><th>Periods/Wk</th><th>Action</th></tr>`;
+    REGISTRY.forEach((r,i)=>{
+        h+=`<tr><td>${r.sub}</td><td>${r.tea}</td><td>${r.frm}</td><td>${r.pwk}</td>
+        <td><button onclick="REGISTRY.splice(${i},1);renderRegistry()">❌</button></td></tr>`;
+    });
+    document.getElementById("app").innerHTML=h+"</table></div>";
 }
 
 function addReg(){
-let sub=prompt("Subject");
-let tea=prompt("Teacher");
-let frm=prompt("Class");
-let p=parseInt(prompt("Periods"));
-if(sub&&tea&&frm) REGISTRY.push({sub,tea,frm,pwk:p});
-renderRegistry();
+    let sub = prompt("Subject Name (e.g. MATH)");
+    let tea = prompt("Teacher Name");
+    let frm = prompt("Class (e.g. F1A)");
+    let p = parseInt(prompt("Periods per Week"));
+    if(sub && tea && frm && p) {
+        REGISTRY.push({sub: sub.toUpperCase(), tea: tea.toUpperCase(), frm: frm.toUpperCase(), pwk: p});
+        if(!TEACHERS.includes(tea.toUpperCase())) TEACHERS.push(tea.toUpperCase());
+        if(!CLASSES.includes(frm.toUpperCase())) CLASSES.push(frm.toUpperCase());
+        renderRegistry();
+    }
 }
 
-/* GENERATE */
+/* GENERATE WITH DOUBLE PERIOD RULE */
 function generate(){
-DATA=[];
-REGISTRY.forEach(r=>{
-let left=r.pwk;
-DAYS.forEach(d=>{
-PERIODS.forEach(p=>{
-if(left>0 && !busy(d,p,r)){
-DATA.push({...r,d,p});
-left--;
-}
-});
-});
-});
-renderTable();
+    DATA=[];
+    // Sort registry to handle high-frequency subjects first
+    let sortedReg = [...REGISTRY].sort((a,b) => b.pwk - a.pwk);
+
+    sortedReg.forEach(r => {
+        let left = r.pwk;
+        DAYS.forEach(d => {
+            if(left <= 0) return;
+            for(let i=0; i < PERIODS.length; i++) {
+                if(left <= 0) break;
+                let p1 = PERIODS[i];
+                let p2 = PERIODS[i+1];
+
+                // DOUBLE PERIOD PRIORITY (Try once per day)
+                if(left >= 2 && p2 && !isBusy(d, p1, r) && !isBusy(d, p2, r)) {
+                    DATA.push({...r, d, p: p1}, {...r, d, p: p2});
+                    left -= 2; i++; continue; 
+                }
+                // SINGLE PERIOD FALLBACK
+                if(!isBusy(d, p1, r)) {
+                    DATA.push({...r, d, p: p1});
+                    left--;
+                }
+            }
+        });
+    });
+    renderTable();
 }
 
-function busy(d,p,r){
-return DATA.some(x=>x.d===d&&x.p===p&&(x.tea===r.tea||x.frm===r.frm));
+function isBusy(d,p,r){
+    return DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm));
 }
 
-/* TABLE */
+/* TIMETABLE VIEW (CLASS-WISE) */
 function renderTable(){
-let h="";
-CLASSES.forEach(f=>{
-h+=`<div class="card"><h3>${f}</h3><table><tr><th>Day</th>`;
-PERIODS.forEach(p=>h+=`<th>${p}</th>`);
-h+="</tr>";
-
-DAYS.forEach(d=>{
-h+=`<tr><td>${d}</td>`;
-PERIODS.forEach(p=>{
-let idx=DATA.findIndex(x=>x.d===d&&x.p===p&&x.frm===f);
-let m=DATA[idx];
-h+=`<td ondrop="drop(event,'${d}','${p}','${f}')" ondragover="event.preventDefault()">`;
-if(m){
-h+=`<div class="slot" draggable="true"
-ondragstart="drag(${idx})"
-style="background:#bbf7d0">
-${m.sub}<br>${m.tea}
-</div>`;
-}
-h+="</td>";
-});
-h+="</tr>";
-});
-h+="</table></div>";
-});
-app.innerHTML=h;
+    let h=`<div style="display:flex; justify-content:space-between; align-items:center"><h2>Generated Timetables</h2><button onclick="window.print()">🖨️ Print All</button></div>`;
+    CLASSES.sort().forEach(f => {
+        h += `<div class="card page-break"><h3>Class: ${f}</h3><table><tr><th>Day</th>`;
+        PERIODS.forEach(p => h += `<th>${p}</th>`);
+        h += `</tr>`;
+        DAYS.forEach(d => {
+            h += `<tr><td><b>${d}</b></td>`;
+            PERIODS.forEach(p => {
+                let idx = DATA.findIndex(x => x.d===d && x.p===p && x.frm===f);
+                let m = DATA[idx];
+                h += `<td ondrop="drop(event,'${d}','${p}','${f}')" ondragover="event.preventDefault()">`;
+                if(m) h += `<div class="slot" draggable="true" ondragstart="drag(${idx})" style="background:#dcfce7; border: 1px solid var(--accent)">${m.sub}<br><small>${m.tea}</small></div>`;
+                h += `</td>`;
+            });
+            h += `</tr>`;
+        });
+        h += `</table></div>`;
+    });
+    document.getElementById("app").innerHTML = h;
 }
 
-/* DRAG */
+/* WORKLOAD ANALYSIS */
+function renderWorkload() {
+    let loads = {};
+    DATA.forEach(x => loads[x.tea] = (loads[x.tea] || 0) + 1);
+    let h = `<div class="card"><h2>Teacher Workload Analysis</h2><table><tr><th>Teacher</th><th>Total Periods</th><th>Status</th></tr>`;
+    Object.keys(loads).sort().forEach(t => {
+        let count = loads[t];
+        h += `<tr class="${count > 30 ? 'overload' : ''}"><td>${t}</td><td>${count}</td><td>${count > 30 ? 'OVERLOAD' : 'OK'}</td></tr>`;
+    });
+    document.getElementById("app").innerHTML = h + `</table></div>`;
+}
+
+/* DRAG & DROP */
 function drag(i){ dragIndex=i; }
-
 function drop(e,d,p,f){
-let item=DATA[dragIndex];
-item.d=d; item.p=p; item.frm=f;
-renderTable();
+    let item = DATA[dragIndex];
+    // Simple conflict check before moving
+    if (DATA.some(x => x.d===d && x.p===p && (x.tea===item.tea || x.frm===f))) {
+        alert("Conflict detected at " + d + " " + p);
+        return;
+    }
+    item.d=d; item.p=p; item.frm=f;
+    renderTable();
 }
 
-/* SAVE */
+/* SAVE/LOAD */
 function saveData(){
-let blob=new Blob([JSON.stringify({
-DATA,REGISTRY,TEACHERS,CLASSES,SUBJECTS,ROOMS
-})]);
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="ttpro.json";
-a.click();
+    const content = JSON.stringify({DATA, REGISTRY, TEACHERS, CLASSES});
+    const blob = new Blob([content], {type: "application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `SchoolData_${new Date().toLocaleDateString()}.ttpro`;
+    a.click();
 }
 
-/* LOAD */
 function loadData(e){
-let reader=new FileReader();
-reader.onload=(ev)=>{
-let d=JSON.parse(ev.target.result);
-DATA=d.DATA||[];
-REGISTRY=d.REGISTRY||[];
-TEACHERS=d.TEACHERS||[];
-CLASSES=d.CLASSES||[];
-SUBJECTS=d.SUBJECTS||[];
-ROOMS=d.ROOMS||[];
-renderDashboard();
-};
-reader.readAsText(e.target.files[0]);
+    let reader = new FileReader();
+    reader.onload = (ev) => {
+        let d = JSON.parse(ev.target.result);
+        DATA = d.DATA || [];
+        REGISTRY = d.REGISTRY || [];
+        TEACHERS = d.TEACHERS || [];
+        CLASSES = d.CLASSES || [];
+        renderDashboard();
+    };
+    reader.readAsText(e.target.files[0]);
 }
 
-/* INIT */
-renderDashboard();
+function renderTeachers(){
+    let h = `<div class="card"><h2>Registered Teachers</h2><ul>` + TEACHERS.map(t => `<li>${t}</li>`).join('') + `</ul></div>`;
+    document.getElementById("app").innerHTML = h;
+}
+
+function renderClasses(){
+    let h = `<div class="card"><h2>Registered Classes</h2><ul>` + CLASSES.map(c => `<li>${c}</li>`).join('') + `</ul></div>`;
+    document.getElementById("app").innerHTML = h;
+}
 </script>
 
 </body>

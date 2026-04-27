@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Full Suite</title>
+<title>TT-PRO Full Suite - Tanzania Edition</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
@@ -44,7 +44,7 @@ th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9p
 th { background: #f1f5f9; }
 
 .slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
-.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; }
+.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; border: 2px solid #000 !important; }
 .load-red { color: var(--danger); font-weight: bold; }
 
 @media print { .sidebar, .top-bar { display: none !important; } .main { padding: 0; } .table-card { border: none; page-break-after: always; } }
@@ -60,18 +60,29 @@ th { background: #f1f5f9; }
         <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
     </div>
 
-    <div class="nav-label">Settings</div>
+    <div class="nav-label">Time & Interval Config</div>
     <div class="setting-card">
         <div style="display:flex; gap:5px;">
-            <div style="flex:1"><label>Start</label><input type="time" id="startTime" value="08:00"></div>
-            <div style="flex:1"><label>Period</label><input type="number" id="dur" value="40"></div>
+            <div style="flex:1"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
+            <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
         </div>
-        <div style="display:flex; gap:5px; margin-top:5px;">
-            <div style="flex:1"><label>Break After</label><input type="number" id="breakAfter" value="2"></div>
-            <div style="flex:1"><label>Lunch After</label><input type="number" id="lunchAfter" value="4"></div>
+        
+        <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
+            <label>Short Break Settings</label>
+            <div style="display:flex; gap:5px;">
+                <div style="flex:1.2"><label>After Period</label><input type="number" id="breakAfter" value="2"></div>
+                <div style="flex:1"><label>Duration</label><input type="number" id="breakDur" value="20"></div>
+            </div>
+        </div>
+
+        <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
+            <label>Lunch Settings</label>
+            <div style="display:flex; gap:5px;">
+                <div style="flex:1.2"><label>After Period</label><input type="number" id="lunchAfter" value="4"></div>
+                <div style="flex:1"><label>Duration</label><input type="number" id="lunchDur" value="45"></div>
+            </div>
         </div>
     </div>
-
     <div class="nav-label">Actions</div>
     <button class="btn btn-gen" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
     <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
@@ -149,19 +160,26 @@ function buildSlots() {
     let start = document.getElementById('startTime').value;
     let dur = parseInt(document.getElementById('dur').value);
     let cur = new Date("2026-01-01T" + start);
+    
+    // Dynamically retrieve break settings
     let bAft = parseInt(document.getElementById('breakAfter').value);
+    let bDur = parseInt(document.getElementById('breakDur').value);
     let lAft = parseInt(document.getElementById('lunchAfter').value);
+    let lDur = parseInt(document.getElementById('lunchDur').value);
 
     for(let i=1; i<=9; i++) {
         let sT = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sT}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+        
         if(i === bAft) {
-            let brkT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 20);
+            let brkT = cur.toTimeString().slice(0,5); 
+            cur.setMinutes(cur.getMinutes() + bDur);
             SLOTS.push({ id: 'BRK', time: `${brkT}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
         }
         if(i === lAft) {
-            let lchT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 45);
+            let lchT = cur.toTimeString().slice(0,5); 
+            cur.setMinutes(cur.getMinutes() + lDur);
             SLOTS.push({ id: 'LCH', time: `${lchT}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
         }
     }
@@ -176,7 +194,6 @@ function generate() {
         let left = r.pwk;
         let dayPool = shuffle([...DAYS]);
 
-        // Double Pass
         for(let d of dayPool) {
             if(left < 2) break;
             for(let i=0; i<SLOTS.length-1; i++) {
@@ -189,7 +206,6 @@ function generate() {
                 }
             }
         }
-        // Single Pass
         for(let d of dayPool) {
             if(left <= 0) break;
             if(DATA.some(x => x.d===d && x.sub===r.sub && x.frm===r.frm)) continue;
@@ -217,15 +233,10 @@ function setView(v) {
     currentView = v;
     document.querySelectorAll('.tab-group button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-'+v).classList.add('active');
-    
     let fil = document.getElementById('viewFilter');
     fil.style.display = (v==='STREAM'||v==='TEACHER') ? 'inline-block' : 'none';
-    
-    if(v==='STREAM') {
-        fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`);
-    } else if(v==='TEACHER') {
-        fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`);
-    }
+    if(v==='STREAM') { fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`); } 
+    else if(v==='TEACHER') { fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`); }
     renderActiveView();
 }
 
@@ -238,7 +249,7 @@ function renderActiveView() {
 
 function renderMaster() {
     let mode = document.getElementById('displayMode').value;
-    let h = "";
+    let h = ""; buildSlots();
     DAYS.forEach(day => {
         h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
         SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
@@ -283,17 +294,17 @@ function renderSingle(key) {
 }
 
 function renderLoads() {
-    let h = `<div class="table-card"><h3>Teacher Workload (Periods/Week)</h3><table><tr><th>Teacher Name</th><th>Total Periods</th><th>Status</th></tr>`;
+    let h = `<div class="table-card"><h3>Teacher Workload</h3><table><tr><th>Teacher Name</th><th>Periods</th><th>Status</th></tr>`;
     TEACHERS.sort().forEach(t => {
         let count = DATA.filter(x => x.tea === t).length;
-        let warn = count > 30 ? 'class="load-red"' : '';
-        h += `<tr><td>${t}</td><td ${warn}>${count}</td><td>${count > 30 ? 'OVERLOAD' : 'OK'}</td></tr>`;
+        h += `<tr><td>${t}</td><td ${count > 30 ? 'class="load-red"' : ''}>${count}</td><td>${count > 30 ? 'OVERLOAD' : 'OK'}</td></tr>`;
     });
     document.getElementById('app').innerHTML = h + `</table></div>`;
 }
 
 function saveProject() {
-    const blob = new Blob([JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS})], {type: "application/json"});
+    const payload = { DATA, REGISTRY, CLASSES, TEACHERS, schName: document.getElementById('schName').value };
+    const blob = new Blob([JSON.stringify(payload)], {type: "application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "TT_Backup.json";
@@ -305,6 +316,7 @@ function loadProject(e) {
     reader.onload = (ev) => {
         const p = JSON.parse(ev.target.result);
         DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        document.getElementById('schName').value = p.schName || "";
         renderActiveView();
     };
     reader.readAsText(e.target.files[0]);

@@ -2,66 +2,107 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Smart Reallocation</title>
+<title>TT-PRO Enterprise - Full Suite</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
-  --bg:#f8fafc; --border:#e2e8f0; --text:#334155;
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444;
 }
-body { margin:0; font-family:'Inter', sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
+body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
 
-/* SIDEBAR */
-.sidebar { width:320px; background:var(--primary); color:white; padding:20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-.sidebar h2 { color: var(--accent); text-align: center; border-bottom: 1px solid #334155; padding-bottom: 10px; }
-.setting-card { background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 5px; }
-.setting-card label { display: block; font-size: 10px; color: #94a3b8; margin-bottom: 4px; font-weight: 700; }
-.setting-card input { width: 100%; padding: 8px; border-radius: 4px; border: none; background: #0f172a; color: white; box-sizing: border-box; }
+/* SIDEBAR COMMAND CENTER */
+.sidebar { 
+    width:340px; background:var(--primary); color:white; padding:20px; 
+    display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.2); z-index:10;
+}
+.sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin:0; }
 
-.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; margin-top: 5px; }
+.setting-card { background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; }
+.setting-card label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; font-weight: 700; }
+.setting-card input, .setting-card select { 
+    width: 100%; padding: 8px; border-radius: 4px; border: none; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px;
+}
+
+.nav-label { font-size: 11px; color: #64748b; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; }
+
+.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
 .btn-gen { background: var(--accent); color: #064e3b; }
 .btn-sec { background: #475569; color: white; }
 
-/* MAIN */
+/* MAIN AREA */
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
-.top-bar { background: white; padding: 12px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
+.top-bar { background: white; padding: 10px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.tab-group { display: flex; gap: 5px; }
+.tab-group button { padding: 8px 15px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 12px; border-radius: 4px; }
+.tab-group button.active { background: var(--primary); color: white; border-color: var(--primary); }
+
 .content { flex:1; padding: 20px; overflow-y: auto; }
-.table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; }
-table { width: 100%; border-collapse: collapse; border: 2px solid #000; }
-th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 40px; }
-.slot { padding: 3px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; }
-.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; }
+.table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
+th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
+th { background: #f1f5f9; }
+
+.slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
+.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; }
+.load-red { color: var(--danger); font-weight: bold; }
+
+@media print { .sidebar, .top-bar { display: none !important; } .main { padding: 0; } .table-card { border: none; page-break-after: always; } }
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2>TT-PRO SHUFFLE</h2>
+<div class="sidebar no-print">
+    <h2>TT-PRO COMMAND</h2>
+    
     <div class="setting-card">
         <label>School Name</label>
-        <input type="text" id="schName" value="TANZANIA SECONDARY">
+        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
     </div>
+
+    <div class="nav-label">Settings</div>
     <div class="setting-card">
-        <label>Workday Settings</label>
         <div style="display:flex; gap:5px;">
+            <div style="flex:1"><label>Start</label><input type="time" id="startTime" value="08:00"></div>
+            <div style="flex:1"><label>Period</label><input type="number" id="dur" value="40"></div>
+        </div>
+        <div style="display:flex; gap:5px; margin-top:5px;">
             <div style="flex:1"><label>Break After</label><input type="number" id="breakAfter" value="2"></div>
             <div style="flex:1"><label>Lunch After</label><input type="number" id="lunchAfter" value="4"></div>
         </div>
     </div>
-    <button class="btn btn-gen" onclick="generate()">⚡ REALLOCATE & GENERATE</button>
+
+    <div class="nav-label">Actions</div>
+    <button class="btn btn-gen" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
     <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
-    <button class="btn btn-sec" onclick="saveProject()">💾 BACKUP PROJECT</button>
+    <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT BACKUP</button>
     <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 LOAD SAVED</button>
     <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
+    <button class="btn btn-sec" onclick="window.print()" style="background:#000">🖨️ PRINT VIEW</button>
 </div>
 
 <div class="main">
     <div class="top-bar">
-        <button onclick="setView('GENERAL')">Master View</button>
-        <button onclick="setView('STREAM')">By Stream</button>
-        <select id="viewFilter" onchange="renderActiveView()" style="display:none;"></select>
+        <div class="tab-group">
+            <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
+            <button id="tab-STREAM" onclick="setView('STREAM')">Stream</button>
+            <button id="tab-TEACHER" onclick="setView('TEACHER')">Teacher</button>
+            <button id="tab-LOADS" onclick="setView('LOADS')">Loads</button>
+        </div>
+        
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label style="font-size: 11px; font-weight: bold;">DISPLAY:</label>
+            <select id="displayMode" onchange="renderActiveView()" style="padding: 5px; font-size: 11px;">
+                <option value="both">Subject + Teacher</option>
+                <option value="sub">Subject Only</option>
+            </select>
+            <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 120px;"></select>
+        </div>
     </div>
+
     <div class="content">
+        <div id="header" style="text-align:center; margin-bottom:15px;"><h1 id="headerTitle">TANZANIA SECONDARY SCHOOL</h1></div>
         <div id="app"></div>
     </div>
 </div>
@@ -70,7 +111,6 @@ th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9p
 let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
 const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
-// Helper to randomize arrays so "Generate" creates a new version every time
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -95,59 +135,68 @@ function handleCSV(e) {
         REGISTRY = []; CLASSES = []; TEACHERS = [];
         for (let key in rawMap) {
             const [sub, tea, frm] = key.split('|');
-            REGISTRY.push({ sub, tea, frm, pwk: rawMap[key] });
+            REGISTRY.push({ sub, tea, frm, pwk: parseInt(rawMap[key]) });
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
         }
-        alert("CSV Imported!");
+        alert("CSV Loaded!");
     };
     reader.readAsText(e.target.files[0]);
 }
 
 function buildSlots() {
     SLOTS = [];
+    let start = document.getElementById('startTime').value;
+    let dur = parseInt(document.getElementById('dur').value);
+    let cur = new Date("2026-01-01T" + start);
     let bAft = parseInt(document.getElementById('breakAfter').value);
     let lAft = parseInt(document.getElementById('lunchAfter').value);
+
     for(let i=1; i<=9; i++) {
-        SLOTS.push({ id: 'P'+i, type: 'period' });
-        if(i === bAft) SLOTS.push({ id: 'BREAK', type: 'break' });
-        if(i === lAft) SLOTS.push({ id: 'LUNCH', type: 'lunch' });
+        let sT = cur.toTimeString().slice(0,5);
+        cur.setMinutes(cur.getMinutes() + dur);
+        SLOTS.push({ id: 'P'+i, time: `${sT}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+        if(i === bAft) {
+            let brkT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 20);
+            SLOTS.push({ id: 'BRK', time: `${brkT}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
+        }
+        if(i === lAft) {
+            let lchT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 45);
+            SLOTS.push({ id: 'LCH', time: `${lchT}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
+        }
     }
 }
 
 function generate() {
     DATA = []; buildSlots();
-    // Shuffle the Registry so the subjects pick slots in a different order each time
-    let subjects = shuffle([...REGISTRY]);
+    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
+    let pool = shuffle([...REGISTRY]);
 
-    subjects.forEach(r => {
+    pool.forEach(r => {
         let left = r.pwk;
-        let shuffledDays = shuffle([...DAYS]);
+        let dayPool = shuffle([...DAYS]);
 
-        // Priority Doubles
-        for(let day of shuffledDays) {
+        // Double Pass
+        for(let d of dayPool) {
             if(left < 2) break;
             for(let i=0; i<SLOTS.length-1; i++) {
                 let s1 = SLOTS[i], s2 = SLOTS[i+1];
-                if(s1.type==='period' && s2.type==='period' && !isSpecial(day, s1.id) && !isSpecial(day, s2.id)) {
-                    if(!isBusy(day, s1.id, r) && !isBusy(day, s2.id, r)) {
-                        DATA.push({...r, d: day, p: s1.id}, {...r, d: day, p: s2.id});
+                if(s1.type==='period' && s2.type==='period' && !isSpecial(d, s1.id) && !isSpecial(d, s2.id)) {
+                    if(!isBusy(d, s1.id, r) && !isBusy(d, s2.id, r)) {
+                        DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
                         left -= 2; break;
                     }
                 }
             }
         }
-
-        // Singles
-        for(let day of shuffledDays) {
+        // Single Pass
+        for(let d of dayPool) {
             if(left <= 0) break;
-            // Strict: Max 1 session per day
-            if(DATA.some(x => x.d===day && x.sub===r.sub && x.frm===r.frm)) continue;
-
-            let shuffledPeriods = shuffle([...SLOTS].filter(s => s.type === 'period'));
-            for(let s of shuffledPeriods) {
-                if(!isSpecial(day, s.id) && !isBusy(day, s.id, r)) {
-                    DATA.push({...r, d: day, p: s.id});
+            if(DATA.some(x => x.d===d && x.sub===r.sub && x.frm===r.frm)) continue;
+            let pPool = shuffle(SLOTS.filter(s => s.type==='period'));
+            for(let s of pPool) {
+                if(!isSpecial(d, s.id) && !isBusy(d, s.id, r)) {
+                    DATA.push({...r, d, p: s.id});
                     left--; break;
                 }
             }
@@ -158,17 +207,41 @@ function generate() {
 
 function isBusy(d,p,r){ return DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm)); }
 function isSpecial(day, p) {
-    if(day === 'WEDNESDAY' && (p === 'P8' || p === 'P9')) return true;
-    if(day === 'THURSDAY' && (p === 'P8' || p === 'P9')) return true;
-    if(day === 'FRIDAY' && (p === 'P7' || p === 'P8' || p === 'P9')) return true;
+    if(day==='WEDNESDAY' && (p==='P8'||p==='P9')) return true;
+    if(day==='THURSDAY' && (p==='P8'||p==='P9')) return true;
+    if(day==='FRIDAY' && (p==='P7'||p==='P8'||p==='P9')) return true;
     return false;
 }
 
+function setView(v) {
+    currentView = v;
+    document.querySelectorAll('.tab-group button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+v).classList.add('active');
+    
+    let fil = document.getElementById('viewFilter');
+    fil.style.display = (v==='STREAM'||v==='TEACHER') ? 'inline-block' : 'none';
+    
+    if(v==='STREAM') {
+        fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`);
+    } else if(v==='TEACHER') {
+        fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`);
+    }
+    renderActiveView();
+}
+
+function renderActiveView() {
+    if(currentView==='GENERAL') renderMaster();
+    else if(currentView==='STREAM') renderSingle('frm');
+    else if(currentView==='TEACHER') renderSingle('tea');
+    else if(currentView==='LOADS') renderLoads();
+}
+
 function renderMaster() {
+    let mode = document.getElementById('displayMode').value;
     let h = "";
     DAYS.forEach(day => {
-        h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Stream</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+        h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
         h += `</tr>`;
         CLASSES.sort().forEach(f => {
             h += `<tr><td style="font-weight:bold">${f}</td>`;
@@ -177,7 +250,8 @@ function renderMaster() {
                 else if(isSpecial(day, s.id)) h += `<td style="background:#fef3c7;font-size:7px">SPEC</td>`;
                 else {
                     let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    h += `<td>${m?`<div class="slot">${m.sub}<br>${m.tea}</div>`:''}</td>`;
+                    let txt = m ? (mode==='both' ? `${m.sub}<br>${m.tea}` : m.sub) : '';
+                    h += `<td>${m ? `<div class="slot">${txt}</div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -187,11 +261,42 @@ function renderMaster() {
     document.getElementById('app').innerHTML = h;
 }
 
+function renderSingle(key) {
+    const val = document.getElementById('viewFilter').value;
+    const mode = document.getElementById('displayMode').value;
+    let h = `<div class="table-card"><h3>${val} Timetable</h3><table><tr><th>Day</th>`;
+    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+    h += `</tr>`;
+    DAYS.forEach(d => {
+        h += `<tr><td><b>${d}</b></td>`;
+        SLOTS.forEach(s => {
+            if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}</td>`;
+            else {
+                let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
+                let txt = m ? (key==='tea' ? m.frm : (mode==='both' ? `${m.sub}<br>${m.tea}` : m.sub)) : '';
+                h += `<td>${m ? `<div class="slot">${txt}</div>` : ''}</td>`;
+            }
+        });
+        h += `</tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
+}
+
+function renderLoads() {
+    let h = `<div class="table-card"><h3>Teacher Workload (Periods/Week)</h3><table><tr><th>Teacher Name</th><th>Total Periods</th><th>Status</th></tr>`;
+    TEACHERS.sort().forEach(t => {
+        let count = DATA.filter(x => x.tea === t).length;
+        let warn = count > 30 ? 'class="load-red"' : '';
+        h += `<tr><td>${t}</td><td ${warn}>${count}</td><td>${count > 30 ? 'OVERLOAD' : 'OK'}</td></tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
+}
+
 function saveProject() {
     const blob = new Blob([JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS})], {type: "application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `TT_Backup.json`;
+    a.download = "TT_Backup.json";
     a.click();
 }
 
@@ -203,38 +308,6 @@ function loadProject(e) {
         renderActiveView();
     };
     reader.readAsText(e.target.files[0]);
-}
-
-function setView(v) { 
-    currentView = v; 
-    let fil = document.getElementById('viewFilter'); 
-    fil.style.display = v==='STREAM'?'inline-block':'none';
-    if(v==='STREAM') {
-        fil.innerHTML = '';
-        CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`);
-    }
-    renderActiveView(); 
-}
-
-function renderActiveView() { if(currentView==='GENERAL') renderMaster(); else renderStream(); }
-
-function renderStream() {
-    const f = document.getElementById('viewFilter').value;
-    let h = `<div class="table-card"><h3>Stream: ${f}</h3><table><tr><th>Day</th>`;
-    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
-    h += `</tr>`;
-    DAYS.forEach(d => {
-        h += `<tr><td><b>${d}</b></td>`;
-        SLOTS.forEach(s => {
-            if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}</td>`;
-            else {
-                let m = DATA.find(x => x.d===d && x.p===s.id && x.frm===f);
-                h += `<td>${m?`<div class="slot">${m.sub}<br>${m.tea}</div>`:''}</td>`;
-            }
-        });
-        h += `</tr>`;
-    });
-    document.getElementById('app').innerHTML = h + `</table></div>`;
 }
 </script>
 </body>

@@ -2,13 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Full Suite - Tanzania Edition</title>
+<title>TT-PRO Enterprise - Secured Edition</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
-  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444;
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b;
 }
 body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
+
+/* EXPIRY ALERT STYLES */
+#expiryBanner { display:none; background: var(--warning); color: #000; text-align: center; padding: 8px; font-weight: bold; font-size: 13px; z-index: 100; }
+#lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); color:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 
 /* SIDEBAR COMMAND CENTER */
 .sidebar { 
@@ -47,10 +51,15 @@ th { background: #f1f5f9; }
 .break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; border: 2px solid #000 !important; }
 .load-red { color: var(--danger); font-weight: bold; }
 
-@media print { .sidebar, .top-bar { display: none !important; } .main { padding: 0; } .table-card { border: none; page-break-after: always; } }
+@media print { .sidebar, .top-bar, #expiryBanner { display: none !important; } .main { padding: 0; } .table-card { border: none; page-break-after: always; } }
 </style>
 </head>
 <body>
+
+<div id="lockScreen">
+    <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
+    <p>Please contact support to renew your Enterprise License for 2027.</p>
+</div>
 
 <div class="sidebar no-print">
     <h2>TT-PRO COMMAND</h2>
@@ -66,26 +75,17 @@ th { background: #f1f5f9; }
             <div style="flex:1"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
             <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
         </div>
-        
         <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
-            <label>Short Break Settings</label>
-            <div style="display:flex; gap:5px;">
-                <div style="flex:1.2"><label>After Period</label><input type="number" id="breakAfter" value="2"></div>
-                <div style="flex:1"><label>Duration</label><input type="number" id="breakDur" value="20"></div>
-            </div>
-        </div>
-
-        <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
-            <label>Lunch Settings</label>
-            <div style="display:flex; gap:5px;">
-                <div style="flex:1.2"><label>After Period</label><input type="number" id="lunchAfter" value="4"></div>
-                <div style="flex:1"><label>Duration</label><input type="number" id="lunchDur" value="45"></div>
-            </div>
+            <label>Break After P:</label>
+            <input type="number" id="breakAfter" value="2">
+            <label>Lunch After P:</label>
+            <input type="number" id="lunchAfter" value="4">
         </div>
     </div>
+
     <div class="nav-label">Actions</div>
-    <button class="btn btn-gen" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
-    <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
+    <button class="btn btn-gen" id="genBtn" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
+    <button class="btn btn-sec" id="impBtn" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
     <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT BACKUP</button>
     <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 LOAD SAVED</button>
@@ -94,6 +94,7 @@ th { background: #f1f5f9; }
 </div>
 
 <div class="main">
+    <div id="expiryBanner">⚠️ ALERT: License expires in <span id="daysLeft"></span> days. Contact administrator soon.</div>
     <div class="top-bar">
         <div class="tab-group">
             <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
@@ -119,6 +120,25 @@ th { background: #f1f5f9; }
 </div>
 
 <script>
+// --- SECURITY & EXPIRY LOGIC ---
+const EXPIRY_DATE = new Date("2026-12-31"); // Change this for license control
+
+function checkSecurity() {
+    const today = new Date();
+    const diffTime = EXPIRY_DATE - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+        document.getElementById('lockScreen').style.display = 'flex';
+        document.getElementById('genBtn').disabled = true;
+        document.getElementById('impBtn').disabled = true;
+    } else if (diffDays <= 5) {
+        document.getElementById('expiryBanner').style.display = 'block';
+        document.getElementById('daysLeft').innerText = diffDays;
+    }
+}
+
+// --- CORE DATA & SHUFFLE ---
 let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
 const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
@@ -129,6 +149,16 @@ function shuffle(array) {
     }
     return array;
 }
+
+window.onload = () => {
+    checkSecurity();
+    const saved = localStorage.getItem('TT_PERSIST');
+    if(saved) {
+        const p = JSON.parse(saved);
+        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        renderActiveView();
+    }
+};
 
 function handleCSV(e) {
     const reader = new FileReader();
@@ -150,7 +180,7 @@ function handleCSV(e) {
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
         }
-        alert("CSV Loaded!");
+        alert("CSV Data Processed.");
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -160,26 +190,19 @@ function buildSlots() {
     let start = document.getElementById('startTime').value;
     let dur = parseInt(document.getElementById('dur').value);
     let cur = new Date("2026-01-01T" + start);
-    
-    // Dynamically retrieve break settings
     let bAft = parseInt(document.getElementById('breakAfter').value);
-    let bDur = parseInt(document.getElementById('breakDur').value);
     let lAft = parseInt(document.getElementById('lunchAfter').value);
-    let lDur = parseInt(document.getElementById('lunchDur').value);
 
     for(let i=1; i<=9; i++) {
         let sT = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sT}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
-        
         if(i === bAft) {
-            let brkT = cur.toTimeString().slice(0,5); 
-            cur.setMinutes(cur.getMinutes() + bDur);
+            let brkT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 20);
             SLOTS.push({ id: 'BRK', time: `${brkT}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
         }
         if(i === lAft) {
-            let lchT = cur.toTimeString().slice(0,5); 
-            cur.setMinutes(cur.getMinutes() + lDur);
+            let lchT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 45);
             SLOTS.push({ id: 'LCH', time: `${lchT}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
         }
     }
@@ -187,7 +210,6 @@ function buildSlots() {
 
 function generate() {
     DATA = []; buildSlots();
-    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
     let pool = shuffle([...REGISTRY]);
 
     pool.forEach(r => {
@@ -218,6 +240,7 @@ function generate() {
             }
         }
     });
+    localStorage.setItem('TT_PERSIST', JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS}));
     renderActiveView();
 }
 
@@ -316,7 +339,6 @@ function loadProject(e) {
     reader.onload = (ev) => {
         const p = JSON.parse(ev.target.result);
         DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
-        document.getElementById('schName').value = p.schName || "";
         renderActiveView();
     };
     reader.readAsText(e.target.files[0]);

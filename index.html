@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Admin - Tanzania Edition</title>
+<title>TT-PRO Admin - Master General View</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
@@ -17,7 +17,7 @@ body { margin:0; font-family:'Segoe UI', sans-serif; display:flex; height: 100vh
 
 .config-group { background: #1e293b; border: 1px solid #334155; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
 .config-group label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
-.config-group select, .config-group input { width: 100%; padding: 6px; border-radius: 4px; border: none; margin-bottom: 5px; box-sizing: border-box; }
+.config-group input { width: 100%; padding: 6px; border-radius: 4px; border: none; margin-bottom: 5px; box-sizing: border-box; }
 
 .sidebar button {
   width:100%; margin:4px 0; padding:10px;
@@ -28,22 +28,25 @@ body { margin:0; font-family:'Segoe UI', sans-serif; display:flex; height: 100vh
 
 /* MAIN CONTENT */
 .main { flex:1; padding:20px; background:var(--bg); overflow-y: auto; }
-.view-controls { display: flex; gap: 10px; margin-bottom: 15px; background: white; padding: 10px; border-radius: 8px; align-items: center; }
+.view-controls { display: flex; gap: 10px; margin-bottom: 15px; background: white; padding: 10px; border-radius: 8px; align-items: center; border: 1px solid #e2e8f0; }
 
 .card { background:white; padding:20px; border-radius:10px; margin-bottom:20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 table { width:100%; border-collapse:collapse; background: white; border: 2px solid #000; table-layout: fixed; }
-th, td { border: 1px solid #000; padding:4px; text-align:center; font-size: 10px; height: 40px; overflow: hidden; }
+th, td { border: 1px solid #000; padding:4px; text-align:center; font-size: 9px; min-height: 40px; }
 th { background: #f1f5f9; font-weight: bold; }
 
-.break-cell { background: #cbd5e1; font-weight: bold; width: 25px; writing-mode: vertical-rl; text-orientation: mixed; }
+.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; }
 .special-cell { background: #fef3c7; color: #92400e; font-weight: bold; font-size: 8px; }
-.slot { padding:2px; border-radius:3px; font-weight: 600; font-size: 9px; background: #dcfce7; border: 1px solid var(--accent); }
+.master-stream-label { background: #f8fafc; font-weight: bold; border-right: 2px solid #000 !important; }
+
+.slot { padding:2px; border-radius:3px; font-weight: 600; font-size: 9px; background: #dcfce7; border: 1px solid var(--accent); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 @media print { 
     .sidebar, .no-print, .view-controls { display: none !important; } 
     .main { padding: 0; } 
-    .card { box-shadow: none; page-break-after: always; border: none; }
-    h2 { font-size: 18px; text-align: center; }
+    .card { box-shadow: none; border: none; }
+    table { width: 100%; font-size: 8px; }
+    .page-break { page-break-after: always; }
 }
 </style>
 </head>
@@ -51,7 +54,7 @@ th { background: #f1f5f9; font-weight: bold; }
 <body>
 
 <div class="sidebar no-print">
-    <h3>TT-PRO ADMIN</h3>
+    <h3>TT-PRO MASTER</h3>
     
     <div class="config-group">
         <label>Start Time</label>
@@ -59,27 +62,21 @@ th { background: #f1f5f9; font-weight: bold; }
     </div>
 
     <button onclick="renderDashboard()">📊 Dashboard</button>
-    <button onclick="renderRegistry()">🗂 Registry</button>
-    <button onclick="generate()">⚙️ Generate Timetable</button>
-
-    <hr style="opacity:0.1; margin:10px 0;">
-    
+    <button onclick="generate()">⚙️ Re-Generate & Refresh</button>
     <button onclick="saveProject()" style="background:var(--accent)">💾 Save Project</button>
-    <button onclick="document.getElementById('loadProj').click()" style="background:#4b5563;">📂 Load Saved</button>
-    <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
-    <button onclick="document.getElementById('csvIn').click()" style="background:var(--info)">📥 Upload CSV</button>
+    <button onclick="document.getElementById('csvIn').click()" style="background:var(--info)">📥 Import CSV</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
-    <button onclick="window.print()" style="background:#1e293b; border:1px solid #334155;">🖨️ Print View</button>
+    <button onclick="window.print()" style="background:#1e293b;">🖨️ Print Master View</button>
 </div>
 
 <div class="main">
     <div class="view-controls no-print">
-        <b>View Mode:</b>
-        <button onclick="setView('GENERAL')" style="padding:5px 10px">General</button>
-        <button onclick="setView('STREAM')" style="padding:5px 10px">By Stream</button>
-        <button onclick="setView('TEACHER')" style="padding:5px 10px">By Teacher</button>
+        <b>Switch View Mode:</b>
+        <button onclick="setView('GENERAL')">General (All Streams)</button>
+        <button onclick="setView('STREAM')">Individual Stream</button>
+        <button onclick="setView('TEACHER')">Teacher View</button>
         
-        <select id="viewFilter" onchange="renderActiveView()" style="padding:5px; margin-left:10px; display:none;"></select>
+        <select id="viewFilter" onchange="renderActiveView()" style="padding:5px; margin-left:10px; display:none; border: 1px solid #ccc; border-radius: 4px;"></select>
     </div>
     
     <div id="app"></div>
@@ -130,7 +127,7 @@ function handleCSV(e) {
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
         }
-        alert("Import Successful!");
+        alert("Data Loaded. Click 'Generate' to create the master view.");
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -145,7 +142,7 @@ function generate(){
         DAYS.forEach(day => {
             if(left <= 0) return;
             let placedToday = false;
-            // Try Double
+            // Double Period Logic
             if(left >= 2) {
                 for(let i=0; i < SLOTS.length - 1; i++) {
                     let s1 = SLOTS[i], s2 = SLOTS[i+1];
@@ -155,7 +152,7 @@ function generate(){
                     }
                 }
             }
-            // Try Single
+            // Single Period Logic
             if(!placedToday && left >= 1) {
                 for(let i=0; i < SLOTS.length; i++) {
                     let s = SLOTS[i];
@@ -171,57 +168,61 @@ function generate(){
 }
 
 function isBusy(d,p,r){ return DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm)); }
+
 function isSpecial(day, p) {
-    if(day === 'WEDNESDAY' && (p === 'P8' || p === 'P9')) return true;
-    if(day === 'THURSDAY' && (p === 'P8' || p === 'P9')) return true;
-    if(day === 'FRIDAY' && (p === 'P7' || p === 'P8' || p === 'P9')) return true;
+    if(day === 'WEDNESDAY' && (p === 'P8' || p === 'P9')) return true; // Religion
+    if(day === 'THURSDAY' && (p === 'P8' || p === 'P9')) return true;  // Debate
+    if(day === 'FRIDAY' && (p === 'P7' || p === 'P8' || p === 'P9')) return true; // Mosque
     return false;
 }
 
-/* VIEW MANAGEMENT */
 function setView(mode) {
     currentView = mode;
     const filter = document.getElementById('viewFilter');
-    filter.style.display = mode === 'GENERAL' ? 'none' : 'block';
+    filter.style.display = (mode === 'GENERAL') ? 'none' : 'block';
     filter.innerHTML = '';
-    
     let list = mode === 'STREAM' ? CLASSES.sort() : TEACHERS.sort();
     list.forEach(item => filter.innerHTML += `<option value="${item}">${item}</option>`);
-    
     renderActiveView();
 }
 
 function renderActiveView() {
-    if(currentView === 'GENERAL') renderGeneral();
+    if(currentView === 'GENERAL') renderMasterGeneral();
     else if(currentView === 'STREAM') renderFiltered('frm');
     else renderFiltered('tea');
 }
 
-function renderGeneral() {
-    let h = `<div class="card"><h2>GENERAL SCHOOL TIMETABLE</h2>`;
-    CLASSES.sort().forEach(f => {
-        h += `<h3>${f}</h3><table><tr><th>Day</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+/* MASTER GENERAL VIEW: ALL STREAMS ON ONE PAGE */
+function renderMasterGeneral() {
+    let h = `<h2>MASTER GENERAL TIMETABLE (ALL STREAMS)</h2>`;
+    DAYS.forEach(day => {
+        h += `<div class="card page-break"><h3>${day}</h3><table><tr><th style="width:60px">Stream</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
         h += `</tr>`;
-        DAYS.forEach(d => {
-            h += `<tr><td><b>${d.slice(0,3)}</b></td>`;
+        
+        CLASSES.sort().forEach(f => {
+            h += `<tr><td class="master-stream-label">${f}</td>`;
             SLOTS.forEach(s => {
                 if(s.type === 'break') h += `<td class="break-cell">BRK</td>`;
-                else if(isSpecial(d, s.id)) h += `<td class="special-cell">BLOCKED</td>`;
-                else {
-                    let m = DATA.find(x => x.d===d && x.p===s.id && x.frm===f);
-                    h += `<td>${m ? `<div class="slot">${m.sub}</div>` : ''}</td>`;
+                else if(isSpecial(day, s.id)) {
+                    let txt = day==='WEDNESDAY'?'REL':'DEB';
+                    if(day==='FRIDAY') txt='MSQ';
+                    h += `<td class="special-cell">${txt}</td>`;
+                } else {
+                    let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
+                    h += `<td>${m ? `<div class="slot">${m.sub}<br>${m.tea}</div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
         });
-        h += `</table><br>`;
+        h += `</table></div>`;
     });
-    document.getElementById("app").innerHTML = h + `</div>`;
+    document.getElementById("app").innerHTML = h;
 }
 
 function renderFiltered(key) {
     const val = document.getElementById('viewFilter').value;
+    if(!val) return;
     let h = `<div class="card"><h2>${currentView}: ${val}</h2><table><tr><th>Day</th>`;
     SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
     h += `</tr>`;
@@ -229,10 +230,7 @@ function renderFiltered(key) {
         h += `<tr><td><b>${d}</b></td>`;
         SLOTS.forEach(s => {
             if(s.type === 'break') h += `<td class="break-cell">BREAK</td>`;
-            else if(isSpecial(d, s.id)) {
-                let txt = d === 'WEDNESDAY' ? 'RELIGION' : (d==='THURSDAY' ? 'DEBATE' : 'MOSQUE');
-                h += `<td class="special-cell">${txt}</td>`;
-            }
+            else if(isSpecial(d, s.id)) h += `<td class="special-cell">SPECIAL BLOCK</td>`;
             else {
                 let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
                 h += `<td>${m ? `<div class="slot"><b>${m.sub}</b><br>${key==='tea'?m.frm:m.tea}</div>` : ''}</td>`;
@@ -247,26 +245,12 @@ function saveProject() {
     const blob = new Blob([JSON.stringify({REGISTRY, DATA, CLASSES, TEACHERS})], {type: "application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "Final_Timetable.json";
+    a.download = "Master_School_Project.json";
     a.click();
 }
 
-function loadProject(e) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        const p = JSON.parse(ev.target.result);
-        REGISTRY = p.REGISTRY || []; DATA = p.DATA || []; CLASSES = p.CLASSES || []; TEACHERS = p.TEACHERS || [];
-        buildTimeSlots();
-        renderActiveView();
-    };
-    reader.readAsText(e.target.files[0]);
-}
-
-function renderDashboard() { setView('GENERAL'); }
-function renderRegistry() {
-    let h = `<div class="card"><h2>Registry</h2><table><tr><th>Sub</th><th>Teacher</th><th>Class</th><th>P/W</th></tr>`;
-    REGISTRY.forEach(r => h += `<tr><td>${r.sub}</td><td>${r.tea}</td><td>${r.frm}</td><td>${r.pwk}</td></tr>`);
-    document.getElementById("app").innerHTML = h + "</table></div>";
+function renderDashboard() {
+    document.getElementById("app").innerHTML = `<div class="card"><h2>System Dashboard</h2><p>Registered Streams: ${CLASSES.length}</p><p>Registered Teachers: ${TEACHERS.length}</p></div>`;
 }
 </script>
 </body>

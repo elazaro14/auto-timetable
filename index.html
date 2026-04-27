@@ -8,57 +8,40 @@
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
   --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444;
 }
-body { margin:0; font-family:'Inter', system-ui, -apple-system, sans-serif; display:flex; height: 100vh; background:var(--bg); color: var(--text); overflow:hidden; }
+body { margin:0; font-family:'Inter', sans-serif; display:flex; height: 100vh; background:var(--bg); color: var(--text); overflow:hidden; }
 
 /* SIDEBAR COMMAND CENTER */
 .sidebar { 
-    width:320px; background:var(--primary); color:white; padding:20px; 
-    display: flex; flex-direction: column; gap: 15px; overflow-y: auto;
+    width:340px; background:var(--primary); color:white; padding:20px; 
+    display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
     box-shadow: 4px 0 15px rgba(0,0,0,0.2); z-index:10;
 }
-.sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 12px; margin-top:0; }
+.sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 12px; margin:0; }
 
-.setting-card { background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 5px; }
+.setting-card { background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; }
 .setting-card label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; font-weight: 700; }
-.setting-card input[type="text"], .setting-card input[type="time"], .setting-card input[type="number"] { 
-    width: 100%; padding: 8px; border-radius: 4px; border: none; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box;
+.setting-card input, .setting-card select { 
+    width: 100%; padding: 8px; border-radius: 4px; border: none; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px;
 }
 
-.toggle-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #cbd5e1; margin-top: 8px; cursor: pointer; }
+.toggle-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #cbd5e1; margin-top: 5px; cursor: pointer; }
 
-.btn { 
-    width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; 
-    font-weight: 700; font-size: 13px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn-gen { background: var(--accent); color: #064e3b; margin-top: 10px; }
-.btn-sec { background: #475569; color: white; margin-top: 5px; }
-.btn-danger { background: var(--danger); color: white; margin-top: 5px; }
-.btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
-
-/* MAIN INTERFACE */
-.main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
-.top-bar { background: white; padding: 12px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.view-tabs button { padding: 8px 16px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 13px; font-weight: 500; }
-.view-tabs button:first-child { border-radius: 6px 0 0 6px; }
-.view-tabs button:last-child { border-radius: 0 6px 6px 0; }
-.view-tabs button.active { background: #f1f5f9; border-color: #cbd5e1; font-weight: 700; }
-
-.content { flex:1; padding: 20px; overflow-y: auto; }
-.master-header { text-align: center; margin-bottom: 20px; }
-.master-header img { max-height: 70px; margin-bottom: 10px; border-radius: 4px; }
+.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 5px; }
+.btn-gen { background: var(--accent); color: #064e3b; }
+.btn-sec { background: #475569; color: white; }
 
 /* TABLE STYLING */
+.main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
+.top-bar { background: white; padding: 12px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.content { flex:1; padding: 20px; overflow-y: auto; }
 .table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid #000; }
-th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; height: 42px; vertical-align: middle; }
-th { background: #f1f5f9; font-weight: 800; }
-.stream-name { background: #f8fafc; font-weight: 800; border-right: 2px solid #000 !important; }
+th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 42px; }
+th { background: #f1f5f9; }
+.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; }
+.slot { padding: 3px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; }
 
-.slot { padding: 3px; border-radius: 4px; font-weight: 700; font-size: 9px; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
-.break-cell { background: #cbd5e1; font-weight: bold; width: 25px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; }
-.special-cell { background: #fef3c7; color: #92400e; font-weight: 900; font-size: 8px; border: 1px dashed #f59e0b; }
-
-@media print { .sidebar, .top-bar, .no-print { display: none !important; } .main { padding: 0; } .table-card { border: none; box-shadow: none; padding: 0; page-break-after: always; } }
+@media print { .sidebar, .top-bar, .no-print { display: none !important; } .main { padding: 0; } .table-card { page-break-after: always; } }
 </style>
 </head>
 <body>
@@ -68,70 +51,63 @@ th { background: #f1f5f9; font-weight: 800; }
 
     <div class="setting-card">
         <label>School Name</label>
-        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL" oninput="updateBranding()">
-        <label style="margin-top:8px">School Logo (URL or local)</label>
-        <input type="text" id="schLogoUrl" placeholder="Logo Link" oninput="updateBranding()">
+        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
     </div>
 
     <div class="setting-card">
-        <label>Time Schedule</label>
-        <div style="display: flex; gap: 8px;">
+        <label>Base Schedule</label>
+        <div style="display: flex; gap: 5px;">
             <div style="flex:1"><label>Start</label><input type="time" id="startTime" value="08:00"></div>
-            <div style="flex:1"><label>Duration</label><input type="number" id="dur" value="40"></div>
+            <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
         </div>
     </div>
 
     <div class="setting-card">
-        <label>Generation Logic</label>
-        <label class="toggle-row"><input type="checkbox" id="strictDay" checked> Strict: Max 1 Entry / Day</label>
-        <label class="toggle-row"><input type="checkbox" id="doublePri" checked> Force Double Periods</label>
-        <label class="toggle-row"><input type="checkbox" id="blockSpec" checked> Enable Special Blocks</label>
+        <label>Break Configuration</label>
+        <label class="toggle-row"><input type="checkbox" id="breakOn" checked> Enable Short Break</label>
+        <div id="breakSettings" style="display: flex; gap: 5px; margin-top:5px;">
+            <div style="flex:1"><label>After P:</label><input type="number" id="breakAfter" value="2"></div>
+            <div style="flex:1"><label>Min:</label><input type="number" id="breakDur" value="20"></div>
+        </div>
+        <hr style="opacity: 0.1; margin: 10px 0;">
+        <label class="toggle-row"><input type="checkbox" id="lunchOn" checked> Enable Lunch</label>
+        <div id="lunchSettings" style="display: flex; gap: 5px; margin-top:5px;">
+            <div style="flex:1"><label>After P:</label><input type="number" id="lunchAfter" value="4"></div>
+            <div style="flex:1"><label>Min:</label><input type="number" id="lunchDur" value="45"></div>
+        </div>
     </div>
 
-    <div style="margin-top: 10px;">
-        <button class="btn btn-gen" onclick="generate()">⚡ GENERATE TIMETABLE</button>
-        <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV DATA</button>
-        <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
+    <div class="setting-card">
+        <label>Logic</label>
+        <label class="toggle-row"><input type="checkbox" id="strictDay" checked> Max 1 Entry/Day</label>
+        <label class="toggle-row"><input type="checkbox" id="doublePri" checked> Prioritize Doubles</label>
     </div>
 
-    <div style="margin-top: auto;">
-        <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT JSON</button>
-        <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 RESTORE BACKUP</button>
-        <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
-        <button class="btn btn-danger" onclick="window.print()">🖨️ PRINT CURRENT VIEW</button>
-    </div>
+    <button class="btn btn-gen" onclick="generate()">⚡ GENERATE</button>
+    <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
+    <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
+    <button class="btn btn-sec" onclick="window.print()" style="background:#000;">🖨️ PRINT</button>
 </div>
 
 <div class="main">
     <div class="top-bar">
         <div class="view-tabs">
-            <button id="btnGen" onclick="setView('GENERAL')" class="active">Master View</button>
-            <button id="btnStr" onclick="setView('STREAM')">Stream View</button>
-            <button id="btnTea" onclick="setView('TEACHER')">Teacher View</button>
+            <button onclick="setView('GENERAL')">Master View</button>
+            <button onclick="setView('STREAM')">Stream View</button>
+            <button onclick="setView('TEACHER')">Teacher View</button>
         </div>
-        <select id="viewFilter" onchange="renderActiveView()" style="padding: 6px; border-radius: 4px; display:none; min-width: 150px;"></select>
+        <select id="viewFilter" onchange="renderActiveView()" style="padding: 6px; border-radius: 4px; display:none;"></select>
     </div>
-
     <div class="content">
-        <div class="master-header">
-            <img id="headerLogo" src="" style="display:none">
-            <h1 id="headerTitle">TANZANIA SECONDARY SCHOOL</h1>
-        </div>
+        <div id="header" style="text-align:center; margin-bottom:20px;"><h1 id="headerTitle">TANZANIA SECONDARY SCHOOL</h1></div>
         <div id="app"></div>
     </div>
 </div>
 
 <script>
-let DATA = [];
-let REGISTRY = [];
-let CLASSES = [];
-let TEACHERS = [];
-let SLOTS = [];
-let currentView = 'GENERAL';
-
+let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
 const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
-// --- CSV IMPORT ---
 function handleCSV(e) {
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -140,9 +116,7 @@ function handleCSV(e) {
         lines.slice(1).forEach(line => {
             const cols = line.split(',').map(c => c.trim().toUpperCase());
             if (cols.length >= 4) {
-                const sub = cols[0];
-                const tea = cols[1];
-                const frm = cols[cols.length-1]; // Often the last col in the template
+                const [sub, tea, frm] = [cols[0], cols[1], cols[cols.length-1]];
                 const key = `${sub}|${tea}|${frm}`;
                 rawMap[key] = (rawMap[key] || 0) + 1;
             }
@@ -154,25 +128,52 @@ function handleCSV(e) {
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
         }
-        alert(`Loaded ${REGISTRY.length} subject entries!`);
+        alert("Data Imported!");
     };
     reader.readAsText(e.target.files[0]);
 }
 
-// --- ENGINE ---
+function buildSlots() {
+    SLOTS = [];
+    let start = document.getElementById('startTime').value;
+    let periodDur = parseInt(document.getElementById('dur').value);
+    let cur = new Date("2026-01-01T" + start);
+
+    let bOn = document.getElementById('breakOn').checked;
+    let bAft = parseInt(document.getElementById('breakAfter').value);
+    let bDur = parseInt(document.getElementById('breakDur').value);
+
+    let lOn = document.getElementById('lunchOn').checked;
+    let lAft = parseInt(document.getElementById('lunchAfter').value);
+    let lDur = parseInt(document.getElementById('lunchDur').value);
+
+    for(let i=1; i<=9; i++) {
+        let sS = cur.toTimeString().slice(0,5);
+        cur.setMinutes(cur.getMinutes() + periodDur);
+        SLOTS.push({ id: 'P'+i, time: `${sS}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+
+        if(bOn && i === bAft) {
+            let breakS = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + bDur);
+            SLOTS.push({ id: 'BREAK', time: `${breakS}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
+        }
+        if(lOn && i === lAft) {
+            let lunchS = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + lDur);
+            SLOTS.push({ id: 'LUNCH', time: `${lunchS}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
+        }
+    }
+}
+
 function generate() {
-    DATA = [];
-    buildSlots();
-    updateBranding();
-    
+    DATA = []; buildSlots();
+    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
+    let sortedReg = [...REGISTRY].sort((a,b) => b.pwk - a.pwk);
     let useStrict = document.getElementById('strictDay').checked;
     let useDouble = document.getElementById('doublePri').checked;
-    let sortedReg = [...REGISTRY].sort((a,b) => b.pwk - a.pwk);
 
     sortedReg.forEach(r => {
         let left = r.pwk;
-
-        // Phase 1: Try Doubles on separate days
         if(useDouble) {
             for(let d=0; d<DAYS.length; d++) {
                 if(left < 2) break;
@@ -182,19 +183,16 @@ function generate() {
                     if(s1.type==='period' && s2.type==='period' && !isSpecial(day, s1.id) && !isSpecial(day, s2.id)) {
                         if(!isBusy(day, s1.id, r) && !isBusy(day, s2.id, r)) {
                             DATA.push({...r, d: day, p: s1.id}, {...r, d: day, p: s2.id});
-                            left -= 2; break; // Found double for this day, move to next day
+                            left -= 2; break;
                         }
                     }
                 }
             }
         }
-
-        // Phase 2: Fill Singles
         for(let d=0; d<DAYS.length; d++) {
             if(left <= 0) break;
             let day = DAYS[d];
             if(useStrict && DATA.some(x => x.d===day && x.sub===r.sub && x.frm===r.frm)) continue;
-
             for(let i=0; i<SLOTS.length; i++) {
                 let s = SLOTS[i];
                 if(s.type==='period' && !isSpecial(day, s.id) && !isBusy(day, s.id, r)) {
@@ -207,68 +205,33 @@ function generate() {
     renderActiveView();
 }
 
-function buildSlots() {
-    SLOTS = [];
-    let start = document.getElementById('startTime').value;
-    let dur = parseInt(document.getElementById('dur').value);
-    let cur = new Date("2026-01-01T" + start);
-    for(let i=1; i<=9; i++) {
-        let sS = cur.toTimeString().slice(0,5);
-        cur.setMinutes(cur.getMinutes() + dur);
-        SLOTS.push({ id: 'P'+i, time: `${sS}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
-        if(i === 4) {
-            let bS = cur.toTimeString().slice(0,5);
-            cur.setMinutes(cur.getMinutes() + 30);
-            SLOTS.push({ id: 'BREAK', time: `${bS}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
-        }
-    }
-}
-
 function isBusy(d,p,r){ return DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm)); }
-
 function isSpecial(day, p) {
-    if(!document.getElementById('blockSpec').checked) return false;
     if(day === 'WEDNESDAY' && (p === 'P8' || p === 'P9')) return true;
     if(day === 'THURSDAY' && (p === 'P8' || p === 'P9')) return true;
     if(day === 'FRIDAY' && (p === 'P7' || p === 'P8' || p === 'P9')) return true;
     return false;
 }
 
-// --- VIEW LOGIC ---
-function setView(v) {
-    currentView = v;
-    document.querySelectorAll('.view-tabs button').forEach(b => b.classList.remove('active'));
-    if(v==='GENERAL') document.getElementById('btnGen').classList.add('active');
-    if(v==='STREAM') document.getElementById('btnStr').classList.add('active');
-    if(v==='TEACHER') document.getElementById('btnTea').classList.add('active');
+function setView(v) { currentView = v; let fil = document.getElementById('viewFilter'); fil.style.display = v==='GENERAL'?'none':'inline-block';
+    let list = v==='STREAM'?CLASSES.sort():TEACHERS.sort(); fil.innerHTML = ''; list.forEach(i=>fil.innerHTML+=`<option value="${i}">${i}</option>`); renderActiveView(); }
 
-    let fil = document.getElementById('viewFilter');
-    fil.style.display = v === 'GENERAL' ? 'none' : 'inline-block';
-    fil.innerHTML = '';
-    let list = v === 'STREAM' ? CLASSES.sort() : TEACHERS.sort();
-    list.forEach(i => fil.innerHTML += `<option value="${i}">${i}</option>`);
-    renderActiveView();
-}
-
-function renderActiveView() {
-    if(currentView === 'GENERAL') renderMaster();
-    else renderFiltered();
-}
+function renderActiveView() { if(currentView==='GENERAL') renderMaster(); else renderFiltered(); }
 
 function renderMaster() {
     let h = "";
     DAYS.forEach(day => {
         h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Stream</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<br><small style="font-weight:normal">${s.time}</small></th>`);
+        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
         h += `</tr>`;
         CLASSES.sort().forEach(f => {
-            h += `<tr><td class="stream-name">${f}</td>`;
+            h += `<tr><td style="font-weight:bold">${f}</td>`;
             SLOTS.forEach(s => {
-                if(s.type==='break') h += `<td class="break-cell">BREAK</td>`;
-                else if(isSpecial(day, s.id)) h += `<td class="special-cell">${getSpecName(day)}</td>`;
+                if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}</td>`;
+                else if(isSpecial(day, s.id)) h += `<td style="background:#fef3c7;font-size:7px">SPEC</td>`;
                 else {
                     let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    h += `<td>${m ? `<div class="slot">${m.sub}<br><span style="font-weight:normal">${m.tea}</span></div>` : ''}</td>`;
+                    h += `<td>${m?`<div class="slot">${m.sub}<br>${m.tea}</div>`:''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -280,51 +243,23 @@ function renderMaster() {
 
 function renderFiltered() {
     const val = document.getElementById('viewFilter').value;
-    let key = currentView === 'STREAM' ? 'frm' : 'tea';
-    let h = `<div class="table-card"><h3>${currentView}: ${val}</h3><table><tr><th>Day</th>`;
-    SLOTS.forEach(s => h += `<th>${s.id}<br><small style="font-weight:normal">${s.time}</small></th>`);
+    let key = currentView==='STREAM'?'frm':'tea';
+    let h = `<div class="table-card"><h3>${val}</h3><table><tr><th>Day</th>`;
+    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         SLOTS.forEach(s => {
-            if(s.type==='break') h += `<td class="break-cell">BREAK</td>`;
-            else if(isSpecial(d, s.id)) h += `<td class="special-cell">${getSpecName(d)}</td>`;
+            if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}</td>`;
+            else if(isSpecial(d, s.id)) h += `<td style="background:#fef3c7">SPEC</td>`;
             else {
                 let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
-                h += `<td>${m ? `<div class="slot">${m.sub}<br><span style="font-weight:normal">${key==='tea'?m.frm:m.tea}</span></div>` : ''}</td>`;
+                h += `<td>${m?`<div class="slot">${m.sub}<br>${key==='tea'?m.frm:m.tea}</div>`:''}</td>`;
             }
         });
         h += `</tr>`;
     });
     document.getElementById('app').innerHTML = h + `</table></div>`;
-}
-
-function getSpecName(d) { return d==='WEDNESDAY'?'RELIGION':(d==='THURSDAY'?'DEBATE':'MOSQUE'); }
-
-function updateBranding() {
-    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
-    let logoUrl = document.getElementById('schLogoUrl').value;
-    let logoImg = document.getElementById('headerLogo');
-    if(logoUrl) { logoImg.src = logoUrl; logoImg.style.display = 'inline-block'; }
-    else { logoImg.style.display = 'none'; }
-}
-
-function saveProject() {
-    const blob = new Blob([JSON.stringify({REGISTRY, DATA, CLASSES, TEACHERS})], {type: "application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "School_Project.json";
-    a.click();
-}
-
-function loadProject(e) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        const p = JSON.parse(ev.target.result);
-        REGISTRY = p.REGISTRY; DATA = p.DATA; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
-        renderActiveView();
-    };
-    reader.readAsText(e.target.files[0]);
 }
 </script>
 </body>

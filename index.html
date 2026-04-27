@@ -2,17 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Backup & Recovery</title>
+<title>TT-PRO Enterprise - Workload & Breaks</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
-  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444;
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --info:#3b82f6;
 }
-body { margin:0; font-family:'Inter', sans-serif; display:flex; height: 100vh; background:var(--bg); color: var(--text); overflow:hidden; }
+body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); color: var(--text); overflow:hidden; }
 
 /* SIDEBAR */
 .sidebar { 
-    width:340px; background:var(--primary); color:white; padding:20px; 
+    width:350px; background:var(--primary); color:white; padding:20px; 
     display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
     box-shadow: 4px 0 15px rgba(0,0,0,0.2); z-index:10;
 }
@@ -24,13 +24,13 @@ body { margin:0; font-family:'Inter', sans-serif; display:flex; height: 100vh; b
     width: 100%; padding: 8px; border-radius: 4px; border: none; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px;
 }
 
-.nav-label { font-size: 11px; color: #64748b; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; }
+.nav-label { font-size: 11px; color: #64748b; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; }
 
-.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; }
-.btn-gen { background: var(--accent); color: #064e3b; margin-bottom: 5px; }
-.btn-sec { background: #475569; color: white; margin-bottom: 5px; }
-.btn-danger { background: #b91c1c; color: white; margin-top: 10px; }
-.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; text-align: left; display: flex; align-items: center; gap: 10px; }
+.btn-gen { background: var(--accent); color: #064e3b; }
+.btn-sec { background: #475569; color: white; }
+.btn-info { background: var(--info); color: white; }
+.btn:hover { opacity: 0.9; transform: translateX(3px); }
 
 /* MAIN AREA */
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
@@ -42,8 +42,9 @@ th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9p
 th { background: #f1f5f9; }
 .break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; }
 .slot { padding: 3px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; }
+.load-tag { padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold; }
 
-@media print { .sidebar, .top-bar { display: none !important; } .main { padding: 0; } .table-card { border:none; box-shadow:none; page-break-after: always; } }
+@media print { .sidebar, .top-bar { display: none !important; } .main { padding: 0; } .table-card { page-break-after: always; border:none; } }
 </style>
 </head>
 <body>
@@ -56,39 +57,43 @@ th { background: #f1f5f9; }
         <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
     </div>
 
-    <div class="nav-label">TIME & BREAKS</div>
+    <div class="nav-label">Time & Break Config</div>
     <div class="setting-card">
         <div style="display: flex; gap: 5px;">
             <div style="flex:1"><label>Start</label><input type="time" id="startTime" value="08:00"></div>
-            <div style="flex:1"><label>Period</label><input type="number" id="dur" value="40"></div>
+            <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
         </div>
         <div style="display: flex; gap: 5px; margin-top:5px;">
             <div style="flex:1"><label>Break After</label><input type="number" id="breakAfter" value="2"></div>
+            <div style="flex:1"><label>Break Min</label><input type="number" id="breakMin" value="20"></div>
+        </div>
+        <div style="display: flex; gap: 5px; margin-top:5px;">
             <div style="flex:1"><label>Lunch After</label><input type="number" id="lunchAfter" value="4"></div>
+            <div style="flex:1"><label>Lunch Min</label><input type="number" id="lunchMin" value="45"></div>
         </div>
     </div>
 
-    <div class="nav-label">OPERATIONS</div>
-    <button class="btn btn-gen" onclick="generate()">⚡ GENERATE</button>
-    <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
+    <div class="nav-label">Operations</div>
+    <button class="btn btn-gen" onclick="generate()">⚡ Generate Timetable</button>
+    <button class="btn btn-info" onclick="viewTeacherLoads()">⚖️ View Teacher Loads</button>
+    <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 Import CSV Data</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
 
-    <div class="nav-label">DATA & BACKUP</div>
-    <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT PROJECT (.json)</button>
-    <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 LOAD SAVED PROJECT</button>
+    <div class="nav-label">Backup</div>
+    <button class="btn btn-sec" onclick="saveProject()">💾 Export Backup (.json)</button>
+    <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 Load Saved Project</button>
     <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
-    
-    <button class="btn btn-danger" onclick="clearAllData()">⚠️ RESET SYSTEM</button>
+    <button class="btn btn-sec" onclick="window.print()" style="background:#000;">🖨️ Print View</button>
 </div>
 
 <div class="main">
     <div class="top-bar">
         <div class="view-tabs">
             <button onclick="setView('GENERAL')">Master View</button>
-            <button onclick="setView('STREAM')">Stream View</button>
-            <button onclick="setView('TEACHER')">Teacher View</button>
+            <button onclick="setView('STREAM')">By Stream</button>
+            <button onclick="setView('TEACHER')">By Teacher</button>
         </div>
-        <select id="viewFilter" onchange="renderActiveView()" style="padding: 6px; border-radius: 4px; display:none;"></select>
+        <select id="viewFilter" onchange="renderActiveView()" style="padding: 6px; border-radius: 4px; display:none; min-width:150px;"></select>
     </div>
     <div class="content">
         <div id="header" style="text-align:center; margin-bottom:20px;"><h1 id="headerTitle">TANZANIA SECONDARY SCHOOL</h1></div>
@@ -97,33 +102,27 @@ th { background: #f1f5f9; }
 </div>
 
 <script>
-// --- CORE DATA ---
 let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
 const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
-// --- INITIAL LOAD (AUTO-RESTORE) ---
+// --- PERSISTENCE ---
 window.onload = () => {
-    const saved = localStorage.getItem('TT_MASTER_DATA');
+    const saved = localStorage.getItem('TT_PERSIST_STATE');
     if(saved) {
-        const parsed = JSON.parse(saved);
-        DATA = parsed.DATA || [];
-        REGISTRY = parsed.REGISTRY || [];
-        CLASSES = parsed.CLASSES || [];
-        TEACHERS = parsed.TEACHERS || [];
-        document.getElementById('schName').value = parsed.schName || "TANZANIA SECONDARY SCHOOL";
+        const p = JSON.parse(saved);
+        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        document.getElementById('schName').value = p.schName || "";
         renderActiveView();
     }
 };
 
 function autoSave() {
-    const payload = {
-        DATA, REGISTRY, CLASSES, TEACHERS,
-        schName: document.getElementById('schName').value
-    };
-    localStorage.setItem('TT_MASTER_DATA', JSON.stringify(payload));
+    localStorage.setItem('TT_PERSIST_STATE', JSON.stringify({
+        DATA, REGISTRY, CLASSES, TEACHERS, schName: document.getElementById('schName').value
+    }));
 }
 
-// --- CSV HANDLER ---
+// --- LOGIC ---
 function handleCSV(e) {
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -145,29 +144,31 @@ function handleCSV(e) {
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
         }
         autoSave();
-        alert("CSV Imported successfully!");
+        alert("CSV Data Imported.");
     };
     reader.readAsText(e.target.files[0]);
 }
 
-// --- GENERATION ---
 function buildSlots() {
     SLOTS = [];
     let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
-    let dur = parseInt(document.getElementById('dur').value);
+    let pDur = parseInt(document.getElementById('dur').value);
     let bAft = parseInt(document.getElementById('breakAfter').value);
     let lAft = parseInt(document.getElementById('lunchAfter').value);
 
     for(let i=1; i<=9; i++) {
         let sS = cur.toTimeString().slice(0,5);
-        cur.setMinutes(cur.getMinutes() + dur);
+        cur.setMinutes(cur.getMinutes() + pDur);
         SLOTS.push({ id: 'P'+i, time: `${sS}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+        
         if(i === bAft) {
-            let bS = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 20);
+            let bS = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('breakMin').value));
             SLOTS.push({ id: 'BREAK', time: `${bS}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
         }
         if(i === lAft) {
-            let lS = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + 45);
+            let lS = cur.toTimeString().slice(0,5);
+            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('lunchMin').value));
             SLOTS.push({ id: 'LUNCH', time: `${lS}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
         }
     }
@@ -180,7 +181,7 @@ function generate() {
 
     sortedReg.forEach(r => {
         let left = r.pwk;
-        // Priority Double Pass
+        // Priority Double
         for(let d=0; d<DAYS.length; d++) {
             if(left < 2) break;
             let day = DAYS[d];
@@ -194,7 +195,7 @@ function generate() {
                 }
             }
         }
-        // Single Pass (Strict 1/Day)
+        // Single
         for(let d=0; d<DAYS.length; d++) {
             if(left <= 0) break;
             let day = DAYS[d];
@@ -220,13 +221,26 @@ function isSpecial(day, p) {
     return false;
 }
 
-// --- BACKUP & LOAD ---
+// --- WORKLOAD MONITOR ---
+function viewTeacherLoads() {
+    let loads = {}; 
+    TEACHERS.forEach(t => loads[t] = DATA.filter(x => x.tea === t).length);
+    let h = `<div class="table-card"><h2>Teacher Workload (Periods/Week)</h2><table><tr><th>Teacher Name</th><th>Total Periods</th><th>Status</th></tr>`;
+    Object.keys(loads).sort().forEach(t => {
+        let count = loads[t];
+        let status = count > 30 ? '<span class="load-tag" style="background:#fee2e2;color:#ef4444">OVERLOAD</span>' : '<span class="load-tag" style="background:#dcfce7;color:#16a34a">OK</span>';
+        h += `<tr><td>${t}</td><td><b>${count}</b></td><td>${status}</td></tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
+}
+
+// --- BACKUP ---
 function saveProject() {
     const payload = { DATA, REGISTRY, CLASSES, TEACHERS, schName: document.getElementById('schName').value };
     const blob = new Blob([JSON.stringify(payload)], {type: "application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `TT_Project_${document.getElementById('schName').value.replace(/ /g,'_')}.json`;
+    a.download = `TT_Project.json`;
     a.click();
 }
 
@@ -235,29 +249,20 @@ function loadProject(e) {
     reader.onload = (ev) => {
         const p = JSON.parse(ev.target.result);
         DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
-        document.getElementById('schName').value = p.schName || "TANZANIA SECONDARY SCHOOL";
-        autoSave();
-        renderActiveView();
-        alert("Project Restored Successfully!");
+        document.getElementById('schName').value = p.schName;
+        autoSave(); renderActiveView();
     };
     reader.readAsText(e.target.files[0]);
 }
 
-function clearAllData() {
-    if(confirm("Are you sure? This will delete all imported subjects and the current timetable!")) {
-        localStorage.removeItem('TT_MASTER_DATA');
-        location.reload();
-    }
-}
-
-// --- RENDERING ---
+// --- VIEWS ---
 function setView(v) { currentView = v; let fil = document.getElementById('viewFilter'); fil.style.display = v==='GENERAL'?'none':'inline-block';
     let list = v==='STREAM'?CLASSES.sort():TEACHERS.sort(); fil.innerHTML = ''; list.forEach(i=>fil.innerHTML+=`<option value="${i}">${i}</option>`); renderActiveView(); }
 
 function renderActiveView() { if(currentView==='GENERAL') renderMaster(); else renderFiltered(); }
 
 function renderMaster() {
-    let h = ""; if(!SLOTS.length) buildSlots();
+    let h = ""; buildSlots();
     DAYS.forEach(day => {
         h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Stream</th>`;
         SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);

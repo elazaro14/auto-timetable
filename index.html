@@ -2,11 +2,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>elazaro14-PRO - Full Detail</title>
+<title>TT-PRO Enterprise - WhatsApp Enabled</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
-  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b;
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --whatsapp:#25d366;
 }
 body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
 
@@ -30,9 +30,10 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 
 .nav-label { font-size: 11px; color: #64748b; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; }
 
-.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; }
 .btn-gen { background: var(--accent); color: #064e3b; }
 .btn-sec { background: #475569; color: white; }
+.btn-wa { background: var(--whatsapp); color: white; margin-left: 10px; padding: 5px 12px; font-size: 11px; }
 
 /* MAIN */
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
@@ -52,22 +53,22 @@ th { background: #f1f5f9; }
 .load-red { color: var(--danger); font-weight: bold; }
 .time-label { display: block; font-size: 7px; color: #64748b; margin-top: 2px; border-top: 1px solid #cbd5e1; padding-top: 1px; }
 
-@media print { .sidebar, .top-bar, #expiryBanner { display: none !important; } .main { padding: 0; } .table-card { border: none; page-break-after: always; } }
+@media print { .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } .main { padding: 0; } .table-card { border: none; page-break-after: always; } }
 </style>
 </head>
 <body>
 
 <div id="lockScreen">
     <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
-    <p>Please contact support-0763418732 to renew your License.</p>
+    <p>Please contact support to renew your Enterprise License.</p>
 </div>
 
 <div class="sidebar no-print">
-    <h2>elazaro14-PRO COMMAND</h2>
+    <h2>TT-PRO COMMAND</h2>
     
     <div class="setting-card">
         <label>School Name</label>
-        <input type="text" id="schName" value="elazaro14 SECONDARY SCHOOL">
+        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
     </div>
 
     <div class="nav-label">Time & Interval Config</div>
@@ -113,7 +114,7 @@ th { background: #f1f5f9; }
 </div>
 
 <div class="main">
-    <div id="expiryBanner">⚠️ ALERT: License expires in <span id="daysLeft"></span> days. Contact 0763418732 soon.</div>
+    <div id="expiryBanner">⚠️ ALERT: License expires in <span id="daysLeft"></span> days. Contact administrator soon.</div>
     <div class="top-bar">
         <div class="tab-group">
             <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
@@ -129,6 +130,7 @@ th { background: #f1f5f9; }
                 <option value="sub">Subject Only</option>
             </select>
             <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 120px;"></select>
+            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareTeacherWA()">📲 SHARE WA</button>
         </div>
     </div>
 
@@ -276,10 +278,33 @@ function setView(v) {
     document.querySelectorAll('.tab-group button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-'+v).classList.add('active');
     let fil = document.getElementById('viewFilter');
+    let wa = document.getElementById('waBtn');
+    
     fil.style.display = (v==='STREAM'||v==='TEACHER') ? 'inline-block' : 'none';
+    wa.style.display = (v==='TEACHER') ? 'inline-block' : 'none';
+
     if(v==='STREAM') { fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`); } 
     else if(v==='TEACHER') { fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`); }
     renderActiveView();
+}
+
+function shareTeacherWA() {
+    const tea = document.getElementById('viewFilter').value;
+    const sch = document.getElementById('schName').value;
+    let msg = `*${sch}*\n*OFFICIAL TIMETABLE: ${tea}*\n\n`;
+    
+    DAYS.forEach(d => {
+        msg += `> *${d}*\n`;
+        SLOTS.forEach(s => {
+            if(s.type === 'period') {
+                let m = DATA.find(x => x.d===d && x.p===s.id && x.tea===tea);
+                if(m) msg += `• ${s.time}: ${m.sub} (${m.frm})\n`;
+            }
+        });
+        msg += `\n`;
+    });
+    
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function renderActiveView() {

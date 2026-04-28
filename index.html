@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Full Suite</title>
+<title>elazaro14-PRO - Secured Edition</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
@@ -58,11 +58,11 @@ th { background: #f1f5f9; }
 
 <div id="lockScreen">
     <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
-    <p>Please contact support-0763418732 to renew your Licence.</p>
+    <p>Please contact support team 0763418732 to renew your License.</p>
 </div>
 
 <div class="sidebar no-print">
-    <h2>TT-PRO COMMAND</h2>
+    <h2>elazaro14-PRO COMMAND</h2>
     
     <div class="setting-card">
         <label>School Name</label>
@@ -72,9 +72,18 @@ th { background: #f1f5f9; }
     <div class="nav-label">Time & Interval Config</div>
     <div class="setting-card">
         <div style="display:flex; gap:5px;">
-            <div style="flex:1"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
+            <div style="flex:1.2"><label>Total Periods</label>
+                <select id="totalPeriods">
+                    <option value="6">6 Periods</option>
+                    <option value="7">7 Periods</option>
+                    <option value="8">8 Periods</option>
+                    <option value="9" selected>9 Periods</option>
+                    <option value="10">10 Periods</option>
+                </select>
+            </div>
             <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
         </div>
+        <div style="margin-top:5px;"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
         
         <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
             <label style="color:#22c55e">Short Break</label>
@@ -197,13 +206,13 @@ function buildSlots() {
     let dur = parseInt(document.getElementById('dur').value);
     let cur = new Date("2026-01-01T" + start);
     
-    // FETCH NEW DURATION AND AFTER PERIOD INPUTS
+    let totalP = parseInt(document.getElementById('totalPeriods').value);
     let bAft = parseInt(document.getElementById('breakAfter').value);
     let bDur = parseInt(document.getElementById('breakDur').value);
     let lAft = parseInt(document.getElementById('lunchAfter').value);
     let lDur = parseInt(document.getElementById('lunchDur').value);
 
-    for(let i=1; i<=9; i++) {
+    for(let i=1; i<=totalP; i++) {
         let sT = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sT}-${cur.toTimeString().slice(0,5)}`, type: 'period' });

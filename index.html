@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>elazaro14-PRO - Secured Edition</title>
+<title>elazaro14-PRO - Full Detail</title>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
@@ -48,8 +48,9 @@ th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9p
 th { background: #f1f5f9; }
 
 .slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
-.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; border: 2px solid #000 !important; }
+.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
 .load-red { color: var(--danger); font-weight: bold; }
+.time-label { display: block; font-size: 7px; color: #64748b; margin-top: 2px; border-top: 1px solid #cbd5e1; padding-top: 1px; }
 
 @media print { .sidebar, .top-bar, #expiryBanner { display: none !important; } .main { padding: 0; } .table-card { border: none; page-break-after: always; } }
 </style>
@@ -58,7 +59,7 @@ th { background: #f1f5f9; }
 
 <div id="lockScreen">
     <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
-    <p>Please contact support team 0763418732 to renew your License.</p>
+    <p>Please contact support-0763418732 to renew your License.</p>
 </div>
 
 <div class="sidebar no-print">
@@ -66,7 +67,7 @@ th { background: #f1f5f9; }
     
     <div class="setting-card">
         <label>School Name</label>
-        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
+        <input type="text" id="schName" value="elazaro14 SECONDARY SCHOOL">
     </div>
 
     <div class="nav-label">Time & Interval Config</div>
@@ -205,7 +206,6 @@ function buildSlots() {
     let start = document.getElementById('startTime').value;
     let dur = parseInt(document.getElementById('dur').value);
     let cur = new Date("2026-01-01T" + start);
-    
     let totalP = parseInt(document.getElementById('totalPeriods').value);
     let bAft = parseInt(document.getElementById('breakAfter').value);
     let bDur = parseInt(document.getElementById('breakDur').value);
@@ -213,18 +213,17 @@ function buildSlots() {
     let lDur = parseInt(document.getElementById('lunchDur').value);
 
     for(let i=1; i<=totalP; i++) {
-        let sT = cur.toTimeString().slice(0,5);
+        let sTime = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
-        SLOTS.push({ id: 'P'+i, time: `${sT}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+        let eTime = cur.toTimeString().slice(0,5);
+        SLOTS.push({ id: 'P'+i, time: `${sTime}-${eTime}`, type: 'period' });
         
         if(i === bAft) {
-            let brkT = cur.toTimeString().slice(0,5); 
-            cur.setMinutes(cur.getMinutes() + bDur);
+            let brkT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + bDur);
             SLOTS.push({ id: 'BRK', time: `${brkT}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
         }
         if(i === lAft) {
-            let lchT = cur.toTimeString().slice(0,5); 
-            cur.setMinutes(cur.getMinutes() + lDur);
+            let lchT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + lDur);
             SLOTS.push({ id: 'LCH', time: `${lchT}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
         }
     }
@@ -266,9 +265,9 @@ function generate() {
 
 function isBusy(d,p,r){ return DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm)); }
 function isSpecial(day, p) {
-    if(day==='WEDNESDAY' && (p==='P8'||p==='P9')) return true;
-    if(day==='THURSDAY' && (p==='P8'||p==='P9')) return true;
-    if(day==='FRIDAY' && (p==='P7'||p==='P8'||p==='P9')) return true;
+    if(day==='WEDNESDAY' && (p==='P8'||p==='P9'||p==='P10')) return true;
+    if(day==='THURSDAY' && (p==='P8'||p==='P9'||p==='P10')) return true;
+    if(day==='FRIDAY' && (p==='P7'||p==='P8'||p==='P9'||p==='P10')) return true;
     return false;
 }
 
@@ -300,12 +299,12 @@ function renderMaster() {
         CLASSES.sort().forEach(f => {
             h += `<tr><td style="font-weight:bold">${f}</td>`;
             SLOTS.forEach(s => {
-                if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}</td>`;
-                else if(isSpecial(day, s.id)) h += `<td style="background:#fef3c7;font-size:7px">SPEC</td>`;
+                if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}<br><small style="font-size:6px">${s.time}</small></td>`;
+                else if(isSpecial(day, s.id)) h += `<td style="background:#fef3c7;font-size:7px">SPEC<br>${s.time}</td>`;
                 else {
                     let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
                     let txt = m ? (mode==='both' ? `${m.sub}<br>${m.tea}` : m.sub) : '';
-                    h += `<td>${m ? `<div class="slot">${txt}</div>` : ''}</td>`;
+                    h += `<td>${m ? `<div class="slot">${txt}<span class="time-label">${s.time}</span></div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -318,8 +317,9 @@ function renderMaster() {
 function renderSingle(key) {
     const val = document.getElementById('viewFilter').value;
     const mode = document.getElementById('displayMode').value;
+    buildSlots();
     let h = `<div class="table-card"><h3>${val} Timetable</h3><table><tr><th>Day</th>`;
-    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+    SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
@@ -328,7 +328,7 @@ function renderSingle(key) {
             else {
                 let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
                 let txt = m ? (key==='tea' ? m.frm : (mode==='both' ? `${m.sub}<br>${m.tea}` : m.sub)) : '';
-                h += `<td>${m ? `<div class="slot">${txt}</div>` : ''}</td>`;
+                h += `<td>${m ? `<div class="slot">${txt}<span class="time-label">${s.time}</span></div>` : ''}</td>`;
             }
         });
         h += `</tr>`;

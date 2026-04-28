@@ -2,11 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - WhatsApp Enabled</title>
+<title>TT-PRO Enterprise - WA PDF Edition</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
-  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --whatsapp:#25d366;
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --whatsapp:#25d366; --pdf:#e11d48;
 }
 body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
 
@@ -34,6 +35,7 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 .btn-gen { background: var(--accent); color: #064e3b; }
 .btn-sec { background: #475569; color: white; }
 .btn-wa { background: var(--whatsapp); color: white; margin-left: 10px; padding: 5px 12px; font-size: 11px; }
+.btn-pdf { background: var(--pdf); color: white; }
 
 /* MAIN */
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
@@ -43,6 +45,7 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 .tab-group button.active { background: var(--primary); color: white; border-color: var(--primary); }
 
 .content { flex:1; padding: 20px; overflow-y: auto; }
+#printableArea { background: white; }
 .table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
 th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
@@ -105,6 +108,7 @@ th { background: #f1f5f9; }
 
     <div class="nav-label">Actions</div>
     <button class="btn btn-gen" id="genBtn" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
+    <button class="btn btn-pdf" onclick="exportPDF()">📄 SAVE AS PDF</button>
     <button class="btn btn-sec" id="impBtn" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
     <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT BACKUP</button>
@@ -130,13 +134,15 @@ th { background: #f1f5f9; }
                 <option value="sub">Subject Only</option>
             </select>
             <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 120px;"></select>
-            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareTeacherWA()">📲 SHARE WA</button>
+            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareTeacherWA_PDF()">📲 SHARE WA (PDF)</button>
         </div>
     </div>
 
     <div class="content">
-        <div id="header" style="text-align:center; margin-bottom:15px;"><h1 id="headerTitle">TANZANIA SECONDARY SCHOOL</h1></div>
-        <div id="app"></div>
+        <div id="printableArea">
+            <div id="header" style="text-align:center; margin-bottom:15px;"><h1 id="headerTitle">TANZANIA SECONDARY SCHOOL</h1></div>
+            <div id="app"></div>
+        </div>
     </div>
 </div>
 
@@ -288,26 +294,45 @@ function setView(v) {
     renderActiveView();
 }
 
-function shareTeacherWA() {
+function shareTeacherWA_PDF() {
     const tea = document.getElementById('viewFilter').value;
     const sch = document.getElementById('schName').value;
-    let msg = `*${sch}*\n*OFFICIAL TIMETABLE: ${tea}*\n\n`;
     
-    DAYS.forEach(d => {
-        msg += `> *${d}*\n`;
-        SLOTS.forEach(s => {
-            if(s.type === 'period') {
-                let m = DATA.find(x => x.d===d && x.p===s.id && x.tea===tea);
-                if(m) msg += `• ${s.time}: ${m.sub} (${m.frm})\n`;
-            }
-        });
-        msg += `\n`;
-    });
+    // 1. Trigger PDF Generation
+    const element = document.getElementById('printableArea');
+    const opt = {
+        margin: 10,
+        filename: `${tea}_Schedule.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
     
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    html2pdf().set(opt).from(element).save();
+
+    // 2. Open WhatsApp with prompt
+    const msg = `*${sch}*\n\nHello ${tea}, please find your official timetable PDF attached below.`;
+    setTimeout(() => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }, 1000);
+}
+
+function exportPDF() {
+    const element = document.getElementById('printableArea');
+    const sch = document.getElementById('schName').value;
+    const opt = {
+        margin: [10, 10],
+        filename: `${sch}_Timetable.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+    html2pdf().set(opt).from(element).save();
 }
 
 function renderActiveView() {
+    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
     if(currentView==='GENERAL') renderMaster();
     else if(currentView==='STREAM') renderSingle('frm');
     else if(currentView==='TEACHER') renderSingle('tea');

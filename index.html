@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Full Integrated System</title>
+<title>TT-PRO Enterprise - Final Integrated</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
@@ -15,7 +15,6 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 #expiryBanner { display:none; background: var(--warning); color: #000; text-align: center; padding: 8px; font-weight: bold; font-size: 13px; z-index: 100; }
 #lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); color:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 
-/* SIDEBAR */
 .sidebar { 
     width:340px; background: var(--sidebar-gradient); color:white; padding:20px; 
     display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
@@ -36,7 +35,6 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 .btn-gen { background: var(--accent); color: #064e3b; box-shadow: 0 4px 0 #15803d; }
 .btn-sec { background: #475569; color: white; }
 
-/* MAIN AREA */
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
 .top-bar { background: white; padding: 10px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 .tab-group { display: flex; gap: 5px; }
@@ -50,13 +48,12 @@ table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-la
 th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
 th { background: #f1f5f9; }
 
-.slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; }
+.slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; font-size: 8px; line-height: 1.1; }
 .break-cell { background: #cbd5e1; font-weight: bold; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
 
 #header { display: flex; align-items: center; justify-content: center; gap: 20px; }
 #logoImg { height: 80px; width: auto; display: none; }
 
-/* PRINT OPTIMIZATION */
 @page { size: A4 landscape; margin: 5mm; }
 @media print { 
     .sidebar, .top-bar, #expiryBanner { display: none !important; } 
@@ -129,6 +126,7 @@ th { background: #f1f5f9; }
             <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
             <button id="tab-STREAM" onclick="setView('STREAM')">Stream</button>
             <button id="tab-TEACHER" onclick="setView('TEACHER')">Teacher</button>
+            <button id="tab-LOADS" onclick="setView('LOADS')">Loads</button>
         </div>
         <div style="display:flex; gap:10px;">
             <select id="displayMode" onchange="renderActiveView()"><option value="both">Sub + Tea</option><option value="sub">Sub Only</option></select>
@@ -192,29 +190,43 @@ function isSpecial(day, pId) {
 
 function generate() {
     DATA = []; buildSlots();
-    let pool = [...REGISTRY].sort(() => Math.random() - 0.5);
-    pool.forEach(r => {
-        let left = r.pwk;
-        // Priority for double periods
-        DAYS.forEach(d => {
-            if(left < 2) return;
-            for(let i=0; i<SLOTS.length-1; i++) {
-                if(SLOTS[i].type==='period' && SLOTS[i+1].type==='period' && !isSpecial(d,SLOTS[i].id).bool && !isSpecial(d,SLOTS[i+1].id).bool) {
-                    if(!DATA.some(x=>x.d===d && (x.p===SLOTS[i].id || x.p===SLOTS[i+1].id) && (x.tea===r.tea || x.frm===r.frm))) {
-                        DATA.push({...r, d, p: SLOTS[i].id}, {...r, d, p: SLOTS[i+1].id});
-                        left -= 2; break;
+    // Use a deep copy to preserve registry original counts
+    let localRegistry = JSON.parse(JSON.stringify(REGISTRY));
+    
+    // Shuffle classes and days to avoid patterns
+    let shuffledClasses = [...CLASSES].sort(() => Math.random() - 0.5);
+    
+    shuffledClasses.forEach(frm => {
+        let classSubjects = localRegistry.filter(r => r.frm === frm).sort((a,b) => b.pwk - a.pwk);
+        
+        classSubjects.forEach(sub => {
+            let left = sub.pwk;
+            let dayOrder = [...DAYS].sort(() => Math.random() - 0.5);
+
+            // Double Period Logic (Priority)
+            for(let d of dayOrder) {
+                if(left < 2) break;
+                for(let i=0; i<SLOTS.length-1; i++) {
+                    let s1 = SLOTS[i], s2 = SLOTS[i+1];
+                    if(s1.type==='period' && s2.type==='period' && !isSpecial(d,s1.id).bool && !isSpecial(d,s2.id).bool) {
+                        if(!DATA.some(x=>x.d===d && (x.p===s1.id || x.p===s2.id) && (x.tea===sub.tea || x.frm===sub.frm))) {
+                            DATA.push({...sub, d, p: s1.id}, {...sub, d, p: s2.id});
+                            left -= 2; break; 
+                        }
                     }
                 }
             }
-        });
-        // Single periods
-        DAYS.forEach(d => {
-            if(left <= 0) return;
-            SLOTS.filter(s=>s.type==='period').forEach(s => {
-                if(left > 0 && !isSpecial(d,s.id).bool && !DATA.some(x=>x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
-                    DATA.push({...r, d, p: s.id}); left--;
+            // Single Period Logic (Fill Remaining)
+            for(let d of dayOrder) {
+                if(left <= 0) break;
+                let periods = SLOTS.filter(s=>s.type==='period').sort(() => Math.random() - 0.5);
+                for(let s of periods) {
+                    if(left > 0 && !isSpecial(d,s.id).bool && !DATA.some(x=>x.d===d && x.p===s.id && (x.tea===sub.tea || x.frm===sub.frm))) {
+                        DATA.push({...sub, d, p: s.id});
+                        left--; break;
+                    }
                 }
-            });
+            }
         });
     });
     renderActiveView();
@@ -268,7 +280,15 @@ function renderSingle(key) {
     document.getElementById('app').innerHTML = h + `</table></div>`;
 }
 
-// Logic helpers
+function renderLoads() {
+    let h = `<div class="table-card"><h3>TEACHER WORKLOAD</h3><table><tr><th>Teacher Name</th><th>Total Periods / Week</th></tr>`;
+    TEACHERS.sort().forEach(t => {
+        let count = DATA.filter(x => x.tea === t).length;
+        h += `<tr><td>${t}</td><td><b>${count}</b></td></tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
+}
+
 function handleLogo(e) {
     const reader = new FileReader();
     reader.onload = () => { 
@@ -285,7 +305,9 @@ function handleCSV(e) {
         const lines = ev.target.result.split('\n').filter(l => l.trim() !== "");
         REGISTRY = []; CLASSES = []; TEACHERS = [];
         lines.slice(1).forEach(line => {
-            const [sub, tea, pwk, frm] = line.split(',').map(c => c.trim().toUpperCase());
+            const parts = line.split(',').map(c => c.trim().toUpperCase());
+            if(parts.length < 4) return;
+            const [sub, tea, pwk, frm] = parts;
             REGISTRY.push({ sub, tea, pwk: parseInt(pwk), frm });
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
@@ -310,6 +332,7 @@ function renderActiveView() {
     document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
     document.getElementById('headerYear').innerText = "ACADEMIC YEAR: " + document.getElementById('acadYear').value;
     if(currentView==='GENERAL') renderMaster();
+    else if(currentView==='LOADS') renderLoads();
     else renderSingle(currentView === 'STREAM' ? 'frm' : 'tea');
 }
 

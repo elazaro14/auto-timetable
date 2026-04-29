@@ -60,11 +60,12 @@ th { background: #f1f5f9; }
 .load-red { color: var(--danger); font-weight: bold; }
 .time-label { display: block; font-size: 7px; color: #64748b; margin-top: 2px; border-top: 1px solid #cbd5e1; padding-top: 1px; }
 
+/* HEADER LOGO STYLES */
+#header { display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
+#logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
+
 /* MINIMUM MARGIN PRINT STYLES */
-@page {
-    size: A4 landscape;
-    margin: 5mm; /* Minimum margin for maximum coverage */
-}
+@page { size: A4 landscape; margin: 5mm; }
 
 @media print { 
     .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } 
@@ -72,16 +73,11 @@ th { background: #f1f5f9; }
     .main { height: auto; overflow: visible; padding: 0; margin: 0; }
     .content { overflow: visible; padding: 0; }
     #printableArea { width: 100%; }
-    .table-card { 
-        border: none; 
-        box-shadow: none; 
-        margin: 0; 
-        padding: 0; 
-        border-radius: 0;
-    }
+    .table-card { border: none; box-shadow: none; margin: 0; padding: 0; border-radius: 0; }
     h3 { margin-top: 0; margin-bottom: 5px; font-size: 14px; }
     table { width: 100% !important; border-width: 1px; }
     th, td { height: auto; padding: 2px; font-size: 8pt; }
+    #logoImg { display: block !important; } /* Ensure logo shows on print if source exists */
 }
 </style>
 </head>
@@ -97,7 +93,11 @@ th { background: #f1f5f9; }
     
     <div class="setting-card">
         <label>School Name</label>
-        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
+        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL" oninput="renderActiveView()">
+        <label>Academic Year</label>
+        <input type="text" id="acadYear" value="2026" oninput="renderActiveView()">
+        <label>School Logo</label>
+        <input type="file" id="logoUpload" accept="image/*" onchange="handleLogo(event)">
     </div>
 
     <div class="nav-label">Time & Interval Config</div>
@@ -166,7 +166,13 @@ th { background: #f1f5f9; }
 
     <div class="content">
         <div id="printableArea">
-            <div id="header" style="text-align:center; margin-bottom:15px;"><h1 id="headerTitle">TANZANIA SECONDARY SCHOOL</h1></div>
+            <div id="header" style="text-align:center; margin-bottom:15px;">
+                <img id="logoImg" src="" alt="School Logo">
+                <div>
+                    <h1 id="headerTitle" style="margin:0;">TANZANIA SECONDARY SCHOOL</h1>
+                    <h4 id="headerYear" style="margin:5px 0 0 0; color:#64748b;">ACADEMIC YEAR: 2026</h4>
+                </div>
+            </div>
             <div id="app"></div>
         </div>
     </div>
@@ -174,6 +180,7 @@ th { background: #f1f5f9; }
 
 <script>
 const EXPIRY_DATE = new Date("2026-12-31");
+let logoBase64 = "";
 
 function checkSecurity() {
     const today = new Date();
@@ -206,9 +213,37 @@ window.onload = () => {
     if(saved) {
         const p = JSON.parse(saved);
         DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        if(p.schName) document.getElementById('schName').value = p.schName;
+        if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
+        if(p.logo) {
+            logoBase64 = p.logo;
+            document.getElementById('logoImg').src = logoBase64;
+            document.getElementById('logoImg').style.display = 'block';
+        }
         renderActiveView();
     }
 };
+
+function handleLogo(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        logoBase64 = reader.result;
+        document.getElementById('logoImg').src = logoBase64;
+        document.getElementById('logoImg').style.display = 'block';
+        saveToLocal();
+    };
+    if (file) reader.readAsDataURL(file);
+}
+
+function saveToLocal() {
+    localStorage.setItem('TT_PERSIST', JSON.stringify({
+        DATA, REGISTRY, CLASSES, TEACHERS, 
+        schName: document.getElementById('schName').value,
+        acadYear: document.getElementById('acadYear').value,
+        logo: logoBase64
+    }));
+}
 
 function handleCSV(e) {
     const reader = new FileReader();
@@ -293,7 +328,7 @@ function generate() {
             }
         }
     });
-    localStorage.setItem('TT_PERSIST', JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS}));
+    saveToLocal();
     renderActiveView();
 }
 
@@ -355,6 +390,7 @@ function exportPDF() {
 
 function renderActiveView() {
     document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
+    document.getElementById('headerYear').innerText = "ACADEMIC YEAR: " + document.getElementById('acadYear').value;
     if(currentView==='GENERAL') renderMaster();
     else if(currentView==='STREAM') renderSingle('frm');
     else if(currentView==='TEACHER') renderSingle('tea');
@@ -421,7 +457,12 @@ function renderLoads() {
 }
 
 function saveProject() {
-    const payload = { DATA, REGISTRY, CLASSES, TEACHERS, schName: document.getElementById('schName').value };
+    const payload = { 
+        DATA, REGISTRY, CLASSES, TEACHERS, 
+        schName: document.getElementById('schName').value,
+        acadYear: document.getElementById('acadYear').value,
+        logo: logoBase64
+    };
     const blob = new Blob([JSON.stringify(payload)], {type: "application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -434,6 +475,13 @@ function loadProject(e) {
     reader.onload = (ev) => {
         const p = JSON.parse(ev.target.result);
         DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        if(p.schName) document.getElementById('schName').value = p.schName;
+        if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
+        if(p.logo) {
+            logoBase64 = p.logo;
+            document.getElementById('logoImg').src = logoBase64;
+            document.getElementById('logoImg').style.display = 'block';
+        }
         renderActiveView();
     };
     reader.readAsText(e.target.files[0]);

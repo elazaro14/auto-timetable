@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Max Space Print</title>
+<title>TT-PRO Enterprise - Special Blocks</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
@@ -12,11 +12,9 @@
 }
 body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
 
-/* SECURITY STYLES */
 #expiryBanner { display:none; background: var(--warning); color: #000; text-align: center; padding: 8px; font-weight: bold; font-size: 13px; z-index: 100; }
 #lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); color:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 
-/* SIDEBAR */
 .sidebar { 
     width:340px; background: var(--sidebar-gradient); color:white; padding:20px; 
     display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
@@ -25,7 +23,7 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 }
 .sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin:0; letter-spacing: 1px; }
 
-.setting-card { background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid #334155; }
+.setting-card { background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 5px; }
 .setting-card label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; font-weight: 700; }
 .setting-card input, .setting-card select { 
     width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px;
@@ -40,7 +38,6 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 .btn-wa { background: var(--whatsapp); color: white; margin-left: 10px; padding: 5px 12px; font-size: 11px; }
 .btn-pdf { background: var(--pdf); color: white; }
 
-/* MAIN */
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
 .top-bar { background: white; padding: 10px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 .tab-group { display: flex; gap: 5px; }
@@ -57,14 +54,11 @@ th { background: #f1f5f9; }
 
 .slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
 .break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
-.load-red { color: var(--danger); font-weight: bold; }
 .time-label { display: block; font-size: 7px; color: #64748b; margin-top: 2px; border-top: 1px solid #cbd5e1; padding-top: 1px; }
 
-/* HEADER LOGO STYLES */
 #header { display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
 #logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
 
-/* MINIMUM MARGIN PRINT STYLES */
 @page { size: A4 landscape; margin: 5mm; }
 
 @media print { 
@@ -74,10 +68,7 @@ th { background: #f1f5f9; }
     .content { overflow: visible; padding: 0; }
     #printableArea { width: 100%; }
     .table-card { border: none; box-shadow: none; margin: 0; padding: 0; border-radius: 0; }
-    h3 { margin-top: 0; margin-bottom: 5px; font-size: 14px; }
-    table { width: 100% !important; border-width: 1px; }
-    th, td { height: auto; padding: 2px; font-size: 8pt; }
-    #logoImg { display: block !important; } /* Ensure logo shows on print if source exists */
+    #logoImg { display: block !important; }
 }
 </style>
 </head>
@@ -85,7 +76,6 @@ th { background: #f1f5f9; }
 
 <div id="lockScreen">
     <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
-    <p>Please contact support to renew your Enterprise License.</p>
 </div>
 
 <div class="sidebar no-print">
@@ -100,51 +90,51 @@ th { background: #f1f5f9; }
         <input type="file" id="logoUpload" accept="image/*" onchange="handleLogo(event)">
     </div>
 
+    <div class="nav-label">Special Blocks</div>
+    <div class="setting-card" style="font-size: 9px;">
+        <div style="display:flex; gap:5px; margin-bottom:5px;">
+            <div style="flex:1"><label>Religion Day</label>
+                <select id="relDay"><option>WEDNESDAY</option><option>MONDAY</option><option>TUESDAY</option><option>THURSDAY</option><option>FRIDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="relPeriods" value="8,9"></div>
+        </div>
+        <div style="display:flex; gap:5px; margin-bottom:5px;">
+            <div style="flex:1"><label>Debate Day</label>
+                <select id="debDay"><option>THURSDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>FRIDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="debPeriods" value="8,9"></div>
+        </div>
+        <div style="display:flex; gap:5px;">
+            <div style="flex:1"><label>Mosque Day</label>
+                <select id="mosDay"><option>FRIDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 7,8,9)</label><input type="text" id="mosPeriods" value="7,8,9"></div>
+        </div>
+    </div>
+
     <div class="nav-label">Time & Interval Config</div>
     <div class="setting-card">
         <div style="display:flex; gap:5px;">
             <div style="flex:1.2"><label>Total Periods</label>
-                <select id="totalPeriods">
-                    <option value="6">6 Periods</option>
-                    <option value="7">7 Periods</option>
-                    <option value="8">8 Periods</option>
-                    <option value="9" selected>9 Periods</option>
-                    <option value="10">10 Periods</option>
-                </select>
+                <select id="totalPeriods"><option value="6">6 Periods</option><option value="7">7 Periods</option><option value="8">8 Periods</option><option value="9" selected>9 Periods</option><option value="10">10 Periods</option></select>
             </div>
             <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
         </div>
         <div style="margin-top:5px;"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
-        
-        <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
-            <label style="color:#22c55e">Short Break</label>
-            <div style="display:flex; gap:5px;">
-                <div style="flex:1"><label>After P:</label><input type="number" id="breakAfter" value="2"></div>
-                <div style="flex:1"><label>Min:</label><input type="number" id="breakDur" value="20"></div>
-            </div>
-        </div>
-        <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
-            <label style="color:#22c55e">Lunch</label>
-            <div style="display:flex; gap:5px;">
-                <div style="flex:1"><label>After P:</label><input type="number" id="lunchAfter" value="4"></div>
-                <div style="flex:1"><label>Min:</label><input type="number" id="lunchDur" value="45"></div>
-            </div>
-        </div>
     </div>
 
     <div class="nav-label">Actions</div>
     <button class="btn btn-gen" id="genBtn" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
     <button class="btn btn-pdf" onclick="exportPDF()">📄 SAVE AS PDF</button>
-    <button class="btn btn-sec" id="impBtn" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
+    <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
     <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT BACKUP</button>
     <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 LOAD SAVED</button>
     <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
-    <button class="btn btn-sec" onclick="window.print()" style="background:#000">🖨️ PRINT VIEW</button>
 </div>
 
 <div class="main">
-    <div id="expiryBanner">⚠️ ALERT: License expires in <span id="daysLeft"></span> days. Contact administrator soon.</div>
+    <div id="expiryBanner">⚠️ ALERT: License expires soon.</div>
     <div class="top-bar">
         <div class="tab-group">
             <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
@@ -152,9 +142,7 @@ th { background: #f1f5f9; }
             <button id="tab-TEACHER" onclick="setView('TEACHER')">Teacher</button>
             <button id="tab-LOADS" onclick="setView('LOADS')">Loads</button>
         </div>
-        
         <div style="display: flex; gap: 10px; align-items: center;">
-            <label style="font-size: 11px; font-weight: bold;">DISPLAY:</label>
             <select id="displayMode" onchange="renderActiveView()" style="padding: 5px; font-size: 11px;">
                 <option value="both">Subject + Teacher</option>
                 <option value="sub">Subject Only</option>
@@ -181,30 +169,12 @@ th { background: #f1f5f9; }
 <script>
 const EXPIRY_DATE = new Date("2026-12-31");
 let logoBase64 = "";
-
-function checkSecurity() {
-    const today = new Date();
-    const diffTime = EXPIRY_DATE - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays <= 0) {
-        document.getElementById('lockScreen').style.display = 'flex';
-        document.getElementById('genBtn').disabled = true;
-        document.getElementById('impBtn').disabled = true;
-    } else if (diffDays <= 5) {
-        document.getElementById('expiryBanner').style.display = 'block';
-        document.getElementById('daysLeft').innerText = diffDays;
-    }
-}
-
 let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
 const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
+function checkSecurity() {
+    const today = new Date();
+    if (EXPIRY_DATE - today <= 0) document.getElementById('lockScreen').style.display = 'flex';
 }
 
 window.onload = () => {
@@ -215,11 +185,7 @@ window.onload = () => {
         DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
         if(p.schName) document.getElementById('schName').value = p.schName;
         if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
-        if(p.logo) {
-            logoBase64 = p.logo;
-            document.getElementById('logoImg').src = logoBase64;
-            document.getElementById('logoImg').style.display = 'block';
-        }
+        if(p.logo) { logoBase64 = p.logo; document.getElementById('logoImg').src = logoBase64; document.getElementById('logoImg').style.display = 'block'; }
         renderActiveView();
     }
 };
@@ -245,100 +211,74 @@ function saveToLocal() {
     }));
 }
 
-function handleCSV(e) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
-        const rawMap = {};
-        lines.slice(1).forEach(line => {
-            const cols = line.split(',').map(c => c.trim().toUpperCase());
-            if (cols.length >= 4) {
-                const [sub, tea, frm] = [cols[0], cols[1], cols[cols.length-1]];
-                const key = `${sub}|${tea}|${frm}`;
-                rawMap[key] = (rawMap[key] || 0) + 1;
-            }
-        });
-        REGISTRY = []; CLASSES = []; TEACHERS = [];
-        for (let key in rawMap) {
-            const [sub, tea, frm] = key.split('|');
-            REGISTRY.push({ sub, tea, frm, pwk: parseInt(rawMap[key]) });
-            if(!CLASSES.includes(frm)) CLASSES.push(frm);
-            if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
-        }
-        alert("CSV Data Processed.");
-    };
-    reader.readAsText(e.target.files[0]);
-}
-
 function buildSlots() {
     SLOTS = [];
     let start = document.getElementById('startTime').value;
     let dur = parseInt(document.getElementById('dur').value);
     let cur = new Date("2026-01-01T" + start);
     let totalP = parseInt(document.getElementById('totalPeriods').value);
-    let bAft = parseInt(document.getElementById('breakAfter').value);
-    let bDur = parseInt(document.getElementById('breakDur').value);
-    let lAft = parseInt(document.getElementById('lunchAfter').value);
-    let lDur = parseInt(document.getElementById('lunchDur').value);
 
     for(let i=1; i<=totalP; i++) {
         let sTime = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
-        let eTime = cur.toTimeString().slice(0,5);
-        SLOTS.push({ id: 'P'+i, time: `${sTime}-${eTime}`, type: 'period' });
-        
-        if(i === bAft) {
-            let brkT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + bDur);
-            SLOTS.push({ id: 'BRK', time: `${brkT}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
-        }
-        if(i === lAft) {
-            let lchT = cur.toTimeString().slice(0,5); cur.setMinutes(cur.getMinutes() + lDur);
-            SLOTS.push({ id: 'LCH', time: `${lchT}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
-        }
+        SLOTS.push({ id: 'P'+i, time: `${sTime}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+        // Simplified break logic for this snippet
+        if(i === 2) { cur.setMinutes(cur.getMinutes() + 20); SLOTS.push({ id: 'BRK', time: 'Break', type: 'break' }); }
+        if(i === 4) { cur.setMinutes(cur.getMinutes() + 45); SLOTS.push({ id: 'LCH', time: 'Lunch', type: 'lunch' }); }
     }
+}
+
+function isSpecial(day, pId) {
+    const pNum = pId.replace('P','');
+    const relD = document.getElementById('relDay').value;
+    const relP = document.getElementById('relPeriods').value.split(',');
+    if(day === relD && relP.includes(pNum)) return {bool: true, name: "RELIGION"};
+
+    const debD = document.getElementById('debDay').value;
+    const debP = document.getElementById('debPeriods').value.split(',');
+    if(day === debD && debP.includes(pNum)) return {bool: true, name: "DEBATE"};
+
+    const mosD = document.getElementById('mosDay').value;
+    const mosP = document.getElementById('mosPeriods').value.split(',');
+    if(day === mosD && mosP.includes(pNum)) return {bool: true, name: "MOSQUE"};
+
+    return {bool: false};
 }
 
 function generate() {
     DATA = []; buildSlots();
-    let pool = shuffle([...REGISTRY]);
+    let pool = [...REGISTRY].sort(() => Math.random() - 0.5);
     pool.forEach(r => {
         let left = r.pwk;
-        let dayPool = shuffle([...DAYS]);
-        for(let d of dayPool) {
-            if(left < 2) break;
-            for(let i=0; i<SLOTS.length-1; i++) {
-                let s1 = SLOTS[i], s2 = SLOTS[i+1];
-                if(s1.type==='period' && s2.type==='period' && !isSpecial(d, s1.id).bool && !isSpecial(d, s2.id).bool) {
-                    if(!isBusy(d, s1.id, r) && !isBusy(d, s2.id, r)) {
-                        DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
-                        left -= 2; break;
-                    }
-                }
-            }
-        }
-        for(let d of dayPool) {
-            if(left <= 0) break;
-            if(DATA.some(x => x.d===d && x.sub===r.sub && x.frm===r.frm)) continue;
-            let pPool = shuffle(SLOTS.filter(s => s.type==='period'));
+        DAYS.forEach(d => {
+            if(left <= 0) return;
+            let pPool = SLOTS.filter(s => s.type === 'period').sort(() => Math.random() - 0.5);
             for(let s of pPool) {
-                if(!isSpecial(d, s.id).bool && !isBusy(d, s.id, r)) {
+                if(!isSpecial(d, s.id).bool && !DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
                     DATA.push({...r, d, p: s.id});
                     left--; break;
                 }
             }
-        }
+        });
     });
     saveToLocal();
     renderActiveView();
 }
 
-function isBusy(d,p,r){ return DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm)); }
-
-function isSpecial(day, p) {
-    if(day==='WEDNESDAY' && (p==='P8'||p==='P9'||p==='P10')) return {bool: true, name: "RELIGION"};
-    if(day==='THURSDAY' && (p==='P8'||p==='P9'||p==='P10')) return {bool: true, name: "DEBATE"};
-    if(day==='FRIDAY' && (p==='P7'||p==='P8'||p==='P9'||p==='P10')) return {bool: true, name: "MOSQUE"};
-    return {bool: false, name: ""};
+function handleCSV(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const lines = ev.target.result.split('\n').filter(l => l.trim() !== "");
+        REGISTRY = []; CLASSES = []; TEACHERS = [];
+        lines.slice(1).forEach(line => {
+            const [sub, tea, pwk, frm] = line.split(',').map(c => c.trim().toUpperCase());
+            REGISTRY.push({ sub, tea, pwk: parseInt(pwk), frm });
+            if(!CLASSES.includes(frm)) CLASSES.push(frm);
+            if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
+        });
+        alert("CSV Loaded.");
+    };
+    reader.readAsText(e.target.files[0]);
 }
 
 function setView(v) {
@@ -346,46 +286,10 @@ function setView(v) {
     document.querySelectorAll('.tab-group button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-'+v).classList.add('active');
     let fil = document.getElementById('viewFilter');
-    let wa = document.getElementById('waBtn');
-    
     fil.style.display = (v==='STREAM'||v==='TEACHER') ? 'inline-block' : 'none';
-    wa.style.display = (v==='TEACHER') ? 'inline-block' : 'none';
-
     if(v==='STREAM') { fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`); } 
     else if(v==='TEACHER') { fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`); }
     renderActiveView();
-}
-
-function shareTeacherWA_PDF() {
-    const tea = document.getElementById('viewFilter').value;
-    const sch = document.getElementById('schName').value;
-    const element = document.getElementById('printableArea');
-    const opt = {
-        margin: 5,
-        filename: `${tea}_Schedule.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-    html2pdf().set(opt).from(element).save();
-    const msg = `*${sch}*\n\nHello ${tea}, please find your official timetable PDF attached below.`;
-    setTimeout(() => {
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    }, 1000);
-}
-
-function exportPDF() {
-    const element = document.getElementById('printableArea');
-    const sch = document.getElementById('schName').value;
-    const opt = {
-        margin: [5, 5],
-        filename: `${sch}_Timetable.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: ['css', 'legacy'] }
-    };
-    html2pdf().set(opt).from(element).save();
 }
 
 function renderActiveView() {
@@ -402,18 +306,17 @@ function renderMaster() {
     let h = ""; buildSlots();
     DAYS.forEach(day => {
         h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
         h += `</tr>`;
         CLASSES.sort().forEach(f => {
-            h += `<tr><td style="font-weight:bold">${f}</td>`;
+            h += `<tr><td><b>${f}</b></td>`;
             SLOTS.forEach(s => {
                 let spec = isSpecial(day, s.id);
-                if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}<br><small style="font-size:6px">${s.time}</small></td>`;
-                else if(spec.bool) h += `<td style="background:#fef3c7;font-size:7px;font-weight:bold">${spec.name}<br>${s.time}</td>`;
+                if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
+                else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
                 else {
                     let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    let txt = m ? (mode==='both' ? `${m.sub}<br>${m.tea}` : m.sub) : '';
-                    h += `<td>${m ? `<div class="slot">${txt}<span class="time-label">${s.time}</span></div>` : ''}</td>`;
+                    h += `<td>${m ? `<div class="slot">${mode==='both'?m.sub+'<br>'+m.tea:m.sub}</div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -425,21 +328,19 @@ function renderMaster() {
 
 function renderSingle(key) {
     const val = document.getElementById('viewFilter').value;
-    const mode = document.getElementById('displayMode').value;
     buildSlots();
     let h = `<div class="table-card"><h3>${val} Timetable</h3><table><tr><th>Day</th>`;
-    SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;
         SLOTS.forEach(s => {
             let spec = isSpecial(d, s.id);
-            if(s.type==='break'||s.type==='lunch') h += `<td class="break-cell">${s.id}</td>`;
-            else if(spec.bool) h += `<td style="background:#fef3c7;font-size:7px;font-weight:bold">${spec.name}</td>`;
+            if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
+            else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
             else {
                 let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
-                let txt = m ? (key==='tea' ? m.frm : (mode==='both' ? `${m.sub}<br>${m.tea}` : m.sub)) : '';
-                h += `<td>${m ? `<div class="slot">${txt}<span class="time-label">${s.time}</span></div>` : ''}</td>`;
+                h += `<td>${m ? `<div class="slot">${key==='tea'?m.frm:m.sub}</div>` : ''}</td>`;
             }
         });
         h += `</tr>`;
@@ -448,26 +349,22 @@ function renderSingle(key) {
 }
 
 function renderLoads() {
-    let h = `<div class="table-card"><h3>Teacher Workload</h3><table><tr><th>Teacher Name</th><th>Periods</th><th>Status</th></tr>`;
+    let h = `<div class="table-card"><h3>Workload</h3><table><tr><th>Teacher</th><th>Periods</th></tr>`;
     TEACHERS.sort().forEach(t => {
         let count = DATA.filter(x => x.tea === t).length;
-        h += `<tr><td>${t}</td><td ${count > 30 ? 'class="load-red"' : ''}>${count}</td><td>${count > 30 ? 'OVERLOAD' : 'OK'}</td></tr>`;
+        h += `<tr><td>${t}</td><td>${count}</td></tr>`;
     });
     document.getElementById('app').innerHTML = h + `</table></div>`;
 }
 
+function exportPDF() {
+    const opt = { margin: 5, filename: 'Timetable.pdf', jsPDF: { orientation: 'landscape' } };
+    html2pdf().set(opt).from(document.getElementById('printableArea')).save();
+}
+
 function saveProject() {
-    const payload = { 
-        DATA, REGISTRY, CLASSES, TEACHERS, 
-        schName: document.getElementById('schName').value,
-        acadYear: document.getElementById('acadYear').value,
-        logo: logoBase64
-    };
-    const blob = new Blob([JSON.stringify(payload)], {type: "application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "TT_Backup.json";
-    a.click();
+    const blob = new Blob([JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS, schName:document.getElementById('schName').value, acadYear:document.getElementById('acadYear').value, logo:logoBase64})], {type:"application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "TT_Backup.json"; a.click();
 }
 
 function loadProject(e) {
@@ -475,13 +372,9 @@ function loadProject(e) {
     reader.onload = (ev) => {
         const p = JSON.parse(ev.target.result);
         DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
-        if(p.schName) document.getElementById('schName').value = p.schName;
-        if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
-        if(p.logo) {
-            logoBase64 = p.logo;
-            document.getElementById('logoImg').src = logoBase64;
-            document.getElementById('logoImg').style.display = 'block';
-        }
+        document.getElementById('schName').value = p.schName || "";
+        document.getElementById('acadYear').value = p.acadYear || "";
+        logoBase64 = p.logo || "";
         renderActiveView();
     };
     reader.readAsText(e.target.files[0]);

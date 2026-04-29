@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Auto Page Breaks</title>
+<title>TT-PRO Enterprise - Max Space Print</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
@@ -49,10 +49,7 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 
 .content { flex:1; padding: 20px; overflow-y: auto; }
 #printableArea { background: white; }
-.table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-
-/* PAGE BREAK LOGIC */
-.table-card { page-break-after: always; break-after: page; }
+.table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); page-break-after: always; break-after: page; }
 
 table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
 th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
@@ -63,12 +60,28 @@ th { background: #f1f5f9; }
 .load-red { color: var(--danger); font-weight: bold; }
 .time-label { display: block; font-size: 7px; color: #64748b; margin-top: 2px; border-top: 1px solid #cbd5e1; padding-top: 1px; }
 
+/* MINIMUM MARGIN PRINT STYLES */
+@page {
+    size: A4 landscape;
+    margin: 5mm; /* Minimum margin for maximum coverage */
+}
+
 @media print { 
     .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } 
     body { height: auto; overflow: visible; background: white; }
-    .main { height: auto; overflow: visible; padding: 0; }
+    .main { height: auto; overflow: visible; padding: 0; margin: 0; }
     .content { overflow: visible; padding: 0; }
-    .table-card { border: none; box-shadow: none; margin: 0; padding-top: 20px; }
+    #printableArea { width: 100%; }
+    .table-card { 
+        border: none; 
+        box-shadow: none; 
+        margin: 0; 
+        padding: 0; 
+        border-radius: 0;
+    }
+    h3 { margin-top: 0; margin-bottom: 5px; font-size: 14px; }
+    table { width: 100% !important; border-width: 1px; }
+    th, td { height: auto; padding: 2px; font-size: 8pt; }
 }
 </style>
 </head>
@@ -313,7 +326,7 @@ function shareTeacherWA_PDF() {
     const sch = document.getElementById('schName').value;
     const element = document.getElementById('printableArea');
     const opt = {
-        margin: 10,
+        margin: 5,
         filename: `${tea}_Schedule.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
@@ -330,7 +343,7 @@ function exportPDF() {
     const element = document.getElementById('printableArea');
     const sch = document.getElementById('schName').value;
     const opt = {
-        margin: [10, 10],
+        margin: [5, 5],
         filename: `${sch}_Timetable.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },

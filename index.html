@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Final Integrated</title>
+<title>TT-PRO Enterprise - Full Integrated</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
@@ -189,11 +189,9 @@ function isSpecial(day, pId) {
 }
 
 function generate() {
+    if(REGISTRY.length === 0) { alert("Please upload a CSV first!"); return; }
     DATA = []; buildSlots();
-    // Use a deep copy to preserve registry original counts
     let localRegistry = JSON.parse(JSON.stringify(REGISTRY));
-    
-    // Shuffle classes and days to avoid patterns
     let shuffledClasses = [...CLASSES].sort(() => Math.random() - 0.5);
     
     shuffledClasses.forEach(frm => {
@@ -203,7 +201,6 @@ function generate() {
             let left = sub.pwk;
             let dayOrder = [...DAYS].sort(() => Math.random() - 0.5);
 
-            // Double Period Logic (Priority)
             for(let d of dayOrder) {
                 if(left < 2) break;
                 for(let i=0; i<SLOTS.length-1; i++) {
@@ -216,7 +213,6 @@ function generate() {
                     }
                 }
             }
-            // Single Period Logic (Fill Remaining)
             for(let d of dayOrder) {
                 if(left <= 0) break;
                 let periods = SLOTS.filter(s=>s.type==='period').sort(() => Math.random() - 0.5);
@@ -312,7 +308,9 @@ function handleCSV(e) {
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
         });
-        alert("CSV Loaded.");
+        alert(`Successfully loaded ${REGISTRY.length} subject entries! Click GENERATE to view.`);
+        // Refresh filter dropdowns immediately
+        if(currentView === 'STREAM' || currentView === 'TEACHER') setView(currentView);
     };
     reader.readAsText(e.target.files[0]);
 }

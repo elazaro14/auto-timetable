@@ -2,192 +2,90 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise - Special Blocks</title>
+<title>TT-PRO Enterprise - Strict Daily Frequency</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
   --sidebar-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --whatsapp:#25d366; --pdf:#e11d48;
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --pdf:#e11d48;
 }
 body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
-
-#expiryBanner { display:none; background: var(--warning); color: #000; text-align: center; padding: 8px; font-weight: bold; font-size: 13px; z-index: 100; }
-#lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); color:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-
 .sidebar { 
     width:340px; background: var(--sidebar-gradient); color:white; padding:20px; 
     display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index:10;
     border-right: 1px solid #334155;
 }
-.sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin:0; letter-spacing: 1px; }
-
-.setting-card { background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 5px; }
+.sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin:0; }
+.setting-card { background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid #334155; }
 .setting-card label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; font-weight: 700; }
 .setting-card input, .setting-card select { 
     width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px;
 }
-
-.nav-label { font-size: 11px; color: #38bdf8; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; }
-.btn-gen { background: var(--accent); color: #064e3b; box-shadow: 0 4px 0 #15803d; }
-.btn-gen:active { transform: translateY(2px); box-shadow: 0 2px 0 #15803d; }
+.nav-label { font-size: 11px; color: #38bdf8; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; }
+.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 8px; justify-content: center; }
+.btn-gen { background: var(--accent); color: #064e3b; }
 .btn-sec { background: #475569; color: white; }
-.btn-wa { background: var(--whatsapp); color: white; margin-left: 10px; padding: 5px 12px; font-size: 11px; }
-.btn-pdf { background: var(--pdf); color: white; }
-
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
 .top-bar { background: white; padding: 10px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.tab-group { display: flex; gap: 5px; }
-.tab-group button { padding: 8px 15px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: 600; }
-.tab-group button.active { background: var(--primary); color: white; border-color: var(--primary); }
-
 .content { flex:1; padding: 20px; overflow-y: auto; }
-#printableArea { background: white; }
-.table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); page-break-after: always; break-after: page; }
-
 table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
 th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
-th { background: #f1f5f9; padding: 6px 2px; }
-
-.slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
-.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
-.time-hdr { display: block; font-size: 7px; color: #64748b; font-weight: 500; margin-top: 2px; border-top: 1px solid #cbd5e1; }
-
-#header { display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
-#logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
-
-@media print { 
-    .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } 
-    body { height: auto; overflow: visible; background: white; }
-    .main { height: auto; overflow: visible; padding: 0; margin: 0; }
-    .content { overflow: visible; padding: 0; }
-    #printableArea { width: 100%; }
-    .table-card { border: none; box-shadow: none; margin: 0; padding: 0; border-radius: 0; }
-    #logoImg { display: block !important; }
-}
+.slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; }
+.break-cell { background: #cbd5e1; font-weight: bold; writing-mode: vertical-rl; }
+#logoImg { height: 80px; display: none; margin: 0 auto; }
 </style>
 </head>
 <body>
 
-<div id="lockScreen">
-    <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
-</div>
-
-<div class="sidebar no-print">
+<div class="sidebar">
     <h2>TT-PRO COMMAND</h2>
-    
     <div class="setting-card">
         <label>School Name</label>
-        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL" oninput="renderActiveView()">
+        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL">
         <label>Academic Year</label>
-        <input type="text" id="acadYear" value="2026" oninput="renderActiveView()">
-        <label>School Logo</label>
-        <input type="file" id="logoUpload" accept="image/*" onchange="handleLogo(event)">
+        <input type="text" id="acadYear" value="2026">
     </div>
 
     <div class="nav-label">Scheduling Rules</div>
     <div class="setting-card">
-        <label>Enable Double Periods</label>
-        <select id="optDouble"><option value="yes">YES (1 Per Subject/Day)</option><option value="no">NO (Single Only)</option></select>
+        <label>Double Period Logic</label>
+        <select id="optDouble">
+            <option value="yes">YES (Once Per Day/Subject)</option>
+            <option value="no">NO (Singles Only)</option>
+        </select>
     </div>
 
-    <div class="nav-label">Special Blocks</div>
-    <div class="setting-card" style="font-size: 9px;">
-        <div style="display:flex; gap:5px; margin-bottom:5px;">
-            <div style="flex:1"><label>Religion Day</label>
-                <select id="relDay"><option>WEDNESDAY</option><option>MONDAY</option><option>TUESDAY</option><option>THURSDAY</option><option>FRIDAY</option></select>
-            </div>
-            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="relPeriods" value="8,9"></div>
-        </div>
-        <div style="display:flex; gap:5px; margin-bottom:5px;">
-            <div style="flex:1"><label>Debate Day</label>
-                <select id="debDay"><option>THURSDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>FRIDAY</option></select>
-            </div>
-            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="debPeriods" value="8,9"></div>
-        </div>
-        <div style="display:flex; gap:5px;">
-            <div style="flex:1"><label>Mosque Day</label>
-                <select id="mosDay"><option>FRIDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option></select>
-            </div>
-            <div style="flex:1"><label>P# (e.g. 7,8,9)</label><input type="text" id="mosPeriods" value="7,8,9"></div>
-        </div>
-    </div>
-
-    <div class="nav-label">Intervals & Breaks</div>
-    <div class="setting-card">
-        <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <div style="flex:1">
-                <label>Break After P#</label>
-                <input type="number" id="brkAfter" value="2">
-            </div>
-            <div style="flex:1">
-                <label>Time (min)</label>
-                <input type="number" id="brkDur" value="20">
-            </div>
-        </div>
-        <div style="display:flex; gap:5px;">
-            <div style="flex:1">
-                <label>Lunch After P#</label>
-                <input type="number" id="lchAfter" value="4">
-            </div>
-            <div style="flex:1">
-                <label>Time (min)</label>
-                <input type="number" id="lchDur" value="45">
-            </div>
-        </div>
-    </div>
-
-    <div class="nav-label">Time & Interval Config</div>
+    <div class="nav-label">Intervals</div>
     <div class="setting-card">
         <div style="display:flex; gap:5px;">
-            <div style="flex:1.2"><label>Total Periods</label>
-                <select id="totalPeriods"><option value="6">6 Periods</option><option value="7">7 Periods</option><option value="8">8 Periods</option><option value="9" selected>9 Periods</option><option value="10">10 Periods</option></select>
-            </div>
-            <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
+            <div style="flex:1"><label>Break @ P#</label><input type="number" id="brkAfter" value="2"></div>
+            <div style="flex:1"><label>Lunch @ P#</label><input type="number" id="lchAfter" value="4"></div>
         </div>
-        <div style="margin-top:5px;"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
     </div>
 
-    <div class="nav-label">Actions</div>
-    <button class="btn btn-gen" id="genBtn" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
-    <button class="btn btn-pdf" onclick="exportPDF()">📄 SAVE AS PDF</button>
+    <div class="nav-label">Config</div>
+    <div class="setting-card">
+        <label>Total Periods</label>
+        <select id="totalPeriods"><option value="8">8 Periods</option><option value="9" selected>9 Periods</option><option value="10">10 Periods</option></select>
+        <label>Start Time</label><input type="time" id="startTime" value="08:00">
+    </div>
+
+    <button class="btn btn-gen" onclick="generate()">⚡ GENERATE TIMETABLE</button>
     <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
-    <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT BACKUP</button>
-    <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 LOAD SAVED</button>
-    <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
 </div>
 
 <div class="main">
-    <div id="expiryBanner">⚠️ ALERT: License expires soon.</div>
     <div class="top-bar">
-        <div class="tab-group">
-            <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
-            <button id="tab-STREAM" onclick="setView('STREAM')">Stream</button>
-            <button id="tab-TEACHER" onclick="setView('TEACHER')">Teacher</button>
-            <button id="tab-LOADS" onclick="setView('LOADS')">Loads</button>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <select id="displayMode" onchange="renderActiveView()" style="padding: 5px; font-size: 11px;">
-                <option value="both">Subject + Teacher</option>
-                <option value="sub">Subject Only</option>
-            </select>
-            <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 120px;"></select>
-            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareTeacherWA_PDF()">📲 SHARE WA (PDF)</button>
-        </div>
+        <div style="font-weight: bold;">VIEW: MASTER SCHEDULE</div>
+        <button class="btn btn-sec" style="width:auto; padding:5px 15px;" onclick="exportPDF()">📄 PDF</button>
     </div>
-
     <div class="content">
         <div id="printableArea">
             <div id="header" style="text-align:center; margin-bottom:15px;">
-                <img id="logoImg" src="" alt="School Logo">
-                <div>
-                    <h1 id="headerTitle" style="margin:0;">TANZANIA SECONDARY SCHOOL</h1>
-                    <h4 id="headerYear" style="margin:5px 0 0 0; color:#64748b;">ACADEMIC YEAR: 2026</h4>
-                </div>
+                <h1 id="headerTitle" style="margin:0;">TANZANIA SECONDARY SCHOOL</h1>
+                <h4 id="headerYear" style="margin:5px 0;">ACADEMIC YEAR: 2026</h4>
             </div>
             <div id="app"></div>
         </div>
@@ -195,144 +93,74 @@ th { background: #f1f5f9; padding: 6px 2px; }
 </div>
 
 <script>
-const EXPIRY_DATE = new Date("2026-12-31");
-let logoBase64 = "";
-let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
+let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [];
 const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
-
-function checkSecurity() {
-    const today = new Date();
-    if (EXPIRY_DATE - today <= 0) document.getElementById('lockScreen').style.display = 'flex';
-}
-
-window.onload = () => {
-    checkSecurity();
-    const saved = localStorage.getItem('TT_PERSIST');
-    if(saved) {
-        const p = JSON.parse(saved);
-        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
-        if(p.schName) document.getElementById('schName').value = p.schName;
-        if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
-        if(p.logo) { logoBase64 = p.logo; document.getElementById('logoImg').src = logoBase64; document.getElementById('logoImg').style.display = 'block'; }
-        renderActiveView();
-    }
-};
-
-function handleLogo(e) {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-        logoBase64 = reader.result;
-        document.getElementById('logoImg').src = logoBase64;
-        document.getElementById('logoImg').style.display = 'block';
-        saveToLocal();
-    };
-    if (file) reader.readAsDataURL(file);
-}
-
-function saveToLocal() {
-    localStorage.setItem('TT_PERSIST', JSON.stringify({
-        DATA, REGISTRY, CLASSES, TEACHERS, 
-        schName: document.getElementById('schName').value,
-        acadYear: document.getElementById('acadYear').value,
-        logo: logoBase64
-    }));
-}
 
 function buildSlots() {
     SLOTS = [];
     let start = document.getElementById('startTime').value;
-    let dur = parseInt(document.getElementById('dur').value);
     let cur = new Date("2026-01-01T" + start);
     let totalP = parseInt(document.getElementById('totalPeriods').value);
-    
     let brkPos = parseInt(document.getElementById('brkAfter').value);
-    let brkLen = parseInt(document.getElementById('brkDur').value);
     let lchPos = parseInt(document.getElementById('lchAfter').value);
-    let lchLen = parseInt(document.getElementById('lchDur').value);
 
     for(let i=1; i<=totalP; i++) {
         let sTime = cur.toTimeString().slice(0,5);
-        cur.setMinutes(cur.getMinutes() + dur);
-        let eTime = cur.toTimeString().slice(0,5);
-        SLOTS.push({ id: 'P'+i, time: `${sTime}-${eTime}`, type: 'period', index: i });
-        
-        if(i === brkPos) { 
-            let bs = cur.toTimeString().slice(0,5);
-            cur.setMinutes(cur.getMinutes() + brkLen); 
-            SLOTS.push({ id: 'BRK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, type: 'break' }); 
-        }
-        if(i === lchPos) { 
-            let ls = cur.toTimeString().slice(0,5);
-            cur.setMinutes(cur.getMinutes() + lchLen); 
-            SLOTS.push({ id: 'LCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' }); 
-        }
+        cur.setMinutes(cur.getMinutes() + 40);
+        SLOTS.push({ id: 'P'+i, time: `${sTime}-${cur.toTimeString().slice(0,5)}`, type: 'period', index: i });
+        if(i === brkPos) { cur.setMinutes(cur.getMinutes() + 20); SLOTS.push({ id: 'BREAK', type: 'break' }); }
+        if(i === lchPos) { cur.setMinutes(cur.getMinutes() + 45); SLOTS.push({ id: 'LUNCH', type: 'lunch' }); }
     }
-}
-
-function isSpecial(day, pId) {
-    const pNum = pId.replace('P','');
-    const relD = document.getElementById('relDay').value;
-    const relP = document.getElementById('relPeriods').value.split(',');
-    if(day === relD && relP.includes(pNum)) return {bool: true, name: "RELIGION"};
-
-    const debD = document.getElementById('debDay').value;
-    const debP = document.getElementById('debPeriods').value.split(',');
-    if(day === debD && debP.includes(pNum)) return {bool: true, name: "DEBATE"};
-
-    const mosD = document.getElementById('mosDay').value;
-    const mosP = document.getElementById('mosPeriods').value.split(',');
-    if(day === mosD && mosP.includes(pNum)) return {bool: true, name: "MOSQUE"};
-
-    return {bool: false};
 }
 
 function generate() {
     DATA = []; buildSlots();
     const useDouble = document.getElementById('optDouble').value === 'yes';
-    let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk); // heavier loads first for better fitting
+    
+    // Sort pool: subjects with higher frequency handled first
+    let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk);
 
     pool.forEach(r => {
         let left = r.pwk;
-        let dayTracker = {}; // track doubles per day
+        
+        // Shuffle days to ensure variety
+        let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
 
-        DAYS.forEach(d => {
-            if (left <= 0) return;
+        for (let d of shuffledDays) {
+            if (left <= 0) break;
 
             let pSlots = SLOTS.filter(s => s.type === 'period');
-            
-            // Try double period if enabled and enough periods left
-            if (useDouble && left >= 2 && !dayTracker[d]) {
+            let placedToday = false;
+
+            // Rule: Double OR Single ONCE per day.
+            if (useDouble && left >= 2) {
                 for (let i = 0; i < pSlots.length - 1; i++) {
                     let s1 = pSlots[i], s2 = pSlots[i+1];
-                    // Check adjacency and availability
                     if (s1.index + 1 === s2.index && 
-                        !isSpecial(d, s1.id).bool && !isSpecial(d, s2.id).bool &&
                         !DATA.some(x => x.d===d && x.p===s1.id && (x.tea===r.tea || x.frm===r.frm)) &&
                         !DATA.some(x => x.d===d && x.p===s2.id && (x.tea===r.tea || x.frm===r.frm))) {
                         
                         DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
-                        left -= 2; dayTracker[d] = true;
-                        break;
+                        left -= 2; placedToday = true;
+                        break; // Exit day loop after double
                     }
                 }
             }
 
-            // Fill remaining as singles
-            if (left > 0) {
-                let shuffled = pSlots.sort(() => Math.random() - 0.5);
-                for (let s of shuffled) {
-                    if (!isSpecial(d, s.id).bool && 
-                        !DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
+            // If double wasn't possible or needed, try single
+            if (!placedToday && left > 0) {
+                let shuffledSlots = [...pSlots].sort(() => Math.random() - 0.5);
+                for (let s of shuffledSlots) {
+                    if (!DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
                         DATA.push({...r, d, p: s.id});
-                        left--; break;
+                        left--; placedToday = true;
+                        break; // Exit day loop after single
                     }
                 }
             }
-        });
+        }
     });
-    saveToLocal();
-    renderActiveView();
+    renderMaster();
 }
 
 function handleCSV(e) {
@@ -351,42 +179,20 @@ function handleCSV(e) {
     reader.readAsText(e.target.files[0]);
 }
 
-function setView(v) {
-    currentView = v;
-    document.querySelectorAll('.tab-group button').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-'+v).classList.add('active');
-    let fil = document.getElementById('viewFilter');
-    fil.style.display = (v==='STREAM'||v==='TEACHER') ? 'inline-block' : 'none';
-    if(v==='STREAM') { fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`); } 
-    else if(v==='TEACHER') { fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`); }
-    renderActiveView();
-}
-
-function renderActiveView() {
-    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
-    document.getElementById('headerYear').innerText = "ACADEMIC YEAR: " + document.getElementById('acadYear').value;
-    if(currentView==='GENERAL') renderMaster();
-    else if(currentView==='STREAM') renderSingle('frm');
-    else if(currentView==='TEACHER') renderSingle('tea');
-    else if(currentView==='LOADS') renderLoads();
-}
-
 function renderMaster() {
-    let mode = document.getElementById('displayMode').value;
-    let h = ""; buildSlots();
+    let h = "";
+    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
     DAYS.forEach(day => {
-        h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<span class="time-hdr">${s.time}</span></th>`);
+        h += `<div style="margin-bottom:20px;"><h3>${day}</h3><table><tr><th>Class</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
         h += `</tr>`;
         CLASSES.sort().forEach(f => {
             h += `<tr><td><b>${f}</b></td>`;
             SLOTS.forEach(s => {
-                let spec = isSpecial(day, s.id);
                 if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
-                else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
                 else {
                     let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    h += `<td>${m ? `<div class="slot">${mode==='both'?m.sub+'<br>'+m.tea:m.sub}</div>` : ''}</td>`;
+                    h += `<td>${m ? `<div class="slot">${m.sub}<br><small>${m.tea}</small></div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
@@ -396,58 +202,8 @@ function renderMaster() {
     document.getElementById('app').innerHTML = h;
 }
 
-function renderSingle(key) {
-    const val = document.getElementById('viewFilter').value;
-    buildSlots();
-    let h = `<div class="table-card"><h3>${val} Timetable</h3><table><tr><th>Day</th>`;
-    SLOTS.forEach(s => h += `<th>${s.id}<span class="time-hdr">${s.time}</span></th>`);
-    h += `</tr>`;
-    DAYS.forEach(d => {
-        h += `<tr><td><b>${d}</b></td>`;
-        SLOTS.forEach(s => {
-            let spec = isSpecial(d, s.id);
-            if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
-            else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
-            else {
-                let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
-                h += `<td>${m ? `<div class="slot">${key==='tea'?m.frm:m.sub}</div>` : ''}</td>`;
-            }
-        });
-        h += `</tr>`;
-    });
-    document.getElementById('app').innerHTML = h + `</table></div>`;
-}
-
-function renderLoads() {
-    let h = `<div class="table-card"><h3>Workload</h3><table><tr><th>Teacher</th><th>Periods</th></tr>`;
-    TEACHERS.sort().forEach(t => {
-        let count = DATA.filter(x => x.tea === t).length;
-        h += `<tr><td>${t}</td><td>${count}</td></tr>`;
-    });
-    document.getElementById('app').innerHTML = h + `</table></div>`;
-}
-
 function exportPDF() {
-    const opt = { margin: 5, filename: 'Timetable.pdf', jsPDF: { orientation: 'landscape' } };
-    html2pdf().set(opt).from(document.getElementById('printableArea')).save();
-}
-
-function saveProject() {
-    const blob = new Blob([JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS, schName:document.getElementById('schName').value, acadYear:document.getElementById('acadYear').value, logo:logoBase64})], {type:"application/json"});
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "TT_Backup.json"; a.click();
-}
-
-function loadProject(e) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        const p = JSON.parse(ev.target.result);
-        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
-        document.getElementById('schName').value = p.schName || "";
-        document.getElementById('acadYear').value = p.acadYear || "";
-        logoBase64 = p.logo || "";
-        renderActiveView();
-    };
-    reader.readAsText(e.target.files[0]);
+    html2pdf().from(document.getElementById('printableArea')).save();
 }
 </script>
 </body>

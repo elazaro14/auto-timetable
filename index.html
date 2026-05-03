@@ -54,12 +54,9 @@ th { background: #f1f5f9; }
 
 .slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
 .break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
-.time-label { display: block; font-size: 7px; color: #64748b; margin-top: 2px; border-top: 1px solid #cbd5e1; padding-top: 1px; }
 
 #header { display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
 #logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
-
-@page { size: A4 landscape; margin: 5mm; }
 
 @media print { 
     .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } 
@@ -109,6 +106,30 @@ th { background: #f1f5f9; }
                 <select id="mosDay"><option>FRIDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option></select>
             </div>
             <div style="flex:1"><label>P# (e.g. 7,8,9)</label><input type="text" id="mosPeriods" value="7,8,9"></div>
+        </div>
+    </div>
+
+    <div class="nav-label">Intervals & Breaks</div>
+    <div class="setting-card">
+        <div style="display:flex; gap:5px; margin-bottom:8px;">
+            <div style="flex:1">
+                <label>Break After P#</label>
+                <input type="number" id="brkAfter" value="2">
+            </div>
+            <div style="flex:1">
+                <label>Time (min)</label>
+                <input type="number" id="brkDur" value="20">
+            </div>
+        </div>
+        <div style="display:flex; gap:5px;">
+            <div style="flex:1">
+                <label>Lunch After P#</label>
+                <input type="number" id="lchAfter" value="4">
+            </div>
+            <div style="flex:1">
+                <label>Time (min)</label>
+                <input type="number" id="lchDur" value="45">
+            </div>
         </div>
     </div>
 
@@ -217,14 +238,25 @@ function buildSlots() {
     let dur = parseInt(document.getElementById('dur').value);
     let cur = new Date("2026-01-01T" + start);
     let totalP = parseInt(document.getElementById('totalPeriods').value);
+    
+    let brkPos = parseInt(document.getElementById('brkAfter').value);
+    let brkLen = parseInt(document.getElementById('brkDur').value);
+    let lchPos = parseInt(document.getElementById('lchAfter').value);
+    let lchLen = parseInt(document.getElementById('lchDur').value);
 
     for(let i=1; i<=totalP; i++) {
         let sTime = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sTime}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
-        // Simplified break logic for this snippet
-        if(i === 2) { cur.setMinutes(cur.getMinutes() + 20); SLOTS.push({ id: 'BRK', time: 'Break', type: 'break' }); }
-        if(i === 4) { cur.setMinutes(cur.getMinutes() + 45); SLOTS.push({ id: 'LCH', time: 'Lunch', type: 'lunch' }); }
+        
+        if(i === brkPos) { 
+            cur.setMinutes(cur.getMinutes() + brkLen); 
+            SLOTS.push({ id: 'BRK', time: 'Break', type: 'break' }); 
+        }
+        if(i === lchPos) { 
+            cur.setMinutes(cur.getMinutes() + lchLen); 
+            SLOTS.push({ id: 'LCH', time: 'Lunch', type: 'lunch' }); 
+        }
     }
 }
 

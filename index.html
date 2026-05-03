@@ -88,6 +88,12 @@ th { background: #f1f5f9; padding: 6px 2px; }
         <input type="file" id="logoUpload" accept="image/*" onchange="handleLogo(event)">
     </div>
 
+    <div class="nav-label">Scheduling Rules</div>
+    <div class="setting-card">
+        <label>Enable Double Periods</label>
+        <select id="optDouble"><option value="yes">YES (1 Per Subject/Day)</option><option value="no">NO (Single Only)</option></select>
+    </div>
+
     <div class="nav-label">Special Blocks</div>
     <div class="setting-card" style="font-size: 9px;">
         <div style="display:flex; gap:5px; margin-bottom:5px;">
@@ -249,7 +255,7 @@ function buildSlots() {
         let sTime = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         let eTime = cur.toTimeString().slice(0,5);
-        SLOTS.push({ id: 'P'+i, time: `${sTime}-${eTime}`, type: 'period' });
+        SLOTS.push({ id: 'P'+i, time: `${sTime}-${eTime}`, type: 'period', index: i });
         
         if(i === brkPos) { 
             let bs = cur.toTimeString().slice(0,5);
@@ -283,16 +289,44 @@ function isSpecial(day, pId) {
 
 function generate() {
     DATA = []; buildSlots();
-    let pool = [...REGISTRY].sort(() => Math.random() - 0.5);
+    const useDouble = document.getElementById('optDouble').value === 'yes';
+    let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk); // heavier loads first for better fitting
+
     pool.forEach(r => {
         let left = r.pwk;
+        let dayTracker = {}; // track doubles per day
+
         DAYS.forEach(d => {
-            if(left <= 0) return;
-            let pPool = SLOTS.filter(s => s.type === 'period').sort(() => Math.random() - 0.5);
-            for(let s of pPool) {
-                if(!isSpecial(d, s.id).bool && !DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
-                    DATA.push({...r, d, p: s.id});
-                    left--; break;
+            if (left <= 0) return;
+
+            let pSlots = SLOTS.filter(s => s.type === 'period');
+            
+            // Try double period if enabled and enough periods left
+            if (useDouble && left >= 2 && !dayTracker[d]) {
+                for (let i = 0; i < pSlots.length - 1; i++) {
+                    let s1 = pSlots[i], s2 = pSlots[i+1];
+                    // Check adjacency and availability
+                    if (s1.index + 1 === s2.index && 
+                        !isSpecial(d, s1.id).bool && !isSpecial(d, s2.id).bool &&
+                        !DATA.some(x => x.d===d && x.p===s1.id && (x.tea===r.tea || x.frm===r.frm)) &&
+                        !DATA.some(x => x.d===d && x.p===s2.id && (x.tea===r.tea || x.frm===r.frm))) {
+                        
+                        DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
+                        left -= 2; dayTracker[d] = true;
+                        break;
+                    }
+                }
+            }
+
+            // Fill remaining as singles
+            if (left > 0) {
+                let shuffled = pSlots.sort(() => Math.random() - 0.5);
+                for (let s of shuffled) {
+                    if (!isSpecial(d, s.id).bool && 
+                        !DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
+                        DATA.push({...r, d, p: s.id});
+                        left--; break;
+                    }
                 }
             }
         });

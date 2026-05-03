@@ -50,10 +50,11 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 
 table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
 th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
-th { background: #f1f5f9; }
+th { background: #f1f5f9; padding: 6px 2px; }
 
 .slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
 .break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
+.time-hdr { display: block; font-size: 7px; color: #64748b; font-weight: 500; margin-top: 2px; border-top: 1px solid #cbd5e1; }
 
 #header { display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
 #logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
@@ -247,15 +248,18 @@ function buildSlots() {
     for(let i=1; i<=totalP; i++) {
         let sTime = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
-        SLOTS.push({ id: 'P'+i, time: `${sTime}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+        let eTime = cur.toTimeString().slice(0,5);
+        SLOTS.push({ id: 'P'+i, time: `${sTime}-${eTime}`, type: 'period' });
         
         if(i === brkPos) { 
+            let bs = cur.toTimeString().slice(0,5);
             cur.setMinutes(cur.getMinutes() + brkLen); 
-            SLOTS.push({ id: 'BRK', time: 'Break', type: 'break' }); 
+            SLOTS.push({ id: 'BRK', time: `${bs}-${cur.toTimeString().slice(0,5)}`, type: 'break' }); 
         }
         if(i === lchPos) { 
+            let ls = cur.toTimeString().slice(0,5);
             cur.setMinutes(cur.getMinutes() + lchLen); 
-            SLOTS.push({ id: 'LCH', time: 'Lunch', type: 'lunch' }); 
+            SLOTS.push({ id: 'LCH', time: `${ls}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' }); 
         }
     }
 }
@@ -338,7 +342,7 @@ function renderMaster() {
     let h = ""; buildSlots();
     DAYS.forEach(day => {
         h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+        SLOTS.forEach(s => h += `<th>${s.id}<span class="time-hdr">${s.time}</span></th>`);
         h += `</tr>`;
         CLASSES.sort().forEach(f => {
             h += `<tr><td><b>${f}</b></td>`;
@@ -362,7 +366,7 @@ function renderSingle(key) {
     const val = document.getElementById('viewFilter').value;
     buildSlots();
     let h = `<div class="table-card"><h3>${val} Timetable</h3><table><tr><th>Day</th>`;
-    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+    SLOTS.forEach(s => h += `<th>${s.id}<span class="time-hdr">${s.time}</span></th>`);
     h += `</tr>`;
     DAYS.forEach(d => {
         h += `<tr><td><b>${d}</b></td>`;

@@ -1,78 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT-PRO Enterprise - Full Build</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        :root {
-            --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
-            --sidebar-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-            --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --whatsapp:#25d366; --pdf:#e11d48;
-        }
-        body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
+<meta charset="UTF-8">
+<title>TT-PRO Enterprise - Special Blocks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root {
+  --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
+  --sidebar-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --whatsapp:#25d366; --pdf:#e11d48;
+}
+body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
 
-        /* SECURITY STYLES */
-        #expiryBanner { display:none; background: var(--warning); color: #000; text-align: center; padding: 8px; font-weight: bold; font-size: 13px; z-index: 100; }
-        #lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); color:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+#expiryBanner { display:none; background: var(--warning); color: #000; text-align: center; padding: 8px; font-weight: bold; font-size: 13px; z-index: 100; }
+#lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); color:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 
-        /* SIDEBAR */
-        .sidebar { width:340px; background: var(--sidebar-gradient); color:white; padding:20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index:10; border-right: 1px solid #334155; }
-        .sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin:0; letter-spacing: 1px; }
+.sidebar { 
+    width:340px; background: var(--sidebar-gradient); color:white; padding:20px; 
+    display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index:10;
+    border-right: 1px solid #334155;
+}
+.sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin:0; letter-spacing: 1px; }
 
-        .setting-card { background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid #334155; }
-        .setting-card label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; font-weight: 700; }
-        .setting-card input, .setting-card select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px; }
+.setting-card { background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 5px; }
+.setting-card label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; font-weight: 700; }
+.setting-card input, .setting-card select { 
+    width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px;
+}
 
-        .nav-label { font-size: 11px; color: #38bdf8; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.nav-label { font-size: 11px; color: #38bdf8; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; }
-        .btn-gen { background: var(--accent); color: #064e3b; box-shadow: 0 4px 0 #15803d; }
-        .btn-gen:active { transform: translateY(2px); box-shadow: 0 2px 0 #15803d; }
-        .btn-sec { background: #475569; color: white; }
-        .btn-wa { background: var(--whatsapp); color: white; padding: 8px 15px; font-size: 11px; }
-        .btn-pdf { background: var(--pdf); color: white; }
+.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; }
+.btn-gen { background: var(--accent); color: #064e3b; box-shadow: 0 4px 0 #15803d; }
+.btn-gen:active { transform: translateY(2px); box-shadow: 0 2px 0 #15803d; }
+.btn-sec { background: #475569; color: white; }
+.btn-wa { background: var(--whatsapp); color: white; margin-left: 10px; padding: 5px 12px; font-size: 11px; }
+.btn-pdf { background: var(--pdf); color: white; }
 
-        /* MAIN */
-        .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-bar { background: white; padding: 10px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .tab-group { display: flex; gap: 5px; }
-        .tab-group button { padding: 8px 15px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: 600; }
-        .tab-group button.active { background: var(--primary); color: white; border-color: var(--primary); }
+.main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
+.top-bar { background: white; padding: 10px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.tab-group { display: flex; gap: 5px; }
+.tab-group button { padding: 8px 15px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: 600; }
+.tab-group button.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .content { flex:1; padding: 20px; overflow-y: auto; }
-        #printableArea { background: white; padding: 20px; border-radius: 8px; }
-        .table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.content { flex:1; padding: 20px; overflow-y: auto; }
+#printableArea { background: white; }
+.table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); page-break-after: always; break-after: page; }
 
-        table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
-        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
-        th { background: #f1f5f9; font-weight: 800; }
+table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
+th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
+th { background: #f1f5f9; }
 
-        .slot { padding: 4px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
-        .break-cell { background: #cbd5e1; font-weight: bold; width: 35px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; border: 2px solid #000 !important; }
-        .time-label { display: block; font-size: 7px; color: #64748b; margin-top: 3px; border-top: 1px solid #94a3b8; }
+.slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
+.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
+.time-label { display: block; font-size: 7px; color: #64748b; margin-top: 2px; border-top: 1px solid #cbd5e1; padding-top: 1px; }
 
-        #header { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; }
-        #logoImg { height: 70px; width: auto; object-fit: contain; display: none; }
+#header { display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
+#logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
 
-        @media print { 
-            .sidebar, .top-bar, #expiryBanner { display: none !important; } 
-            body { height: auto; overflow: visible; background: white; }
-            .main, .content { overflow: visible; padding: 0; }
-            .table-card { page-break-after: always; border: none; box-shadow: none; }
-        }
-    </style>
+@page { size: A4 landscape; margin: 5mm; }
+
+@media print { 
+    .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } 
+    body { height: auto; overflow: visible; background: white; }
+    .main { height: auto; overflow: visible; padding: 0; margin: 0; }
+    .content { overflow: visible; padding: 0; }
+    #printableArea { width: 100%; }
+    .table-card { border: none; box-shadow: none; margin: 0; padding: 0; border-radius: 0; }
+    #logoImg { display: block !important; }
+}
+</style>
 </head>
 <body>
 
 <div id="lockScreen">
     <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
-    <p>Please contact system administrator to renew your license.</p>
 </div>
 
 <div class="sidebar no-print">
-    <h2>TT-PRO ENTERPRISE</h2>
+    <h2>TT-PRO COMMAND</h2>
     
     <div class="setting-card">
         <label>School Name</label>
@@ -83,67 +90,75 @@
         <input type="file" id="logoUpload" accept="image/*" onchange="handleLogo(event)">
     </div>
 
-    <div class="nav-label">Interval Settings</div>
-    <div class="setting-card">
+    <div class="nav-label">Special Blocks</div>
+    <div class="setting-card" style="font-size: 9px;">
+        <div style="display:flex; gap:5px; margin-bottom:5px;">
+            <div style="flex:1"><label>Religion Day</label>
+                <select id="relDay"><option>WEDNESDAY</option><option>MONDAY</option><option>TUESDAY</option><option>THURSDAY</option><option>FRIDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="relPeriods" value="8,9"></div>
+        </div>
+        <div style="display:flex; gap:5px; margin-bottom:5px;">
+            <div style="flex:1"><label>Debate Day</label>
+                <select id="debDay"><option>THURSDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>FRIDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="debPeriods" value="8,9"></div>
+        </div>
         <div style="display:flex; gap:5px;">
-            <div style="flex:1"><label>Periods</label>
-                <select id="totalPeriods">
-                    <option value="8">8</option>
-                    <option value="9" selected>9</option>
-                    <option value="10">10</option>
-                </select>
+            <div style="flex:1"><label>Mosque Day</label>
+                <select id="mosDay"><option>FRIDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option></select>
             </div>
-            <div style="flex:1"><label>Dur (min)</label><input type="number" id="dur" value="40"></div>
-        </div>
-        <label>Start Time</label><input type="time" id="startTime" value="08:00">
-        
-        <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
-            <label style="color:#22c55e">Short Break (After P:)</label>
-            <div style="display:flex; gap:5px;">
-                <input type="number" id="breakAfter" value="2" style="flex:1">
-                <input type="number" id="breakDur" value="20" style="flex:1">
-            </div>
-        </div>
-        <div style="margin-top:8px; border-top:1px solid #334155; padding-top:8px;">
-            <label style="color:#22c55e">Lunch (After P:)</label>
-            <div style="display:flex; gap:5px;">
-                <input type="number" id="lunchAfter" value="4" style="flex:1">
-                <input type="number" id="lunchDur" value="45" style="flex:1">
-            </div>
+            <div style="flex:1"><label>P# (e.g. 7,8,9)</label><input type="text" id="mosPeriods" value="7,8,9"></div>
         </div>
     </div>
 
-    <div class="nav-label">Core Actions</div>
-    <button class="btn btn-gen" onclick="generate()">⚡ SHUFFLE & GENERATE</button>
-    <button class="btn btn-pdf" onclick="exportPDF()">📄 EXPORT MASTER PDF</button>
+    <div class="nav-label">Time & Interval Config</div>
+    <div class="setting-card">
+        <div style="display:flex; gap:5px;">
+            <div style="flex:1.2"><label>Total Periods</label>
+                <select id="totalPeriods"><option value="6">6 Periods</option><option value="7">7 Periods</option><option value="8">8 Periods</option><option value="9" selected>9 Periods</option><option value="10">10 Periods</option></select>
+            </div>
+            <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
+        </div>
+        <div style="margin-top:5px;"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
+    </div>
+
+    <div class="nav-label">Actions</div>
+    <button class="btn btn-gen" id="genBtn" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
+    <button class="btn btn-pdf" onclick="exportPDF()">📄 SAVE AS PDF</button>
     <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
     <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
+    <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT BACKUP</button>
+    <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 LOAD SAVED</button>
+    <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
 </div>
 
 <div class="main">
-    <div id="expiryBanner">⚠️ License expiring soon. Days left: <span id="daysLeft"></span></div>
-    
+    <div id="expiryBanner">⚠️ ALERT: License expires soon.</div>
     <div class="top-bar">
         <div class="tab-group">
             <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
             <button id="tab-STREAM" onclick="setView('STREAM')">Stream</button>
             <button id="tab-TEACHER" onclick="setView('TEACHER')">Teacher</button>
-            <button id="tab-LOADS" onclick="setView('LOADS')">Workload</button>
+            <button id="tab-LOADS" onclick="setView('LOADS')">Loads</button>
         </div>
-        
         <div style="display: flex; gap: 10px; align-items: center;">
-            <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 150px;"></select>
-            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareWA()">📲 WHATSAPP SHARE</button>
+            <select id="displayMode" onchange="renderActiveView()" style="padding: 5px; font-size: 11px;">
+                <option value="both">Subject + Teacher</option>
+                <option value="sub">Subject Only</option>
+            </select>
+            <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 120px;"></select>
+            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareTeacherWA_PDF()">📲 SHARE WA (PDF)</button>
         </div>
     </div>
 
     <div class="content">
         <div id="printableArea">
-            <div id="header">
-                <img id="logoImg" src="">
-                <div style="text-align:center">
-                    <h1 id="headerTitle" style="margin:0; font-size: 24px;"></h1>
-                    <h4 id="headerYear" style="margin:5px 0 0 0; color:#64748b;"></h4>
+            <div id="header" style="text-align:center; margin-bottom:15px;">
+                <img id="logoImg" src="" alt="School Logo">
+                <div>
+                    <h1 id="headerTitle" style="margin:0;">TANZANIA SECONDARY SCHOOL</h1>
+                    <h4 id="headerYear" style="margin:5px 0 0 0; color:#64748b;">ACADEMIC YEAR: 2026</h4>
                 </div>
             </div>
             <div id="app"></div>
@@ -153,200 +168,217 @@
 
 <script>
 const EXPIRY_DATE = new Date("2026-12-31");
+let logoBase64 = "";
+let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
 const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
-let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL', logoBase64 = "";
 
 function checkSecurity() {
-    const diff = Math.ceil((EXPIRY_DATE - new Date()) / (1000 * 60 * 60 * 24));
-    if (diff <= 0) document.getElementById('lockScreen').style.display = 'flex';
-    else if (diff <= 15) {
-        document.getElementById('expiryBanner').style.display = 'block';
-        document.getElementById('daysLeft').innerText = diff;
-    }
+    const today = new Date();
+    if (EXPIRY_DATE - today <= 0) document.getElementById('lockScreen').style.display = 'flex';
 }
+
+window.onload = () => {
+    checkSecurity();
+    const saved = localStorage.getItem('TT_PERSIST');
+    if(saved) {
+        const p = JSON.parse(saved);
+        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        if(p.schName) document.getElementById('schName').value = p.schName;
+        if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
+        if(p.logo) { logoBase64 = p.logo; document.getElementById('logoImg').src = logoBase64; document.getElementById('logoImg').style.display = 'block'; }
+        renderActiveView();
+    }
+};
 
 function handleLogo(e) {
+    const file = e.target.files[0];
     const reader = new FileReader();
-    reader.onload = (ev) => {
-        logoBase64 = ev.target.result;
-        const img = document.getElementById('logoImg');
-        img.src = logoBase64; img.style.display = 'block';
+    reader.onloadend = () => {
+        logoBase64 = reader.result;
+        document.getElementById('logoImg').src = logoBase64;
+        document.getElementById('logoImg').style.display = 'block';
+        saveToLocal();
     };
-    reader.readAsDataURL(e.target.files[0]);
+    if (file) reader.readAsDataURL(file);
 }
 
-function handleCSV(e) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
-        const rawMap = {};
-        lines.slice(1).forEach(line => {
-            const cols = line.split(',').map(c => c.trim().toUpperCase());
-            if (cols.length >= 4) {
-                const key = `${cols[0]}|${cols[1]}|${cols[3]}`; // Sub | Tea | Class
-                rawMap[key] = (rawMap[key] || 0) + 1;
-            }
-        });
-        REGISTRY = []; CLASSES = []; TEACHERS = [];
-        for (let k in rawMap) {
-            const [sub, tea, frm] = k.split('|');
-            REGISTRY.push({ sub, tea, frm, pwk: rawMap[k] });
-            if(!CLASSES.includes(frm)) CLASSES.push(frm);
-            if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
-        }
-        alert("Success: Imported " + REGISTRY.length + " Subject Allocations.");
-    };
-    reader.readAsText(e.target.files[0]);
+function saveToLocal() {
+    localStorage.setItem('TT_PERSIST', JSON.stringify({
+        DATA, REGISTRY, CLASSES, TEACHERS, 
+        schName: document.getElementById('schName').value,
+        acadYear: document.getElementById('acadYear').value,
+        logo: logoBase64
+    }));
 }
 
 function buildSlots() {
     SLOTS = [];
-    let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
-    const totalP = parseInt(document.getElementById('totalPeriods').value);
-    const dur = parseInt(document.getElementById('dur').value);
-    const bAft = parseInt(document.getElementById('breakAfter').value);
-    const lAft = parseInt(document.getElementById('lunchAfter').value);
+    let start = document.getElementById('startTime').value;
+    let dur = parseInt(document.getElementById('dur').value);
+    let cur = new Date("2026-01-01T" + start);
+    let totalP = parseInt(document.getElementById('totalPeriods').value);
 
     for(let i=1; i<=totalP; i++) {
         let sTime = cur.toTimeString().slice(0,5);
         cur.setMinutes(cur.getMinutes() + dur);
         SLOTS.push({ id: 'P'+i, time: `${sTime}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
-        
-        if(i === bAft) {
-            let bt = cur.toTimeString().slice(0,5); 
-            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('breakDur').value));
-            SLOTS.push({ id: 'BREAK', time: `${bt}-${cur.toTimeString().slice(0,5)}`, type: 'break' });
-        }
-        if(i === lAft) {
-            let lt = cur.toTimeString().slice(0,5); 
-            cur.setMinutes(cur.getMinutes() + parseInt(document.getElementById('lunchDur').value));
-            SLOTS.push({ id: 'LUNCH', time: `${lt}-${cur.toTimeString().slice(0,5)}`, type: 'lunch' });
-        }
+        // Simplified break logic for this snippet
+        if(i === 2) { cur.setMinutes(cur.getMinutes() + 20); SLOTS.push({ id: 'BRK', time: 'Break', type: 'break' }); }
+        if(i === 4) { cur.setMinutes(cur.getMinutes() + 45); SLOTS.push({ id: 'LCH', time: 'Lunch', type: 'lunch' }); }
     }
 }
 
+function isSpecial(day, pId) {
+    const pNum = pId.replace('P','');
+    const relD = document.getElementById('relDay').value;
+    const relP = document.getElementById('relPeriods').value.split(',');
+    if(day === relD && relP.includes(pNum)) return {bool: true, name: "RELIGION"};
+
+    const debD = document.getElementById('debDay').value;
+    const debP = document.getElementById('debPeriods').value.split(',');
+    if(day === debD && debP.includes(pNum)) return {bool: true, name: "DEBATE"};
+
+    const mosD = document.getElementById('mosDay').value;
+    const mosP = document.getElementById('mosPeriods').value.split(',');
+    if(day === mosD && mosP.includes(pNum)) return {bool: true, name: "MOSQUE"};
+
+    return {bool: false};
+}
+
 function generate() {
-    if(REGISTRY.length === 0) return alert("Please import a CSV first!");
     DATA = []; buildSlots();
-    
-    // Priority 1: Double Periods
-    let pool = [...REGISTRY].sort((a,b) => b.pwk - a.pwk);
+    let pool = [...REGISTRY].sort(() => Math.random() - 0.5);
     pool.forEach(r => {
         let left = r.pwk;
-        // Try to place exactly one double per day first
-        for(let d of DAYS) {
-            if(left < 2) break;
-            for(let i=0; i<SLOTS.length-1; i++) {
-                let s1 = SLOTS[i], s2 = SLOTS[i+1];
-                if(s1.type==='period' && s2.type==='period' && !isBusy(d, s1.id, r) && !isBusy(d, s2.id, r)) {
-                    DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
-                    left -= 2; break; 
-                }
-            }
-        }
-        // Priority 2: Remaining Singles
-        for(let d of DAYS) {
-            if(left <= 0) break;
-            for(let s of SLOTS.filter(x => x.type==='period')) {
-                if(left > 0 && !isBusy(d, s.id, r)) {
+        DAYS.forEach(d => {
+            if(left <= 0) return;
+            let pPool = SLOTS.filter(s => s.type === 'period').sort(() => Math.random() - 0.5);
+            for(let s of pPool) {
+                if(!isSpecial(d, s.id).bool && !DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
                     DATA.push({...r, d, p: s.id});
                     left--; break;
                 }
             }
-        }
+        });
     });
+    saveToLocal();
     renderActiveView();
 }
 
-function isBusy(d,p,r){ return DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm)); }
+function handleCSV(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const lines = ev.target.result.split('\n').filter(l => l.trim() !== "");
+        REGISTRY = []; CLASSES = []; TEACHERS = [];
+        lines.slice(1).forEach(line => {
+            const [sub, tea, pwk, frm] = line.split(',').map(c => c.trim().toUpperCase());
+            REGISTRY.push({ sub, tea, pwk: parseInt(pwk), frm });
+            if(!CLASSES.includes(frm)) CLASSES.push(frm);
+            if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
+        });
+        alert("CSV Loaded.");
+    };
+    reader.readAsText(e.target.files[0]);
+}
 
 function setView(v) {
     currentView = v;
     document.querySelectorAll('.tab-group button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-'+v).classList.add('active');
-    const fil = document.getElementById('viewFilter');
-    const wa = document.getElementById('waBtn');
-    
+    let fil = document.getElementById('viewFilter');
     fil.style.display = (v==='STREAM'||v==='TEACHER') ? 'inline-block' : 'none';
-    wa.style.display = (v==='TEACHER') ? 'inline-block' : 'none';
-
-    if(v==='STREAM') fil.innerHTML = CLASSES.map(c => `<option value="${c}">${c}</option>`).join('');
-    if(v==='TEACHER') fil.innerHTML = TEACHERS.map(t => `<option value="${t}">${t}</option>`).join('');
+    if(v==='STREAM') { fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`); } 
+    else if(v==='TEACHER') { fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`); }
     renderActiveView();
 }
 
 function renderActiveView() {
     document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
     document.getElementById('headerYear').innerText = "ACADEMIC YEAR: " + document.getElementById('acadYear').value;
-    const app = document.getElementById('app');
-    
-    if(currentView==='GENERAL') {
-        let h = "";
-        DAYS.forEach(day => {
-            h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
-            SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
-            h += `</tr>`;
-            CLASSES.forEach(f => {
-                h += `<tr><td><b>${f}</b></td>`;
-                SLOTS.forEach(s => {
-                    if(s.type !== 'period') h += `<td class="break-cell">${s.id}</td>`;
-                    else {
-                        let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                        h += `<td>${m ? `<div class="slot">${m.sub}<br>${m.tea}</div>`:''}</td>`;
-                    }
-                });
-                h += `</tr>`;
-            });
-            h += `</table></div>`;
-        });
-        app.innerHTML = h;
-    } else if(currentView==='STREAM'||currentView==='TEACHER') {
-        const val = document.getElementById('viewFilter').value;
-        const key = currentView === 'STREAM' ? 'frm' : 'tea';
-        let h = `<div class="table-card"><h3>${val} Schedule</h3><table><tr><th>Day</th>`;
-        SLOTS.forEach(s => h += `<th>${s.id}<br><small>${s.time}</small></th>`);
+    if(currentView==='GENERAL') renderMaster();
+    else if(currentView==='STREAM') renderSingle('frm');
+    else if(currentView==='TEACHER') renderSingle('tea');
+    else if(currentView==='LOADS') renderLoads();
+}
+
+function renderMaster() {
+    let mode = document.getElementById('displayMode').value;
+    let h = ""; buildSlots();
+    DAYS.forEach(day => {
+        h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
         h += `</tr>`;
-        DAYS.forEach(d => {
-            h += `<tr><td><b>${d}</b></td>`;
+        CLASSES.sort().forEach(f => {
+            h += `<tr><td><b>${f}</b></td>`;
             SLOTS.forEach(s => {
-                if(s.type !== 'period') h += `<td class="break-cell">${s.id}</td>`;
+                let spec = isSpecial(day, s.id);
+                if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
+                else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
                 else {
-                    let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
-                    h += `<td>${m ? `<div class="slot">${currentView==='STREAM'?m.sub+'<br>'+m.tea:m.sub+'<br>'+m.frm}</div>`:''}</td>`;
+                    let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
+                    h += `<td>${m ? `<div class="slot">${mode==='both'?m.sub+'<br>'+m.tea:m.sub}</div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;
         });
-        app.innerHTML = h + `</table></div>`;
-    } else if(currentView==='LOADS') {
-        let h = `<div class="table-card"><h3>Teacher Workload Summary</h3><table><tr><th>Teacher</th><th>Periods / Week</th><th>Status</th></tr>`;
-        TEACHERS.forEach(t => {
-            let c = DATA.filter(x => x.tea === t).length;
-            h += `<tr><td>${t}</td><td>${c}</td><td>${c > 28 ? '<b style="color:red">HIGH</b>' : 'NORMAL'}</td></tr>`;
-        });
-        app.innerHTML = h + `</table></div>`;
-    }
+        h += `</table></div>`;
+    });
+    document.getElementById('app').innerHTML = h;
 }
 
-function shareWA() {
-    const teacher = document.getElementById('viewFilter').value;
-    const school = document.getElementById('schName').value;
-    
-    // First, trigger PDF download so the user has the file ready to attach
-    const opt = { margin: 10, filename: teacher + '_Timetable.pdf', jsPDF: { orientation: 'landscape' } };
-    html2pdf().from(document.getElementById('printableArea')).set(opt).save();
+function renderSingle(key) {
+    const val = document.getElementById('viewFilter').value;
+    buildSlots();
+    let h = `<div class="table-card"><h3>${val} Timetable</h3><table><tr><th>Day</th>`;
+    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+    h += `</tr>`;
+    DAYS.forEach(d => {
+        h += `<tr><td><b>${d}</b></td>`;
+        SLOTS.forEach(s => {
+            let spec = isSpecial(d, s.id);
+            if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
+            else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
+            else {
+                let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
+                h += `<td>${m ? `<div class="slot">${key==='tea'?m.frm:m.sub}</div>` : ''}</td>`;
+            }
+        });
+        h += `</tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
+}
 
-    // Second, open WhatsApp with professional message
-    const msg = `*${school}*\n\nHello ${teacher},\nAttached is your official timetable for ${document.getElementById('acadYear').value}. \n\nPlease download and keep it for your reference.`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+function renderLoads() {
+    let h = `<div class="table-card"><h3>Workload</h3><table><tr><th>Teacher</th><th>Periods</th></tr>`;
+    TEACHERS.sort().forEach(t => {
+        let count = DATA.filter(x => x.tea === t).length;
+        h += `<tr><td>${t}</td><td>${count}</td></tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
 }
 
 function exportPDF() {
-    const opt = { margin: 5, filename: 'Master_Timetable.pdf', jsPDF: { orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' } };
-    html2pdf().from(document.getElementById('printableArea')).set(opt).save();
+    const opt = { margin: 5, filename: 'Timetable.pdf', jsPDF: { orientation: 'landscape' } };
+    html2pdf().set(opt).from(document.getElementById('printableArea')).save();
 }
 
-window.onload = checkSecurity;
+function saveProject() {
+    const blob = new Blob([JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS, schName:document.getElementById('schName').value, acadYear:document.getElementById('acadYear').value, logo:logoBase64})], {type:"application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "TT_Backup.json"; a.click();
+}
+
+function loadProject(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const p = JSON.parse(ev.target.result);
+        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        document.getElementById('schName').value = p.schName || "";
+        document.getElementById('acadYear').value = p.acadYear || "";
+        logoBase64 = p.logo || "";
+        renderActiveView();
+    };
+    reader.readAsText(e.target.files[0]);
+}
 </script>
 </body>
 </html>

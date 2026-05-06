@@ -277,17 +277,13 @@ function isSpecial(day, pId) {
     return {bool: false};
 }
 
+// INTEGRATED DOUBLE PERIOD LOGIC
 function generate() {
-    DATA = []; 
-    buildSlots();
-    
-    // 1. Sort registry by workload (highest periods first) for better fitting
-    let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk);
+    DATA = []; buildSlots();
+    let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk); // Highest loads first for efficiency
     
     pool.forEach(r => {
         let left = r.pwk;
-        
-        // Shuffle days so the timetable isn't identical every time
         let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
 
         for (let d of shuffledDays) {
@@ -296,50 +292,35 @@ function generate() {
             let pSlots = SLOTS.filter(s => s.type === 'period');
             let placedToday = false;
 
-            // --- STEP A: TRY DOUBLE PERIOD FIRST ---
-            // Only if subject has at least 2 periods left
+            // TRY DOUBLE PERIOD (Consecutive)
             if (left >= 2) {
                 for (let i = 0; i < pSlots.length - 1; i++) {
-                    let s1 = pSlots[i];
-                    let s2 = pSlots[i+1];
+                    let s1 = pSlots[i], s2 = pSlots[i+1];
+                    let busy1 = DATA.some(x => x.d===d && x.p===s1.id && (x.tea===r.tea || x.frm===r.frm));
+                    let busy2 = DATA.some(x => x.d===d && x.p===s2.id && (x.tea===r.tea || x.frm===r.frm));
+                    let spec1 = isSpecial(d, s1.id).bool, spec2 = isSpecial(d, s2.id).bool;
 
-                    // Check if slots are free for both Teacher and Form
-                    let busy1 = DATA.some(x => x.d === d && x.p === s1.id && (x.tea === r.tea || x.frm === r.frm));
-                    let busy2 = DATA.some(x => x.d === d && x.p === s2.id && (x.tea === r.tea || x.frm === r.frm));
-                    let spec1 = isSpecial(d, s1.id).bool;
-                    let spec2 = isSpecial(d, s2.id).bool;
-
-                    // Ensure they are consecutive and not blocked
                     if (!busy1 && !busy2 && !spec1 && !spec2) {
                         DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
-                        left -= 2;
-                        placedToday = true; 
-                        break; // Move to next day for this subject
+                        left -= 2; placedToday = true; break;
                     }
                 }
             }
 
-            // --- STEP B: TRY SINGLE PERIOD FALLBACK ---
-            // If double wasn't possible today or not needed, try to place 1 single
+            // SINGLE PERIOD FALLBACK (If double not possible or not needed)
             if (!placedToday && left > 0) {
                 let shuffledP = [...pSlots].sort(() => Math.random() - 0.5);
                 for (let s of shuffledP) {
-                    let busy = DATA.some(x => x.d === d && x.p === s.id && (x.tea === r.tea || x.frm === r.frm));
+                    let busy = DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm));
                     let spec = isSpecial(d, s.id).bool;
-
                     if (!busy && !spec) {
                         DATA.push({...r, d, p: s.id});
-                        left--;
-                        break; // Move to next day for this subject
+                        left--; placedToday = true; break;
                     }
                 }
             }
         }
     });
-
-    saveToLocal();
-    renderActiveView();
-}
     saveToLocal();
     renderActiveView();
 }
@@ -394,8 +375,8 @@ function renderMaster() {
                 if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
                 else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
                 else {
-                    let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
-                    h += `<td>${m ? `<div class="slot">${mode==='both'?m.sub+'<br>'+m.tea:m.sub}</div>` : ''}</td>`;
+                    let m = DATA.filter(x => x.d===day && x.p===s.id && x.frm===f);
+                    h += `<td>${m.length > 0 ? `<div class="slot">${mode==='both'?m[0].sub+'<br>'+m[0].tea:m[0].sub}</div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;

@@ -35,7 +35,6 @@ body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; heigh
 .btn-gen { background: var(--accent); color: #064e3b; box-shadow: 0 4px 0 #15803d; }
 .btn-gen:active { transform: translateY(2px); box-shadow: 0 2px 0 #15803d; }
 .btn-sec { background: #475569; color: white; }
-.btn-wa { background: var(--whatsapp); color: white; margin-left: 10px; padding: 5px 12px; font-size: 11px; }
 .btn-pdf { background: var(--pdf); color: white; }
 
 .main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
@@ -59,7 +58,7 @@ th { background: #f1f5f9; }
 #logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
 
 @media print { 
-    .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } 
+    .sidebar, .top-bar, #expiryBanner { display: none !important; } 
     body { height: auto; overflow: visible; background: white; }
     .main { height: auto; overflow: visible; padding: 0; margin: 0; }
     .content { overflow: visible; padding: 0; }
@@ -276,69 +275,65 @@ function isSpecial(day, pId) {
     return {bool: false};
 }
 
-// IMPROVED GENERATION WITH RETRY LOGIC
+function canPlace(r, d, pId) {
+    if(isSpecial(d, pId).bool) return false;
+    if(DATA.some(x => x.d === d && x.p === pId && (x.tea === r.tea || x.frm === r.frm))) return false;
+    return true;
+}
+
 function generate() {
     if(REGISTRY.length === 0) return alert("Load CSV first!");
-    
+    buildSlots();
     let attempts = 0;
     let success = false;
-    buildSlots();
 
-    while(attempts < 5 && !success) {
+    while(attempts < 10 && !success) {
         DATA = [];
         success = true;
-        let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk); // Complex subjects first
+        let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk);
 
         for(let r of pool) {
             let left = r.pwk;
             let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
-            let hasDouble = false;
 
             for(let d of shuffledDays) {
                 if(left <= 0) break;
                 let pSlots = SLOTS.filter(s => s.type === 'period');
 
-                // 1. TRY TO PLACE DOUBLE PERIOD (Priority 1)
-                if(left >= 2 && !hasDouble) {
+                // RULE: Subject appears ONLY ONCE per day (as a double OR as a single)
+                let alreadyToday = DATA.some(x => x.d === d && x.frm === r.frm && x.sub === r.sub);
+                if(alreadyToday) continue;
+
+                // PRIORITY 1: DOUBLE PERIOD
+                if(left >= 2) {
                     let placedDouble = false;
                     for(let i=0; i < pSlots.length-1; i++) {
                         let s1 = pSlots[i], s2 = pSlots[i+1];
                         if(canPlace(r, d, s1.id) && canPlace(r, d, s2.id)) {
                             DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
-                            left -= 2; hasDouble = true; placedDouble = true; break;
+                            left -= 2; placedDouble = true; break;
                         }
                     }
-                    if(placedDouble) continue; // Move to next day
+                    if(placedDouble) continue; 
                 }
 
-                // 2. TRY TO PLACE SINGLE PERIOD (Priority 2)
+                // PRIORITY 2: SINGLE PERIOD
                 let shuffledP = [...pSlots].sort(() => Math.random() - 0.5);
                 for(let s of shuffledP) {
-                    // Rule: Only 1 entry of the same subject per day (unless it's the double we just placed)
-                    let alreadyInDay = DATA.some(x => x.d === d && x.frm === r.frm && x.sub === r.sub);
-                    if(!alreadyInDay && canPlace(r, d, s.id)) {
+                    if(canPlace(r, d, s.id)) {
                         DATA.push({...r, d, p: s.id});
                         left--; break;
                     }
                 }
             }
-            if(left > 0) { success = false; break; } // Failed this subject, retry whole board
+            if(left > 0) { success = false; break; }
         }
         attempts++;
     }
 
-    if(!success) alert("Conflict detected. Try clicking Generate again or check Teacher loads.");
+    if(!success) alert("Could not satisfy all constraints. Try again or reduce teacher workload.");
     saveToLocal();
     renderActiveView();
-}
-
-function canPlace(r, d, pId) {
-    if(isSpecial(d, pId).bool) return false;
-    // Teacher check
-    if(DATA.some(x => x.d === d && x.p === pId && x.tea === r.tea)) return false;
-    // Form/Class check
-    if(DATA.some(x => x.d === d && x.p === pId && x.frm === r.frm)) return false;
-    return true;
 }
 
 function handleCSV(e) {
@@ -354,7 +349,7 @@ function handleCSV(e) {
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
         });
-        alert("CSV Loaded successfully.");
+        alert("CSV Loaded.");
         saveToLocal();
     };
     reader.readAsText(e.target.files[0]);

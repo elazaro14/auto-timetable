@@ -282,14 +282,16 @@ function canPlace(r, d, pId) {
 }
 
 function generate() {
-    if(REGISTRY.length === 0) return alert("Load CSV first!");
+    if(REGISTRY.length === 0) return alert("Please import CSV first!");
     buildSlots();
     let attempts = 0;
     let success = false;
 
-    while(attempts < 10 && !success) {
+    // We allow 20 full re-shuffles to find a solution
+    while(attempts < 20 && !success) {
         DATA = [];
         success = true;
+        // Priority: Sort by most periods per week to place hard ones first
         let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk);
 
         for(let r of pool) {
@@ -298,15 +300,15 @@ function generate() {
 
             for(let d of shuffledDays) {
                 if(left <= 0) break;
+                
+                // Rule: Subject once per day (either 1 double or 1 single)
+                if(DATA.some(x => x.d === d && x.frm === r.frm && x.sub === r.sub)) continue;
+
                 let pSlots = SLOTS.filter(s => s.type === 'period');
-
-                // RULE: Subject appears ONLY ONCE per day (as a double OR as a single)
-                let alreadyToday = DATA.some(x => x.d === d && x.frm === r.frm && x.sub === r.sub);
-                if(alreadyToday) continue;
-
-                // PRIORITY 1: DOUBLE PERIOD
+                
+                // 1. Try Double Priority
+                let placedDouble = false;
                 if(left >= 2) {
-                    let placedDouble = false;
                     for(let i=0; i < pSlots.length-1; i++) {
                         let s1 = pSlots[i], s2 = pSlots[i+1];
                         if(canPlace(r, d, s1.id) && canPlace(r, d, s2.id)) {
@@ -314,26 +316,31 @@ function generate() {
                             left -= 2; placedDouble = true; break;
                         }
                     }
-                    if(placedDouble) continue; 
                 }
 
-                // PRIORITY 2: SINGLE PERIOD
-                let shuffledP = [...pSlots].sort(() => Math.random() - 0.5);
-                for(let s of shuffledP) {
-                    if(canPlace(r, d, s.id)) {
-                        DATA.push({...r, d, p: s.id});
-                        left--; break;
+                // 2. Try Single if no double was possible (or if only 1 left)
+                if(!placedDouble && left > 0) {
+                    let shuffledP = [...pSlots].sort(() => Math.random() - 0.5);
+                    for(let s of shuffledP) {
+                        if(canPlace(r, d, s.id)) {
+                            DATA.push({...r, d, p: s.id});
+                            left--; break;
+                        }
                     }
                 }
             }
+            // If even after checking all days we still have lessons left for this subject
             if(left > 0) { success = false; break; }
         }
         attempts++;
     }
 
-    if(!success) alert("Could not satisfy all constraints. Try again or reduce teacher workload.");
-    saveToLocal();
-    renderActiveView();
+    if(!success) {
+        alert("Failed to find a perfect fit. Try clicking Generate again or reducing some teachers' periods per week.");
+    } else {
+        saveToLocal();
+        renderActiveView();
+    }
 }
 
 function handleCSV(e) {

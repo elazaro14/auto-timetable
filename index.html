@@ -2,50 +2,44 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO Enterprise+</title>
+<title>TT-PRO MAX</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-:root {
-  --primary:#0f172a; --accent:#22c55e; --bg:#f8fafc;
-  --border:#e2e8f0; --danger:#ef4444;
-}
-body { margin:0; font-family:system-ui; display:flex; height:100vh; background:var(--bg); }
-
-.sidebar {
-  width:300px; background:#0f172a; color:white; padding:15px; overflow:auto;
-}
-.sidebar h2 { color:var(--accent); text-align:center; }
-
-.setting-card { margin-bottom:10px; }
-.setting-card label { font-size:11px; display:block; }
-.setting-card input, select {
-  width:100%; padding:6px; margin-bottom:5px;
+:root{
+--primary:#0f172a;
+--accent:#22c55e;
+--bg:#f8fafc;
+--border:#e2e8f0;
 }
 
-.btn {
-  width:100%; padding:10px; margin-top:5px;
-  background:var(--accent); border:none; cursor:pointer;
+body{margin:0;display:flex;font-family:system-ui;background:var(--bg);height:100vh}
+
+.sidebar{
+width:320px;background:#0f172a;color:white;padding:15px;overflow:auto
 }
 
-.main { flex:1; display:flex; flex-direction:column; }
-.top { padding:10px; background:white; border-bottom:1px solid var(--border); }
+.sidebar h2{color:var(--accent);text-align:center}
 
-.content { padding:15px; overflow:auto; }
+.setting-card{margin-bottom:10px}
+.setting-card label{font-size:11px}
+.setting-card input,.setting-card select{width:100%;padding:6px;margin:3px 0}
 
-.card {
-  background:white; padding:10px; border-radius:8px;
-  border:1px solid var(--border);
-}
+.btn{width:100%;padding:10px;margin-top:5px;border:none;background:var(--accent);cursor:pointer}
 
-.stats { display:flex; gap:10px; margin-bottom:10px; }
+.main{flex:1;display:flex;flex-direction:column}
+.top{padding:10px;background:white;border-bottom:1px solid var(--border)}
+.content{padding:10px;overflow:auto}
 
-table { width:100%; border-collapse:collapse; }
-th, td { border:1px solid black; font-size:10px; text-align:center; padding:4px; }
+.stats{display:flex;gap:10px;margin-bottom:10px}
+.card{background:white;padding:10px;border-radius:6px;border:1px solid var(--border)}
 
-.slot { background:#dcfce7; font-weight:bold; }
-.break { background:#ddd; }
-.special { background:#fef3c7; font-weight:bold; }
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
+
+.slot{background:#dcfce7;font-weight:bold}
+.break{background:#ddd}
+.special{background:#fef3c7;font-weight:bold}
 
 </style>
 </head>
@@ -53,27 +47,50 @@ th, td { border:1px solid black; font-size:10px; text-align:center; padding:4px;
 <body>
 
 <div class="sidebar">
-<h2>TT-PRO+</h2>
+<h2>TT-PRO MAX</h2>
 
 <div class="setting-card">
-<label>School</label>
+<label>School Name</label>
 <input id="schName" value="SECONDARY SCHOOL">
 </div>
 
 <div class="setting-card">
-<label>Periods</label>
+<label>Total Periods</label>
 <select id="totalPeriods">
 <option>6</option><option>7</option><option selected>8</option><option>9</option>
 </select>
 
-<label>Duration</label>
-<input id="dur" type="number" value="40">
+<label>Period Duration (min)</label>
+<input type="number" id="periodDur" value="40">
+
+<label>Start Time</label>
+<input type="time" id="startTime" value="08:00">
 </div>
 
-<button class="btn" onclick="generate()">⚡ GENERATE</button>
-<button class="btn" onclick="exportPDF()">📄 PDF</button>
+<div class="setting-card">
+<label>Break After Period</label>
+<input type="number" id="breakAfter" value="2">
 
-<input type="file" id="csv" onchange="loadCSV(event)">
+<label>Break Duration</label>
+<input type="number" id="breakDur" value="20">
+
+<label>Lunch After Period</label>
+<input type="number" id="lunchAfter" value="4">
+
+<label>Lunch Duration</label>
+<input type="number" id="lunchDur" value="45">
+</div>
+
+<h4>Special Blocks</h4>
+<div id="specialContainer"></div>
+<button class="btn" onclick="addSpecial()">➕ Add Special</button>
+
+<hr>
+
+<button class="btn" onclick="generate()">⚡ Generate</button>
+<button class="btn" onclick="exportPDF()">📄 Export PDF</button>
+
+<input type="file" onchange="loadCSV(event)">
 
 </div>
 
@@ -90,144 +107,232 @@ th, td { border:1px solid black; font-size:10px; text-align:center; padding:4px;
 
 <script>
 
-let REGISTRY=[], DATA=[], CLASSES=[], TEACHERS=[];
-const DAYS=["MON","TUE","WED","THU","FRI"];
+let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[];
+let SLOTS=[];
+const DAYS=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
+
+// ================= SPECIAL BLOCKS =================
+
+function addSpecial(){
+let id=Date.now();
+
+let html=`
+<div class="setting-card" id="sp-${id}">
+<label>Name</label>
+<input id="name-${id}" placeholder="RELIGION">
+
+<label>Day</label>
+<select id="day-${id}">
+${DAYS.map(d=>`<option>${d}</option>`).join('')}
+</select>
+
+<label>After Period</label>
+<input type="number" id="after-${id}">
+
+<label>Duration</label>
+<input type="number" id="dur-${id}" value="40">
+
+<button onclick="removeSpecial(${id})">Remove</button>
+</div>`;
+
+document.getElementById('specialContainer').insertAdjacentHTML('beforeend',html);
+}
+
+function removeSpecial(id){
+document.getElementById(`sp-${id}`).remove();
+}
+
+// ================= CSV =================
 
 function loadCSV(e){
- const reader=new FileReader();
- reader.onload=(ev)=>{
-  let lines=ev.target.result.split('\n');
-  REGISTRY=[]; CLASSES=[]; TEACHERS=[];
+const reader=new FileReader();
+reader.onload=(ev)=>{
+let lines=ev.target.result.split('\n');
 
-  lines.slice(1).forEach(l=>{
-    let [sub,tea,pwk,frm]=l.split(',').map(x=>x?.trim().toUpperCase());
+REGISTRY=[];CLASSES=[];TEACHERS=[];
 
-    if(!sub || !tea || isNaN(pwk)) return;
+lines.slice(1).forEach(l=>{
+let [sub,tea,pwk,frm]=l.split(',').map(x=>x?.trim().toUpperCase());
 
-    REGISTRY.push({sub,tea,pwk:+pwk,frm});
+if(!sub||!tea||isNaN(pwk)) return;
 
-    if(!CLASSES.includes(frm)) CLASSES.push(frm);
-    if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
-  });
+REGISTRY.push({sub,tea,pwk:+pwk,frm});
 
-  alert("Loaded!");
- }
- reader.readAsText(e.target.files[0]);
+if(!CLASSES.includes(frm)) CLASSES.push(frm);
+if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
+});
+
+alert("CSV Loaded");
+};
+reader.readAsText(e.target.files[0]);
 }
+
+// ================= SLOT ENGINE =================
 
 function buildSlots(){
- let total=+document.getElementById('totalPeriods').value;
- let arr=[];
- for(let i=1;i<=total;i++) arr.push("P"+i);
- return arr;
+
+SLOTS=[];
+
+let cur=new Date("2026-01-01T"+document.getElementById('startTime').value);
+
+let dur=+document.getElementById('periodDur').value;
+let total=+document.getElementById('totalPeriods').value;
+
+let breakAfter=+document.getElementById('breakAfter').value;
+let breakDur=+document.getElementById('breakDur').value;
+
+let lunchAfter=+document.getElementById('lunchAfter').value;
+let lunchDur=+document.getElementById('lunchDur').value;
+
+for(let i=1;i<=total;i++){
+
+let s=cur.toTimeString().slice(0,5);
+cur.setMinutes(cur.getMinutes()+dur);
+let e=cur.toTimeString().slice(0,5);
+
+SLOTS.push({id:"P"+i,label:`P${i}<br>${s}-${e}`,type:"period"});
+
+// BREAK
+if(i===breakAfter){
+SLOTS.push({id:"BREAK",label:`BREAK<br>${breakDur} min`,type:"break"});
+cur.setMinutes(cur.getMinutes()+breakDur);
 }
 
-function teacherLoad(t){
- return DATA.filter(x=>x.tea===t).length;
+// LUNCH
+if(i===lunchAfter){
+SLOTS.push({id:"LUNCH",label:`LUNCH<br>${lunchDur} min`,type:"lunch"});
+cur.setMinutes(cur.getMinutes()+lunchDur);
 }
+
+// SPECIALS
+document.querySelectorAll('#specialContainer .setting-card').forEach(card=>{
+let id=card.id.split('-')[1];
+
+let name=document.getElementById(`name-${id}`).value.toUpperCase();
+let after=+document.getElementById(`after-${id}`).value;
+let sd=+document.getElementById(`dur-${id}`).value;
+
+if(after===i && name){
+SLOTS.push({id:"SP-"+name,label:`${name}<br>${sd} min`,type:"special",name});
+cur.setMinutes(cur.getMinutes()+sd);
+}
+});
+
+}
+
+}
+
+// ================= GENERATOR =================
 
 function canPlace(r,d,p){
- if(DATA.some(x=>x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm))) return false;
- return true;
+let slot=SLOTS.find(s=>s.id===p);
+if(!slot || slot.type!=="period") return false;
+
+if(DATA.some(x=>x.d===d && x.p===p && x.tea===r.tea)) return false;
+if(DATA.some(x=>x.d===d && x.p===p && x.frm===r.frm)) return false;
+
+return true;
 }
+
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5);}
 
 function generate(){
 
- if(REGISTRY.length===0) return alert("Upload CSV");
+if(REGISTRY.length===0) return alert("Upload CSV first");
 
- DATA=[];
+DATA=[];
+buildSlots();
 
- let slots=buildSlots();
+let pool=[...REGISTRY].sort((a,b)=>b.pwk-a.pwk);
 
- // sort hard subjects first
- let pool=[...REGISTRY].sort((a,b)=>b.pwk-a.pwk);
+for(let r of pool){
 
- for(let r of pool){
+let left=r.pwk;
 
-  let left=r.pwk;
+for(let d of shuffle(DAYS)){
 
-  for(let d of shuffle(DAYS)){
+if(left<=0) break;
 
-   if(left<=0) break;
+// prevent duplicate subject same day
+if(DATA.some(x=>x.d===d && x.frm===r.frm && x.sub===r.sub)) continue;
 
-   // prevent same subject twice per day
-   if(DATA.some(x=>x.d===d && x.frm===r.frm && x.sub===r.sub)) continue;
+for(let s of shuffle(SLOTS.filter(x=>x.type==="period"))){
 
-   for(let p of shuffle(slots)){
-
-    if(canPlace(r,d,p)){
-
-      DATA.push({...r,d,p});
-      left--;
-
-      break;
-    }
-   }
-  }
-
-  if(left>0){
-    alert("Could not fully allocate "+r.sub);
-  }
- }
-
- render();
+if(canPlace(r,d,s.id)){
+DATA.push({...r,d,p:s.id});
+left--;
+break;
+}
+}
 }
 
-function shuffle(arr){
- return [...arr].sort(()=>Math.random()-0.5);
+if(left>0){
+alert("Not fully allocated: "+r.sub);
 }
+}
+
+render();
+}
+
+// ================= RENDER =================
 
 function render(){
 
- document.getElementById('title').innerText=document.getElementById('schName').value;
+document.getElementById('title').innerText=document.getElementById('schName').value;
 
- renderStats();
+renderStats();
 
- let slots=buildSlots();
+let html="";
 
- let html="";
+for(let d of DAYS){
 
- for(let d of DAYS){
+html+=`<div class="card"><h4>${d}</h4><table><tr><th>Class</th>`;
 
-  html+=`<div class="card"><h4>${d}</h4><table><tr><th>Class</th>`;
+SLOTS.forEach(s=>html+=`<th>${s.label}</th>`);
+html+="</tr>";
 
-  slots.forEach(p=>html+=`<th>${p}</th>`);
-  html+="</tr>";
+CLASSES.forEach(c=>{
+html+=`<tr><td>${c}</td>`;
 
-  CLASSES.forEach(c=>{
-    html+=`<tr><td>${c}</td>`;
+SLOTS.forEach(s=>{
 
-    slots.forEach(p=>{
-      let m=DATA.find(x=>x.d===d && x.p===p && x.frm===c);
-
-      html+=`<td>${m?`<div class="slot">${m.sub}<br>${m.tea}</div>`:""}</td>`;
-    });
-
-    html+="</tr>";
-  });
-
-  html+="</table></div><br>";
- }
-
- document.getElementById('app').innerHTML=html;
+if(s.type==="break"||s.type==="lunch"){
+html+=`<td class="break">${s.label}</td>`;
 }
+else if(s.type==="special"){
+html+=`<td class="special">${s.name}</td>`;
+}
+else{
+let m=DATA.find(x=>x.d===d && x.p===s.id && x.frm===c);
+html+=`<td>${m?`<div class="slot">${m.sub}<br>${m.tea}</div>`:""}</td>`;
+}
+
+});
+
+html+="</tr>";
+});
+
+html+="</table></div><br>";
+}
+
+document.getElementById('app').innerHTML=html;
+}
+
+// ================= STATS =================
 
 function renderStats(){
-
- let totalLessons=DATA.length;
- let teachers=TEACHERS.length;
- let classes=CLASSES.length;
-
- document.getElementById('stats').innerHTML=`
- <div class="stats">
-  <div class="card">Classes: ${classes}</div>
-  <div class="card">Teachers: ${teachers}</div>
-  <div class="card">Lessons: ${totalLessons}</div>
- </div>`;
+document.getElementById('stats').innerHTML=`
+<div class="stats">
+<div class="card">Classes: ${CLASSES.length}</div>
+<div class="card">Teachers: ${TEACHERS.length}</div>
+<div class="card">Lessons: ${DATA.length}</div>
+</div>`;
 }
 
+// ================= PDF =================
+
 function exportPDF(){
- html2pdf().from(document.body).save();
+html2pdf().from(document.body).save();
 }
 
 </script>

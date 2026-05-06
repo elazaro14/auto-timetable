@@ -2,30 +2,21 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO MAX+</title>
+<title>TT-PRO MAX FINAL</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 body{margin:0;font-family:system-ui;display:flex;height:100vh;background:#f1f5f9}
-
 .sidebar{width:320px;background:#0f172a;color:white;padding:15px;overflow:auto}
 .sidebar h2{color:#22c55e;text-align:center}
-
-.setting-card{margin-bottom:10px}
 .setting-card input,.setting-card select{width:100%;padding:6px;margin:4px 0}
-
 .btn{width:100%;padding:10px;margin-top:5px;background:#22c55e;border:none;cursor:pointer}
-
 .main{flex:1;display:flex;flex-direction:column}
-.top{background:white;padding:10px;border-bottom:1px solid #ddd;display:flex;gap:10px}
-
+.top{background:white;padding:10px;border-bottom:1px solid #ddd;display:flex;gap:10px;flex-wrap:wrap}
 .content{padding:10px;overflow:auto}
-
 .card{background:white;padding:10px;margin-bottom:10px;border-radius:6px}
-
 table{width:100%;border-collapse:collapse}
 th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
-
 .slot{background:#dcfce7;font-weight:bold}
 .break{background:#ddd}
 .special{background:#fef3c7;font-weight:bold}
@@ -35,17 +26,20 @@ th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 <body>
 
 <div class="sidebar">
-<h2>TT-PRO MAX+</h2>
+<h2>TT-PRO MAX</h2>
 
 <label>School</label>
 <input id="schName" value="SECONDARY SCHOOL">
+
+<label>Academic Year</label>
+<input id="acadYear" value="2026">
 
 <label>Total Periods</label>
 <select id="totalPeriods">
 <option>6</option><option>7</option><option selected>8</option><option>9</option>
 </select>
 
-<label>Duration</label>
+<label>Period Duration</label>
 <input type="number" id="periodDur" value="40">
 
 <label>Start Time</label>
@@ -64,12 +58,6 @@ th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 
 <label>Lunch Duration</label>
 <input type="number" id="lunchDur" value="45">
-
-<hr>
-
-<h4>Special Blocks</h4>
-<div id="specialContainer"></div>
-<button class="btn" onclick="addSpecial()">➕ Add Special</button>
 
 <hr>
 
@@ -92,13 +80,15 @@ th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 
 <select id="displayMode" onchange="render()">
 <option value="both">Subject + Teacher</option>
-<option value="sub">Subject only</option>
+<option value="sub">Subject Only</option>
 </select>
 
 <select id="filter"></select>
 </div>
 
 <div class="content">
+<h2 id="headerTitle"></h2>
+<h4 id="headerYear"></h4>
 <div id="stats"></div>
 <div id="app"></div>
 </div>
@@ -111,17 +101,15 @@ let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[],SLOTS=[];
 let currentView="MASTER";
 const DAYS=["MON","TUE","WED","THU","FRI"];
 
-// ================= CSV =================
+// CSV
 function loadCSV(e){
-const r=new FileReader();
+let r=new FileReader();
 r.onload=(ev)=>{
 let lines=ev.target.result.split('\n');
 REGISTRY=[];CLASSES=[];TEACHERS=[];
-
 lines.slice(1).forEach(l=>{
 let [sub,tea,pwk,frm]=l.split(',').map(x=>x?.trim().toUpperCase());
 if(!sub||!tea||isNaN(pwk)) return;
-
 REGISTRY.push({sub,tea,pwk:+pwk,frm});
 if(!CLASSES.includes(frm)) CLASSES.push(frm);
 if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
@@ -131,23 +119,7 @@ alert("CSV Loaded");
 r.readAsText(e.target.files[0]);
 }
 
-// ================= SPECIAL =================
-function addSpecial(){
-let id=Date.now();
-document.getElementById('specialContainer').insertAdjacentHTML('beforeend',`
-<div id="sp-${id}">
-<input id="name-${id}" placeholder="NAME">
-<select id="day-${id}">
-${DAYS.map(d=>`<option>${d}</option>`)}
-</select>
-<input id="after-${id}" placeholder="After P">
-<input id="dur-${id}" value="40">
-<button onclick="removeSpecial(${id})">X</button>
-</div>`);
-}
-function removeSpecial(id){document.getElementById('sp-'+id).remove();}
-
-// ================= SLOTS =================
+// SLOTS
 function buildSlots(){
 SLOTS=[];
 let cur=new Date("2026-01-01T"+startTime.value);
@@ -172,15 +144,18 @@ cur.setMinutes(cur.getMinutes()+ +lunchDur.value);
 }
 }
 
-// ================= GENERATOR =================
+// RULES
 function canPlace(r,d,p){
-if(DATA.some(x=>x.d==d && x.p==p && x.tea==r.tea)) return false;
-if(DATA.some(x=>x.d==d && x.p==p && x.frm==r.frm)) return false;
+let slot=SLOTS.find(s=>s.id===p);
+if(!slot || slot.type!=="period") return false;
+if(DATA.some(x=>x.d===d && x.p===p && x.tea===r.tea)) return false;
+if(DATA.some(x=>x.d===d && x.p===p && x.frm===r.frm)) return false;
 return true;
 }
 
 function shuffle(a){return [...a].sort(()=>Math.random()-0.5);}
 
+// GENERATOR
 function generate(){
 
 if(REGISTRY.length==0) return alert("Upload CSV");
@@ -203,18 +178,37 @@ for(let d of shuffle(DAYS)){
 
 if(left<=0) break;
 
-if(DATA.some(x=>x.d==d && x.frm==r.frm && x.sub==r.sub)) continue;
+if(DATA.some(x=>x.d===d && x.frm===r.frm && x.sub===r.sub)) continue;
 
-for(let s of shuffle(SLOTS.filter(x=>x.type=="period"))){
+let periods=SLOTS.filter(x=>x.type==="period");
 
-if(canPlace(r,d,s.id)){
-DATA.push({...r,d,p:s.id});
-left--; break;
+// DOUBLE FIRST
+if(left>=2){
+for(let i=0;i<periods.length-1;i++){
+let p1=periods[i].id;
+let p2=periods[i+1].id;
+if(canPlace(r,d,p1)&&canPlace(r,d,p2)){
+DATA.push({...r,d,p:p1},{...r,d,p:p2});
+left-=2;
+break;
 }
 }
 }
 
-if(left>0){ success=false; break; }
+// SINGLE
+if(left>0){
+for(let p of shuffle(periods)){
+if(canPlace(r,d,p.id)){
+DATA.push({...r,d,p:p.id});
+left--;
+break;
+}
+}
+}
+
+}
+
+if(left>0){success=false;break;}
 }
 
 }
@@ -224,31 +218,30 @@ if(!success) alert("⚠️ Some subjects not fully allocated");
 render();
 }
 
-// ================= VIEWS =================
+// VIEWS
 function setView(v){
 currentView=v;
-let f=document.getElementById('filter');
+let f=filter;
 
-if(v=="STREAM"){
-f.innerHTML=CLASSES.map(c=>`<option>${c}</option>`);
-}
-else if(v=="TEACHER"){
-f.innerHTML=TEACHERS.map(t=>`<option>${t}</option>`);
-}
+if(v==="STREAM") f.innerHTML=CLASSES.map(c=>`<option>${c}</option>`);
+else if(v==="TEACHER") f.innerHTML=TEACHERS.map(t=>`<option>${t}</option>`);
 else f.innerHTML="";
 
 render();
 }
 
-// ================= RENDER =================
+// RENDER
 function render(){
+
+headerTitle.innerText=schName.value;
+headerYear.innerText="Academic Year: "+acadYear.value;
 
 renderStats();
 
-if(currentView=="MASTER") renderMaster();
-if(currentView=="STREAM") renderSingle('frm');
-if(currentView=="TEACHER") renderSingle('tea');
-if(currentView=="LOAD") renderLoads();
+if(currentView==="MASTER") renderMaster();
+if(currentView==="STREAM") renderSingle("frm");
+if(currentView==="TEACHER") renderSingle("tea");
+if(currentView==="LOAD") renderLoads();
 }
 
 function renderMaster(){
@@ -257,21 +250,18 @@ let html="";
 
 DAYS.forEach(d=>{
 html+=`<div class="card"><h4>${d}</h4><table><tr><th>Class</th>`;
-
 SLOTS.forEach(s=>html+=`<th>${s.label}</th>`);
 html+="</tr>";
 
 CLASSES.forEach(c=>{
 html+=`<tr><td>${c}</td>`;
-
 SLOTS.forEach(s=>{
-if(s.type=="break"||s.type=="lunch") html+=`<td class="break">${s.label}</td>`;
+if(s.type!=="period") html+=`<td class="break">${s.label}</td>`;
 else{
-let m=DATA.find(x=>x.d==d && x.p==s.id && x.frm==c);
-html+=`<td>${m?`<div class="slot">${mode=="both"?m.sub+"<br>"+m.tea:m.sub}</div>`:""}</td>`;
+let m=DATA.find(x=>x.d===d && x.p===s.id && x.frm===c);
+html+=`<td>${m?`<div class="slot">${mode==="both"?m.sub+"<br>"+m.tea:m.sub}</div>`:""}</td>`;
 }
 });
-
 html+="</tr>";
 });
 
@@ -284,16 +274,15 @@ app.innerHTML=html;
 function renderSingle(key){
 let val=filter.value;
 let html=`<div class="card"><table><tr><th>Day</th>`;
-
 SLOTS.forEach(s=>html+=`<th>${s.label}</th>`);
 html+="</tr>";
 
 DAYS.forEach(d=>{
 html+=`<tr><td>${d}</td>`;
 SLOTS.forEach(s=>{
-if(s.type!="period") html+=`<td class="break">${s.label}</td>`;
+if(s.type!=="period") html+=`<td class="break">${s.label}</td>`;
 else{
-let m=DATA.find(x=>x.d==d && x.p==s.id && x[key]==val);
+let m=DATA.find(x=>x.d===d && x.p===s.id && x[key]===val);
 html+=`<td>${m?m.sub:""}</td>`;
 }
 });
@@ -306,25 +295,24 @@ app.innerHTML=html+"</table></div>";
 function renderLoads(){
 let html="<div class='card'><table><tr><th>Teacher</th><th>Load</th></tr>";
 TEACHERS.forEach(t=>{
-html+=`<tr><td>${t}</td><td>${DATA.filter(x=>x.tea==t).length}</td></tr>`;
+html+=`<tr><td>${t}</td><td>${DATA.filter(x=>x.tea===t).length}</td></tr>`;
 });
 app.innerHTML=html+"</table></div>";
 }
 
-// ================= STATS =================
+// STATS
 function renderStats(){
-stats.innerHTML=`
-<div class="card">
+stats.innerHTML=`<div class="card">
 Classes: ${CLASSES.length} | Teachers: ${TEACHERS.length} | Lessons: ${DATA.length}
 </div>`;
 }
 
-// ================= SAVE =================
+// SAVE
 function saveProject(){
 let blob=new Blob([JSON.stringify({DATA,REGISTRY,CLASSES,TEACHERS})]);
 let a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
-a.download="tt.json";
+a.download="tt_backup.json";
 a.click();
 }
 
@@ -338,7 +326,7 @@ render();
 r.readAsText(e.target.files[0]);
 }
 
-// ================= PDF =================
+// PDF
 function exportPDF(){
 html2pdf().from(document.body).save();
 }

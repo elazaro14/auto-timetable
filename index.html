@@ -169,7 +169,6 @@ th { background: #f1f5f9; }
                 <option value="sub">Subject Only</option>
             </select>
             <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 120px;"></select>
-            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareTeacherWA_PDF()">📲 SHARE WA (PDF)</button>
         </div>
     </div>
 
@@ -203,7 +202,7 @@ window.onload = () => {
     const saved = localStorage.getItem('TT_PERSIST');
     if(saved) {
         const p = JSON.parse(saved);
-        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        DATA = p.DATA || []; REGISTRY = p.REGISTRY || []; CLASSES = p.CLASSES || []; TEACHERS = p.TEACHERS || [];
         if(p.schName) document.getElementById('schName').value = p.schName;
         if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
         if(p.logo) { logoBase64 = p.logo; document.getElementById('logoImg').src = logoBase64; document.getElementById('logoImg').style.display = 'block'; }
@@ -277,52 +276,69 @@ function isSpecial(day, pId) {
     return {bool: false};
 }
 
-// INTEGRATED DOUBLE PERIOD LOGIC
+// IMPROVED GENERATION WITH RETRY LOGIC
 function generate() {
-    DATA = []; buildSlots();
-    let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk); // Highest loads first for efficiency
+    if(REGISTRY.length === 0) return alert("Load CSV first!");
     
-    pool.forEach(r => {
-        let left = r.pwk;
-        let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
+    let attempts = 0;
+    let success = false;
+    buildSlots();
 
-        for (let d of shuffledDays) {
-            if (left <= 0) break;
+    while(attempts < 5 && !success) {
+        DATA = [];
+        success = true;
+        let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk); // Complex subjects first
 
-            let pSlots = SLOTS.filter(s => s.type === 'period');
-            let placedToday = false;
+        for(let r of pool) {
+            let left = r.pwk;
+            let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
+            let hasDouble = false;
 
-            // TRY DOUBLE PERIOD (Consecutive)
-            if (left >= 2) {
-                for (let i = 0; i < pSlots.length - 1; i++) {
-                    let s1 = pSlots[i], s2 = pSlots[i+1];
-                    let busy1 = DATA.some(x => x.d===d && x.p===s1.id && (x.tea===r.tea || x.frm===r.frm));
-                    let busy2 = DATA.some(x => x.d===d && x.p===s2.id && (x.tea===r.tea || x.frm===r.frm));
-                    let spec1 = isSpecial(d, s1.id).bool, spec2 = isSpecial(d, s2.id).bool;
+            for(let d of shuffledDays) {
+                if(left <= 0) break;
+                let pSlots = SLOTS.filter(s => s.type === 'period');
 
-                    if (!busy1 && !busy2 && !spec1 && !spec2) {
-                        DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
-                        left -= 2; placedToday = true; break;
+                // 1. TRY TO PLACE DOUBLE PERIOD (Priority 1)
+                if(left >= 2 && !hasDouble) {
+                    let placedDouble = false;
+                    for(let i=0; i < pSlots.length-1; i++) {
+                        let s1 = pSlots[i], s2 = pSlots[i+1];
+                        if(canPlace(r, d, s1.id) && canPlace(r, d, s2.id)) {
+                            DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
+                            left -= 2; hasDouble = true; placedDouble = true; break;
+                        }
                     }
+                    if(placedDouble) continue; // Move to next day
                 }
-            }
 
-            // SINGLE PERIOD FALLBACK (If double not possible or not needed)
-            if (!placedToday && left > 0) {
+                // 2. TRY TO PLACE SINGLE PERIOD (Priority 2)
                 let shuffledP = [...pSlots].sort(() => Math.random() - 0.5);
-                for (let s of shuffledP) {
-                    let busy = DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm));
-                    let spec = isSpecial(d, s.id).bool;
-                    if (!busy && !spec) {
+                for(let s of shuffledP) {
+                    // Rule: Only 1 entry of the same subject per day (unless it's the double we just placed)
+                    let alreadyInDay = DATA.some(x => x.d === d && x.frm === r.frm && x.sub === r.sub);
+                    if(!alreadyInDay && canPlace(r, d, s.id)) {
                         DATA.push({...r, d, p: s.id});
-                        left--; placedToday = true; break;
+                        left--; break;
                     }
                 }
             }
+            if(left > 0) { success = false; break; } // Failed this subject, retry whole board
         }
-    });
+        attempts++;
+    }
+
+    if(!success) alert("Conflict detected. Try clicking Generate again or check Teacher loads.");
     saveToLocal();
     renderActiveView();
+}
+
+function canPlace(r, d, pId) {
+    if(isSpecial(d, pId).bool) return false;
+    // Teacher check
+    if(DATA.some(x => x.d === d && x.p === pId && x.tea === r.tea)) return false;
+    // Form/Class check
+    if(DATA.some(x => x.d === d && x.p === pId && x.frm === r.frm)) return false;
+    return true;
 }
 
 function handleCSV(e) {
@@ -331,12 +347,15 @@ function handleCSV(e) {
         const lines = ev.target.result.split('\n').filter(l => l.trim() !== "");
         REGISTRY = []; CLASSES = []; TEACHERS = [];
         lines.slice(1).forEach(line => {
-            const [sub, tea, pwk, frm] = line.split(',').map(c => c.trim().toUpperCase());
+            const parts = line.split(',').map(c => c.trim().toUpperCase());
+            if(parts.length < 4) return;
+            const [sub, tea, pwk, frm] = parts;
             REGISTRY.push({ sub, tea, pwk: parseInt(pwk), frm });
             if(!CLASSES.includes(frm)) CLASSES.push(frm);
             if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
         });
-        alert("CSV Loaded.");
+        alert("CSV Loaded successfully.");
+        saveToLocal();
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -375,8 +394,8 @@ function renderMaster() {
                 if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
                 else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
                 else {
-                    let m = DATA.filter(x => x.d===day && x.p===s.id && x.frm===f);
-                    h += `<td>${m.length > 0 ? `<div class="slot">${mode==='both'?m[0].sub+'<br>'+m[0].tea:m[0].sub}</div>` : ''}</td>`;
+                    let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
+                    h += `<td>${m ? `<div class="slot">${mode==='both'?m.sub+'<br>'+m.tea:m.sub}</div>` : ''}</td>`;
                 }
             });
             h += `</tr>`;

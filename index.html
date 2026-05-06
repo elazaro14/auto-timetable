@@ -2,37 +2,26 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO MAX</title>
+<title>TT-PRO MAX+</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-:root{
---primary:#0f172a;
---accent:#22c55e;
---bg:#f8fafc;
---border:#e2e8f0;
-}
+body{margin:0;font-family:system-ui;display:flex;height:100vh;background:#f1f5f9}
 
-body{margin:0;display:flex;font-family:system-ui;background:var(--bg);height:100vh}
-
-.sidebar{
-width:320px;background:#0f172a;color:white;padding:15px;overflow:auto
-}
-
-.sidebar h2{color:var(--accent);text-align:center}
+.sidebar{width:320px;background:#0f172a;color:white;padding:15px;overflow:auto}
+.sidebar h2{color:#22c55e;text-align:center}
 
 .setting-card{margin-bottom:10px}
-.setting-card label{font-size:11px}
-.setting-card input,.setting-card select{width:100%;padding:6px;margin:3px 0}
+.setting-card input,.setting-card select{width:100%;padding:6px;margin:4px 0}
 
-.btn{width:100%;padding:10px;margin-top:5px;border:none;background:var(--accent);cursor:pointer}
+.btn{width:100%;padding:10px;margin-top:5px;background:#22c55e;border:none;cursor:pointer}
 
 .main{flex:1;display:flex;flex-direction:column}
-.top{padding:10px;background:white;border-bottom:1px solid var(--border)}
+.top{background:white;padding:10px;border-bottom:1px solid #ddd;display:flex;gap:10px}
+
 .content{padding:10px;overflow:auto}
 
-.stats{display:flex;gap:10px;margin-bottom:10px}
-.card{background:white;padding:10px;border-radius:6px;border:1px solid var(--border)}
+.card{background:white;padding:10px;margin-bottom:10px;border-radius:6px}
 
 table{width:100%;border-collapse:collapse}
 th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
@@ -40,46 +29,43 @@ th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 .slot{background:#dcfce7;font-weight:bold}
 .break{background:#ddd}
 .special{background:#fef3c7;font-weight:bold}
-
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-<h2>TT-PRO MAX</h2>
+<h2>TT-PRO MAX+</h2>
 
-<div class="setting-card">
-<label>School Name</label>
+<label>School</label>
 <input id="schName" value="SECONDARY SCHOOL">
-</div>
 
-<div class="setting-card">
 <label>Total Periods</label>
 <select id="totalPeriods">
 <option>6</option><option>7</option><option selected>8</option><option>9</option>
 </select>
 
-<label>Period Duration (min)</label>
+<label>Duration</label>
 <input type="number" id="periodDur" value="40">
 
 <label>Start Time</label>
 <input type="time" id="startTime" value="08:00">
-</div>
 
-<div class="setting-card">
-<label>Break After Period</label>
+<hr>
+
+<label>Break After</label>
 <input type="number" id="breakAfter" value="2">
 
 <label>Break Duration</label>
 <input type="number" id="breakDur" value="20">
 
-<label>Lunch After Period</label>
+<label>Lunch After</label>
 <input type="number" id="lunchAfter" value="4">
 
 <label>Lunch Duration</label>
 <input type="number" id="lunchDur" value="45">
-</div>
+
+<hr>
 
 <h4>Special Blocks</h4>
 <div id="specialContainer"></div>
@@ -88,149 +74,108 @@ th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 <hr>
 
 <button class="btn" onclick="generate()">⚡ Generate</button>
-<button class="btn" onclick="exportPDF()">📄 Export PDF</button>
+<button class="btn" onclick="exportPDF()">📄 PDF</button>
 
 <input type="file" onchange="loadCSV(event)">
+<button class="btn" onclick="saveProject()">💾 Save</button>
+<input type="file" onchange="loadProject(event)">
 
 </div>
 
 <div class="main">
+
 <div class="top">
-<h3 id="title">TIMETABLE</h3>
+<button onclick="setView('MASTER')">Master</button>
+<button onclick="setView('STREAM')">Stream</button>
+<button onclick="setView('TEACHER')">Teacher</button>
+<button onclick="setView('LOAD')">Loads</button>
+
+<select id="displayMode" onchange="render()">
+<option value="both">Subject + Teacher</option>
+<option value="sub">Subject only</option>
+</select>
+
+<select id="filter"></select>
 </div>
 
 <div class="content">
 <div id="stats"></div>
 <div id="app"></div>
 </div>
+
 </div>
 
 <script>
 
-let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[];
-let SLOTS=[];
-const DAYS=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
-
-// ================= SPECIAL BLOCKS =================
-
-function addSpecial(){
-let id=Date.now();
-
-let html=`
-<div class="setting-card" id="sp-${id}">
-<label>Name</label>
-<input id="name-${id}" placeholder="RELIGION">
-
-<label>Day</label>
-<select id="day-${id}">
-${DAYS.map(d=>`<option>${d}</option>`).join('')}
-</select>
-
-<label>After Period</label>
-<input type="number" id="after-${id}">
-
-<label>Duration</label>
-<input type="number" id="dur-${id}" value="40">
-
-<button onclick="removeSpecial(${id})">Remove</button>
-</div>`;
-
-document.getElementById('specialContainer').insertAdjacentHTML('beforeend',html);
-}
-
-function removeSpecial(id){
-document.getElementById(`sp-${id}`).remove();
-}
+let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[],SLOTS=[];
+let currentView="MASTER";
+const DAYS=["MON","TUE","WED","THU","FRI"];
 
 // ================= CSV =================
-
 function loadCSV(e){
-const reader=new FileReader();
-reader.onload=(ev)=>{
+const r=new FileReader();
+r.onload=(ev)=>{
 let lines=ev.target.result.split('\n');
-
 REGISTRY=[];CLASSES=[];TEACHERS=[];
 
 lines.slice(1).forEach(l=>{
 let [sub,tea,pwk,frm]=l.split(',').map(x=>x?.trim().toUpperCase());
-
 if(!sub||!tea||isNaN(pwk)) return;
 
 REGISTRY.push({sub,tea,pwk:+pwk,frm});
-
 if(!CLASSES.includes(frm)) CLASSES.push(frm);
 if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
 });
-
 alert("CSV Loaded");
 };
-reader.readAsText(e.target.files[0]);
+r.readAsText(e.target.files[0]);
 }
 
-// ================= SLOT ENGINE =================
+// ================= SPECIAL =================
+function addSpecial(){
+let id=Date.now();
+document.getElementById('specialContainer').insertAdjacentHTML('beforeend',`
+<div id="sp-${id}">
+<input id="name-${id}" placeholder="NAME">
+<select id="day-${id}">
+${DAYS.map(d=>`<option>${d}</option>`)}
+</select>
+<input id="after-${id}" placeholder="After P">
+<input id="dur-${id}" value="40">
+<button onclick="removeSpecial(${id})">X</button>
+</div>`);
+}
+function removeSpecial(id){document.getElementById('sp-'+id).remove();}
 
+// ================= SLOTS =================
 function buildSlots(){
-
 SLOTS=[];
+let cur=new Date("2026-01-01T"+startTime.value);
+let dur=+periodDur.value;
 
-let cur=new Date("2026-01-01T"+document.getElementById('startTime').value);
-
-let dur=+document.getElementById('periodDur').value;
-let total=+document.getElementById('totalPeriods').value;
-
-let breakAfter=+document.getElementById('breakAfter').value;
-let breakDur=+document.getElementById('breakDur').value;
-
-let lunchAfter=+document.getElementById('lunchAfter').value;
-let lunchDur=+document.getElementById('lunchDur').value;
-
-for(let i=1;i<=total;i++){
-
+for(let i=1;i<=+totalPeriods.value;i++){
 let s=cur.toTimeString().slice(0,5);
 cur.setMinutes(cur.getMinutes()+dur);
 let e=cur.toTimeString().slice(0,5);
 
 SLOTS.push({id:"P"+i,label:`P${i}<br>${s}-${e}`,type:"period"});
 
-// BREAK
-if(i===breakAfter){
-SLOTS.push({id:"BREAK",label:`BREAK<br>${breakDur} min`,type:"break"});
-cur.setMinutes(cur.getMinutes()+breakDur);
+if(i==breakAfter.value){
+SLOTS.push({type:"break",label:"BREAK"});
+cur.setMinutes(cur.getMinutes()+ +breakDur.value);
 }
 
-// LUNCH
-if(i===lunchAfter){
-SLOTS.push({id:"LUNCH",label:`LUNCH<br>${lunchDur} min`,type:"lunch"});
-cur.setMinutes(cur.getMinutes()+lunchDur);
+if(i==lunchAfter.value){
+SLOTS.push({type:"lunch",label:"LUNCH"});
+cur.setMinutes(cur.getMinutes()+ +lunchDur.value);
 }
-
-// SPECIALS
-document.querySelectorAll('#specialContainer .setting-card').forEach(card=>{
-let id=card.id.split('-')[1];
-
-let name=document.getElementById(`name-${id}`).value.toUpperCase();
-let after=+document.getElementById(`after-${id}`).value;
-let sd=+document.getElementById(`dur-${id}`).value;
-
-if(after===i && name){
-SLOTS.push({id:"SP-"+name,label:`${name}<br>${sd} min`,type:"special",name});
-cur.setMinutes(cur.getMinutes()+sd);
 }
-});
-
-}
-
 }
 
 // ================= GENERATOR =================
-
 function canPlace(r,d,p){
-let slot=SLOTS.find(s=>s.id===p);
-if(!slot || slot.type!=="period") return false;
-
-if(DATA.some(x=>x.d===d && x.p===p && x.tea===r.tea)) return false;
-if(DATA.some(x=>x.d===d && x.p===p && x.frm===r.frm)) return false;
-
+if(DATA.some(x=>x.d==d && x.p==p && x.tea==r.tea)) return false;
+if(DATA.some(x=>x.d==d && x.p==p && x.frm==r.frm)) return false;
 return true;
 }
 
@@ -238,10 +183,15 @@ function shuffle(a){return [...a].sort(()=>Math.random()-0.5);}
 
 function generate(){
 
-if(REGISTRY.length===0) return alert("Upload CSV first");
+if(REGISTRY.length==0) return alert("Upload CSV");
 
-DATA=[];
 buildSlots();
+
+let success=false;
+
+for(let attempt=0;attempt<30 && !success;attempt++){
+
+DATA=[]; success=true;
 
 let pool=[...REGISTRY].sort((a,b)=>b.pwk-a.pwk);
 
@@ -253,39 +203,59 @@ for(let d of shuffle(DAYS)){
 
 if(left<=0) break;
 
-// prevent duplicate subject same day
-if(DATA.some(x=>x.d===d && x.frm===r.frm && x.sub===r.sub)) continue;
+if(DATA.some(x=>x.d==d && x.frm==r.frm && x.sub==r.sub)) continue;
 
-for(let s of shuffle(SLOTS.filter(x=>x.type==="period"))){
+for(let s of shuffle(SLOTS.filter(x=>x.type=="period"))){
 
 if(canPlace(r,d,s.id)){
 DATA.push({...r,d,p:s.id});
-left--;
-break;
+left--; break;
 }
 }
 }
 
-if(left>0){
-alert("Not fully allocated: "+r.sub);
+if(left>0){ success=false; break; }
 }
+
 }
+
+if(!success) alert("⚠️ Some subjects not fully allocated");
+
+render();
+}
+
+// ================= VIEWS =================
+function setView(v){
+currentView=v;
+let f=document.getElementById('filter');
+
+if(v=="STREAM"){
+f.innerHTML=CLASSES.map(c=>`<option>${c}</option>`);
+}
+else if(v=="TEACHER"){
+f.innerHTML=TEACHERS.map(t=>`<option>${t}</option>`);
+}
+else f.innerHTML="";
 
 render();
 }
 
 // ================= RENDER =================
-
 function render(){
-
-document.getElementById('title').innerText=document.getElementById('schName').value;
 
 renderStats();
 
+if(currentView=="MASTER") renderMaster();
+if(currentView=="STREAM") renderSingle('frm');
+if(currentView=="TEACHER") renderSingle('tea');
+if(currentView=="LOAD") renderLoads();
+}
+
+function renderMaster(){
+let mode=displayMode.value;
 let html="";
 
-for(let d of DAYS){
-
+DAYS.forEach(d=>{
 html+=`<div class="card"><h4>${d}</h4><table><tr><th>Class</th>`;
 
 SLOTS.forEach(s=>html+=`<th>${s.label}</th>`);
@@ -295,47 +265,84 @@ CLASSES.forEach(c=>{
 html+=`<tr><td>${c}</td>`;
 
 SLOTS.forEach(s=>{
-
-if(s.type==="break"||s.type==="lunch"){
-html+=`<td class="break">${s.label}</td>`;
-}
-else if(s.type==="special"){
-html+=`<td class="special">${s.name}</td>`;
-}
+if(s.type=="break"||s.type=="lunch") html+=`<td class="break">${s.label}</td>`;
 else{
-let m=DATA.find(x=>x.d===d && x.p===s.id && x.frm===c);
-html+=`<td>${m?`<div class="slot">${m.sub}<br>${m.tea}</div>`:""}</td>`;
+let m=DATA.find(x=>x.d==d && x.p==s.id && x.frm==c);
+html+=`<td>${m?`<div class="slot">${mode=="both"?m.sub+"<br>"+m.tea:m.sub}</div>`:""}</td>`;
 }
-
 });
 
 html+="</tr>";
 });
 
-html+="</table></div><br>";
+html+="</table></div>";
+});
+
+app.innerHTML=html;
 }
 
-document.getElementById('app').innerHTML=html;
+function renderSingle(key){
+let val=filter.value;
+let html=`<div class="card"><table><tr><th>Day</th>`;
+
+SLOTS.forEach(s=>html+=`<th>${s.label}</th>`);
+html+="</tr>";
+
+DAYS.forEach(d=>{
+html+=`<tr><td>${d}</td>`;
+SLOTS.forEach(s=>{
+if(s.type!="period") html+=`<td class="break">${s.label}</td>`;
+else{
+let m=DATA.find(x=>x.d==d && x.p==s.id && x[key]==val);
+html+=`<td>${m?m.sub:""}</td>`;
+}
+});
+html+="</tr>";
+});
+
+app.innerHTML=html+"</table></div>";
+}
+
+function renderLoads(){
+let html="<div class='card'><table><tr><th>Teacher</th><th>Load</th></tr>";
+TEACHERS.forEach(t=>{
+html+=`<tr><td>${t}</td><td>${DATA.filter(x=>x.tea==t).length}</td></tr>`;
+});
+app.innerHTML=html+"</table></div>";
 }
 
 // ================= STATS =================
-
 function renderStats(){
-document.getElementById('stats').innerHTML=`
-<div class="stats">
-<div class="card">Classes: ${CLASSES.length}</div>
-<div class="card">Teachers: ${TEACHERS.length}</div>
-<div class="card">Lessons: ${DATA.length}</div>
+stats.innerHTML=`
+<div class="card">
+Classes: ${CLASSES.length} | Teachers: ${TEACHERS.length} | Lessons: ${DATA.length}
 </div>`;
 }
 
-// ================= PDF =================
+// ================= SAVE =================
+function saveProject(){
+let blob=new Blob([JSON.stringify({DATA,REGISTRY,CLASSES,TEACHERS})]);
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="tt.json";
+a.click();
+}
 
+function loadProject(e){
+let r=new FileReader();
+r.onload=(ev)=>{
+let p=JSON.parse(ev.target.result);
+DATA=p.DATA;REGISTRY=p.REGISTRY;CLASSES=p.CLASSES;TEACHERS=p.TEACHERS;
+render();
+};
+r.readAsText(e.target.files[0]);
+}
+
+// ================= PDF =================
 function exportPDF(){
 html2pdf().from(document.body).save();
 }
 
 </script>
-
 </body>
 </html>

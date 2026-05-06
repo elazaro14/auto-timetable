@@ -278,21 +278,68 @@ function isSpecial(day, pId) {
 }
 
 function generate() {
-    DATA = []; buildSlots();
-    let pool = [...REGISTRY].sort(() => Math.random() - 0.5);
+    DATA = []; 
+    buildSlots();
+    
+    // 1. Sort registry by workload (highest periods first) for better fitting
+    let pool = [...REGISTRY].sort((a, b) => b.pwk - a.pwk);
+    
     pool.forEach(r => {
         let left = r.pwk;
-        DAYS.forEach(d => {
-            if(left <= 0) return;
-            let pPool = SLOTS.filter(s => s.type === 'period').sort(() => Math.random() - 0.5);
-            for(let s of pPool) {
-                if(!isSpecial(d, s.id).bool && !DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
-                    DATA.push({...r, d, p: s.id});
-                    left--; break;
+        
+        // Shuffle days so the timetable isn't identical every time
+        let shuffledDays = [...DAYS].sort(() => Math.random() - 0.5);
+
+        for (let d of shuffledDays) {
+            if (left <= 0) break;
+
+            let pSlots = SLOTS.filter(s => s.type === 'period');
+            let placedToday = false;
+
+            // --- STEP A: TRY DOUBLE PERIOD FIRST ---
+            // Only if subject has at least 2 periods left
+            if (left >= 2) {
+                for (let i = 0; i < pSlots.length - 1; i++) {
+                    let s1 = pSlots[i];
+                    let s2 = pSlots[i+1];
+
+                    // Check if slots are free for both Teacher and Form
+                    let busy1 = DATA.some(x => x.d === d && x.p === s1.id && (x.tea === r.tea || x.frm === r.frm));
+                    let busy2 = DATA.some(x => x.d === d && x.p === s2.id && (x.tea === r.tea || x.frm === r.frm));
+                    let spec1 = isSpecial(d, s1.id).bool;
+                    let spec2 = isSpecial(d, s2.id).bool;
+
+                    // Ensure they are consecutive and not blocked
+                    if (!busy1 && !busy2 && !spec1 && !spec2) {
+                        DATA.push({...r, d, p: s1.id}, {...r, d, p: s2.id});
+                        left -= 2;
+                        placedToday = true; 
+                        break; // Move to next day for this subject
+                    }
                 }
             }
-        });
+
+            // --- STEP B: TRY SINGLE PERIOD FALLBACK ---
+            // If double wasn't possible today or not needed, try to place 1 single
+            if (!placedToday && left > 0) {
+                let shuffledP = [...pSlots].sort(() => Math.random() - 0.5);
+                for (let s of shuffledP) {
+                    let busy = DATA.some(x => x.d === d && x.p === s.id && (x.tea === r.tea || x.frm === r.frm));
+                    let spec = isSpecial(d, s.id).bool;
+
+                    if (!busy && !spec) {
+                        DATA.push({...r, d, p: s.id});
+                        left--;
+                        break; // Move to next day for this subject
+                    }
+                }
+            }
+        }
     });
+
+    saveToLocal();
+    renderActiveView();
+}
     saveToLocal();
     renderActiveView();
 }

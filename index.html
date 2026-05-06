@@ -2,15 +2,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO MAX FINAL</title>
+<title>TT-PRO ULTIMATE</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 body{margin:0;font-family:system-ui;display:flex;height:100vh;background:#f1f5f9}
 .sidebar{width:320px;background:#0f172a;color:white;padding:15px;overflow:auto}
 .sidebar h2{color:#22c55e;text-align:center}
-.setting-card input,.setting-card select{width:100%;padding:6px;margin:4px 0}
-.btn{width:100%;padding:10px;margin-top:5px;background:#22c55e;border:none;cursor:pointer}
+input,select{width:100%;padding:6px;margin:4px 0}
+button{width:100%;padding:10px;margin-top:5px;background:#22c55e;border:none;cursor:pointer}
 .main{flex:1;display:flex;flex-direction:column}
 .top{background:white;padding:10px;border-bottom:1px solid #ddd;display:flex;gap:10px;flex-wrap:wrap}
 .content{padding:10px;overflow:auto}
@@ -19,14 +19,13 @@ table{width:100%;border-collapse:collapse}
 th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 .slot{background:#dcfce7;font-weight:bold}
 .break{background:#ddd}
-.special{background:#fef3c7;font-weight:bold}
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-<h2>TT-PRO MAX</h2>
+<h2>TT-PRO ULTIMATE</h2>
 
 <label>School</label>
 <input id="schName" value="SECONDARY SCHOOL">
@@ -61,11 +60,11 @@ th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 
 <hr>
 
-<button class="btn" onclick="generate()">⚡ Generate</button>
-<button class="btn" onclick="exportPDF()">📄 PDF</button>
+<button onclick="generate()">⚡ Generate</button>
+<button onclick="exportPDF()">📄 PDF</button>
 
-<input type="file" onchange="loadCSV(event)">
-<button class="btn" onclick="saveProject()">💾 Save</button>
+<input type="file" accept=".csv,.cvs,.txt" onchange="loadCSV(event)">
+<button onclick="saveProject()">💾 Save</button>
 <input type="file" onchange="loadProject(event)">
 
 </div>
@@ -80,7 +79,7 @@ th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
 
 <select id="displayMode" onchange="render()">
 <option value="both">Subject + Teacher</option>
-<option value="sub">Subject Only</option>
+<option value="sub">Subject only</option>
 </select>
 
 <select id="filter"></select>
@@ -101,25 +100,38 @@ let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[],SLOTS=[];
 let currentView="MASTER";
 const DAYS=["MON","TUE","WED","THU","FRI"];
 
-// CSV
+// ================= CSV =================
 function loadCSV(e){
-let r=new FileReader();
-r.onload=(ev)=>{
+const file=e.target.files[0];
+const reader=new FileReader();
+
+reader.onload=(ev)=>{
 let lines=ev.target.result.split('\n');
+
 REGISTRY=[];CLASSES=[];TEACHERS=[];
-lines.slice(1).forEach(l=>{
-let [sub,tea,pwk,frm]=l.split(',').map(x=>x?.trim().toUpperCase());
-if(!sub||!tea||isNaN(pwk)) return;
+
+lines.slice(1).forEach((line,i)=>{
+let parts=line.split(/[;,]/).map(x=>x.trim().toUpperCase());
+
+if(parts.length<4) return;
+
+let [sub,tea,pwk,frm]=parts;
+
+if(!sub || !tea || isNaN(pwk)) return;
+
 REGISTRY.push({sub,tea,pwk:+pwk,frm});
+
 if(!CLASSES.includes(frm)) CLASSES.push(frm);
 if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
 });
-alert("CSV Loaded");
+
+alert("CSV Loaded Successfully");
 };
-r.readAsText(e.target.files[0]);
+
+reader.readAsText(file);
 }
 
-// SLOTS
+// ================= SLOTS =================
 function buildSlots(){
 SLOTS=[];
 let cur=new Date("2026-01-01T"+startTime.value);
@@ -144,21 +156,23 @@ cur.setMinutes(cur.getMinutes()+ +lunchDur.value);
 }
 }
 
-// RULES
+// ================= RULES =================
 function canPlace(r,d,p){
 let slot=SLOTS.find(s=>s.id===p);
 if(!slot || slot.type!=="period") return false;
+
 if(DATA.some(x=>x.d===d && x.p===p && x.tea===r.tea)) return false;
 if(DATA.some(x=>x.d===d && x.p===p && x.frm===r.frm)) return false;
+
 return true;
 }
 
 function shuffle(a){return [...a].sort(()=>Math.random()-0.5);}
 
-// GENERATOR
+// ================= GENERATOR =================
 function generate(){
 
-if(REGISTRY.length==0) return alert("Upload CSV");
+if(REGISTRY.length===0) return alert("Upload CSV");
 
 buildSlots();
 
@@ -178,6 +192,7 @@ for(let d of shuffle(DAYS)){
 
 if(left<=0) break;
 
+// one block per day rule
 if(DATA.some(x=>x.d===d && x.frm===r.frm && x.sub===r.sub)) continue;
 
 let periods=SLOTS.filter(x=>x.type==="period");
@@ -187,7 +202,8 @@ if(left>=2){
 for(let i=0;i<periods.length-1;i++){
 let p1=periods[i].id;
 let p2=periods[i+1].id;
-if(canPlace(r,d,p1)&&canPlace(r,d,p2)){
+
+if(canPlace(r,d,p1) && canPlace(r,d,p2)){
 DATA.push({...r,d,p:p1},{...r,d,p:p2});
 left-=2;
 break;
@@ -218,25 +234,26 @@ if(!success) alert("⚠️ Some subjects not fully allocated");
 render();
 }
 
-// VIEWS
+// ================= VIEWS =================
 function setView(v){
 currentView=v;
-let f=filter;
 
-if(v==="STREAM") f.innerHTML=CLASSES.map(c=>`<option>${c}</option>`);
-else if(v==="TEACHER") f.innerHTML=TEACHERS.map(t=>`<option>${t}</option>`);
-else f.innerHTML="";
+if(v==="STREAM") filter.innerHTML=CLASSES.map(c=>`<option>${c}</option>`);
+else if(v==="TEACHER") filter.innerHTML=TEACHERS.map(t=>`<option>${t}</option>`);
+else filter.innerHTML="";
 
 render();
 }
 
-// RENDER
+// ================= RENDER =================
 function render(){
 
 headerTitle.innerText=schName.value;
 headerYear.innerText="Academic Year: "+acadYear.value;
 
-renderStats();
+stats.innerHTML=`<div class="card">
+Classes: ${CLASSES.length} | Teachers: ${TEACHERS.length} | Lessons: ${DATA.length}
+</div>`;
 
 if(currentView==="MASTER") renderMaster();
 if(currentView==="STREAM") renderSingle("frm");
@@ -300,14 +317,7 @@ html+=`<tr><td>${t}</td><td>${DATA.filter(x=>x.tea===t).length}</td></tr>`;
 app.innerHTML=html+"</table></div>";
 }
 
-// STATS
-function renderStats(){
-stats.innerHTML=`<div class="card">
-Classes: ${CLASSES.length} | Teachers: ${TEACHERS.length} | Lessons: ${DATA.length}
-</div>`;
-}
-
-// SAVE
+// ================= SAVE =================
 function saveProject(){
 let blob=new Blob([JSON.stringify({DATA,REGISTRY,CLASSES,TEACHERS})]);
 let a=document.createElement("a");
@@ -326,11 +336,12 @@ render();
 r.readAsText(e.target.files[0]);
 }
 
-// PDF
+// ================= PDF =================
 function exportPDF(){
 html2pdf().from(document.body).save();
 }
 
 </script>
+
 </body>
 </html>

@@ -2,283 +2,346 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>TT-PRO ULTIMATE - Interactive</title>
+<title>TT-PRO ULTIMATE</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
-:root {
-  --primary: #0f172a; --accent: #22c55e; --danger: #ef4444; --border: #e2e8f0;
-}
-body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:#f1f5f9; overflow:hidden; }
-
-/* Dashboard & Sidebar */
-.sidebar { width:320px; background: var(--primary); color:white; padding:15px; overflow-y: auto; }
-.sidebar h2 { color: var(--accent); text-align: center; margin-top:0; }
-.stat-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-.stat-card { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; text-align: center; }
-.stat-card small { font-size: 10px; color: #94a3b8; display: block; }
-.stat-card b { font-size: 16px; }
-
-input, select { width:100%; padding:8px; margin:5px 0; background:#1e293b; border:1px solid #334155; color:white; border-radius:4px; box-sizing: border-box; }
-button { width:100%; padding:10px; margin-top:8px; background:var(--accent); border:none; cursor:pointer; font-weight:bold; color:#064e3b; border-radius:4px; }
-.btn-sec { background: #475569; color: white; }
-
-/* Main Area */
-.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.top-bar { background:white; padding:10px 20px; border-bottom:1px solid var(--border); display:flex; justify-content: space-between; align-items: center; }
-.view-tabs button { width: auto; padding: 8px 15px; background: #f8fafc; color: var(--primary); border: 1px solid var(--border); margin-right: 5px; }
-
-/* Conflicts */
-#conflictAlert { background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 6px; margin: 10px; display: none; font-size: 12px; }
-
-/* Table & Drag/Drop */
-.content { padding:20px; overflow:auto; flex:1; }
-.card { background:white; padding:15px; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
-table { width:100%; border-collapse:collapse; table-layout: fixed; }
-th, td { border:1px solid #cbd5e1; padding:6px; text-align:center; font-size:11px; height: 50px; position: relative; }
-th { background: #f8fafc; font-weight: 700; }
-
-.slot { 
-    background:#dcfce7; border: 1px solid var(--accent); padding:4px; border-radius:4px; 
-    cursor: grab; transition: 0.2s; 
-}
-.slot:hover { transform: scale(1.02); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.break { background:#f1f5f9; color: #94a3b8; font-weight: 800; font-size: 9px; writing-mode: vertical-rl; }
-
-@media print { .sidebar, .top-bar, #conflictAlert { display:none !important; } }
+body{margin:0;font-family:system-ui;display:flex;height:100vh;background:#f1f5f9}
+.sidebar{width:320px;background:#0f172a;color:white;padding:15px;overflow:auto}
+.sidebar h2{color:#22c55e;text-align:center}
+input,select{width:100%;padding:6px;margin:4px 0}
+button{width:100%;padding:10px;margin-top:5px;background:#22c55e;border:none;cursor:pointer}
+.main{flex:1;display:flex;flex-direction:column}
+.top{background:white;padding:10px;border-bottom:1px solid #ddd;display:flex;gap:10px;flex-wrap:wrap}
+.content{padding:10px;overflow:auto}
+.card{background:white;padding:10px;margin-bottom:10px;border-radius:6px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid black;font-size:10px;text-align:center;padding:4px}
+.slot{background:#dcfce7;font-weight:bold}
+.break{background:#ddd}
 </style>
 </head>
+
 <body>
 
 <div class="sidebar">
-    <h2>TT-PRO ULTIMATE</h2>
-    
-    <div class="stat-box">
-        <div class="stat-card"><small>CLASSES</small><b id="st-cls">0</b></div>
-        <div class="stat-card"><small>TEACHERS</small><b id="st-tea">0</b></div>
-        <div class="stat-card"><small>ASSIGNED</small><b id="st-asg">0</b></div>
-        <div class="stat-card"><small>UNASSIGNED</small><b id="st-un" style="color:var(--danger)">0</b></div>
-    </div>
+<h2>TT-PRO ULTIMATE</h2>
 
-    <label>School Name</label>
-    <input id="schName" value="TANZANIA SECONDARY" oninput="render()">
-    
-    <div style="display:flex; gap:5px">
-        <div><label>Start</label><input type="time" id="startTime" value="08:00"></div>
-        <div><label>Periods</label><select id="totalPeriods"><option>7</option><option selected>8</option><option>9</option></select></div>
-    </div>
+<label>School</label>
+<input id="schName" value="SECONDARY SCHOOL">
 
-    <hr style="opacity:0.1">
-    <label>Interval Configuration</label>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px">
-        <input type="number" id="breakAfter" value="2" title="Break After Period">
-        <input type="number" id="lunchAfter" value="5" title="Lunch After Period">
-    </div>
+<label>Academic Year</label>
+<input id="acadYear" value="2026">
 
-    <button onclick="generate()">⚡ SMART GENERATE</button>
-    <button class="btn-sec" onclick="document.getElementById('csvIn').click()">📥 LOAD CSV</button>
-    <input type="file" id="csvIn" style="display:none" onchange="loadCSV(event)">
-    <button class="btn-sec" onclick="exportPDF()">📄 EXPORT PDF</button>
+<label>Total Periods</label>
+<select id="totalPeriods">
+<option>6</option><option>7</option><option selected>8</option><option>9</option>
+</select>
+
+<label>Period Duration</label>
+<input type="number" id="periodDur" value="40">
+
+<label>Start Time</label>
+<input type="time" id="startTime" value="08:00">
+
+<hr>
+
+<label>Break After</label>
+<input type="number" id="breakAfter" value="2">
+
+<label>Break Duration</label>
+<input type="number" id="breakDur" value="20">
+
+<label>Lunch After</label>
+<input type="number" id="lunchAfter" value="4">
+
+<label>Lunch Duration</label>
+<input type="number" id="lunchDur" value="45">
+
+<hr>
+
+<button onclick="generate()">⚡ Generate</button>
+<button onclick="exportPDF()">📄 PDF</button>
+
+<input type="file" accept=".csv,.cvs,.txt" onchange="loadCSV(event)">
+<button onclick="saveProject()">💾 Save</button>
+<input type="file" onchange="loadProject(event)">
+
 </div>
 
 <div class="main">
-    <div id="conflictAlert"></div>
-    
-    <div class="top-bar">
-        <div class="view-tabs">
-            <button onclick="setView('MASTER')">Master</button>
-            <button onclick="setView('STREAM')">Stream</button>
-            <button onclick="setView('TEACHER')">Teacher</button>
-        </div>
-        
-        <div style="display:flex; gap:10px">
-            <select id="filter" style="width:120px; background:white; color:black; border:1px solid #ddd"></select>
-            <select id="displayMode" onchange="render()" style="width:140px; background:white; color:black; border:1px solid #ddd">
-                <option value="both">Sub + Teacher</option>
-                <option value="sub">Sub Only</option>
-            </select>
-        </div>
-    </div>
 
-    <div class="content" id="printableArea">
-        <h2 id="headerTitle" style="text-align:center; margin:0"></h2>
-        <div id="app"></div>
-    </div>
+<div class="top">
+<button onclick="setView('MASTER')">Master</button>
+<button onclick="setView('STREAM')">Stream</button>
+<button onclick="setView('TEACHER')">Teacher</button>
+<button onclick="setView('LOAD')">Loads</button>
+
+<select id="displayMode" onchange="render()">
+<option value="both">Subject + Teacher</option>
+<option value="sub">Subject only</option>
+</select>
+
+<select id="filter"></select>
+</div>
+
+<div class="content">
+<h2 id="headerTitle"></h2>
+<h4 id="headerYear"></h4>
+<div id="stats"></div>
+<div id="app"></div>
+</div>
+
 </div>
 
 <script>
-let REGISTRY=[], DATA=[], CLASSES=[], TEACHERS=[], SLOTS=[], currentView="MASTER";
-const DAYS=["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
-// --- DATA ENGINE ---
-function loadCSV(e) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        let lines = ev.target.result.split('\n');
-        REGISTRY=[]; CLASSES=[]; TEACHERS=[];
-        lines.slice(1).forEach(line => {
-            let p = line.split(/[;,]/).map(x=>x.trim().toUpperCase());
-            if(p.length < 4) return;
-            REGISTRY.push({ sub: p[0], tea: p[1], pwk: +p[2], frm: p[3] });
-            if(!CLASSES.includes(p[3])) CLASSES.push(p[3]);
-            if(!TEACHERS.includes(p[1])) TEACHERS.push(p[1]);
-        });
-        alert("CSV Loaded!"); updateDashboard();
-    };
-    reader.readAsText(e.target.files[0]);
+let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[],SLOTS=[];
+let currentView="MASTER";
+const DAYS=["MON","TUE","WED","THU","FRI"];
+
+// ================= CSV =================
+function loadCSV(e){
+const file=e.target.files[0];
+const reader=new FileReader();
+
+reader.onload=(ev)=>{
+let lines=ev.target.result.split('\n');
+
+REGISTRY=[];CLASSES=[];TEACHERS=[];
+
+lines.slice(1).forEach((line,i)=>{
+let parts=line.split(/[;,]/).map(x=>x.trim().toUpperCase());
+
+if(parts.length<4) return;
+
+let [sub,tea,pwk,frm]=parts;
+
+if(!sub || !tea || isNaN(pwk)) return;
+
+REGISTRY.push({sub,tea,pwk:+pwk,frm});
+
+if(!CLASSES.includes(frm)) CLASSES.push(frm);
+if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
+});
+
+alert("CSV Loaded Successfully");
+};
+
+reader.readAsText(file);
 }
 
-function buildSlots() {
-    SLOTS = [];
-    let cur = new Date("2026-01-01T" + document.getElementById('startTime').value);
-    let total = +document.getElementById('totalPeriods').value;
-    for(let i=1; i<=total; i++) {
-        let s = cur.toTimeString().slice(0,5);
-        cur.setMinutes(cur.getMinutes() + 40);
-        SLOTS.push({ id: "P"+i, label: `P${i}<br>${s}-${cur.toTimeString().slice(0,5)}`, type: "period" });
-        if(i == document.getElementById('breakAfter').value) SLOTS.push({ type: "break", label: "BREAK" });
-        if(i == document.getElementById('lunchAfter').value) SLOTS.push({ type: "lunch", label: "LUNCH" });
-    }
+// ================= SLOTS =================
+function buildSlots(){
+SLOTS=[];
+let cur=new Date("2026-01-01T"+startTime.value);
+let dur=+periodDur.value;
+
+for(let i=1;i<=+totalPeriods.value;i++){
+let s=cur.toTimeString().slice(0,5);
+cur.setMinutes(cur.getMinutes()+dur);
+let e=cur.toTimeString().slice(0,5);
+
+SLOTS.push({id:"P"+i,label:`P${i}<br>${s}-${e}`,type:"period"});
+
+if(i==breakAfter.value){
+SLOTS.push({type:"break",label:"BREAK"});
+cur.setMinutes(cur.getMinutes()+ +breakDur.value);
 }
 
-// --- GENERATOR ---
-function canPlace(r, d, p) {
-    return !DATA.some(x => x.d===d && x.p===p && (x.tea===r.tea || x.frm===r.frm));
+if(i==lunchAfter.value){
+SLOTS.push({type:"lunch",label:"LUNCH"});
+cur.setMinutes(cur.getMinutes()+ +lunchDur.value);
+}
+}
 }
 
-function generate() {
-    if(REGISTRY.length === 0) return alert("Load CSV first");
-    buildSlots();
-    let success = false;
+// ================= RULES =================
+function canPlace(r,d,p){
+let slot=SLOTS.find(s=>s.id===p);
+if(!slot || slot.type!=="period") return false;
 
-    for(let attempt=0; attempt<50 && !success; attempt++) {
-        DATA = []; success = true;
-        let pool = [...REGISTRY].sort((a,b) => b.pwk - a.pwk);
+if(DATA.some(x=>x.d===d && x.p===p && x.tea===r.tea)) return false;
+if(DATA.some(x=>x.d===d && x.p===p && x.frm===r.frm)) return false;
 
-        for(let r of pool) {
-            let left = r.pwk;
-            let dayOrder = [...DAYS].sort(() => Math.random() - 0.5);
-
-            for(let d of dayOrder) {
-                if(left <= 0) break;
-                if(DATA.some(x => x.d===d && x.frm===r.frm && x.sub===r.sub)) continue;
-
-                let periods = SLOTS.filter(s => s.type === "period");
-                
-                // Try Double
-                let placed = false;
-                if(left >= 2) {
-                    for(let i=0; i<periods.length-1; i++) {
-                        let p1=periods[i].id, p2=periods[i+1].id;
-                        if(canPlace(r, d, p1) && canPlace(r, d, p2)) {
-                            DATA.push({...r, d, p: p1}, {...r, d, p: p2});
-                            left -= 2; placed = true; break;
-                        }
-                    }
-                }
-                // Try Single
-                if(!placed && left > 0) {
-                    for(let p of periods.sort(() => Math.random() - 0.5)) {
-                        if(canPlace(r, d, p.id)) {
-                            DATA.push({...r, d, p: p.id});
-                            left--; break;
-                        }
-                    }
-                }
-            }
-            if(left > 0) { success = false; break; }
-        }
-    }
-    render();
+return true;
 }
 
-// --- UI & INTERACTIVITY ---
-function updateDashboard() {
-    document.getElementById('st-cls').innerText = CLASSES.length;
-    document.getElementById('st-tea').innerText = TEACHERS.length;
-    document.getElementById('st-asg').innerText = DATA.length;
-    let totalNeeded = REGISTRY.reduce((a,b) => a + b.pwk, 0);
-    document.getElementById('st-un').innerText = totalNeeded - DATA.length;
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5);}
 
-    // Conflict Check
-    let conflicts = [];
-    TEACHERS.forEach(t => {
-        DAYS.forEach(d => {
-            SLOTS.filter(s=>s.type==="period").forEach(s => {
-                let count = DATA.filter(x => x.tea===t && x.d===d && x.p===s.id).length;
-                if(count > 1) conflicts.push(`Teacher ${t} is double-booked on ${d} ${s.id}`);
-            });
-        });
-    });
-    let alertDiv = document.getElementById('conflictAlert');
-    if(conflicts.length > 0) {
-        alertDiv.innerHTML = "⚠️ <b>Conflicts:</b> " + conflicts.join(" | ");
-        alertDiv.style.display = "block";
-    } else { alertDiv.style.display = "none"; }
+// ================= GENERATOR =================
+function generate(){
+
+if(REGISTRY.length===0) return alert("Upload CSV");
+
+buildSlots();
+
+let success=false;
+
+for(let attempt=0;attempt<30 && !success;attempt++){
+
+DATA=[]; success=true;
+
+let pool=[...REGISTRY].sort((a,b)=>b.pwk-a.pwk);
+
+for(let r of pool){
+
+let left=r.pwk;
+
+for(let d of shuffle(DAYS)){
+
+if(left<=0) break;
+
+// one block per day rule
+if(DATA.some(x=>x.d===d && x.frm===r.frm && x.sub===r.sub)) continue;
+
+let periods=SLOTS.filter(x=>x.type==="period");
+
+// DOUBLE FIRST
+if(left>=2){
+for(let i=0;i<periods.length-1;i++){
+let p1=periods[i].id;
+let p2=periods[i+1].id;
+
+if(canPlace(r,d,p1) && canPlace(r,d,p2)){
+DATA.push({...r,d,p:p1},{...r,d,p:p2});
+left-=2;
+break;
+}
+}
 }
 
-function setView(v) {
-    currentView = v;
-    let f = document.getElementById('filter');
-    if(v === "STREAM") f.innerHTML = CLASSES.map(c => `<option>${c}</option>`).join('');
-    else if(v === "TEACHER") f.innerHTML = TEACHERS.map(t => `<option>${t}</option>`).join('');
-    else f.innerHTML = "";
-    render();
+// SINGLE
+if(left>0){
+for(let p of shuffle(periods)){
+if(canPlace(r,d,p.id)){
+DATA.push({...r,d,p:p.id});
+left--;
+break;
+}
+}
 }
 
-function render() {
-    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
-    updateDashboard();
-    if(currentView === "MASTER") renderMaster();
-    else renderSingle();
 }
 
-function renderMaster() {
-    let mode = document.getElementById('displayMode').value;
-    let html = "";
-    DAYS.forEach(d => {
-        html += `<div class="card"><h3>${d}</h3><table><tr><th>Class</th>`;
-        SLOTS.forEach(s => html += `<th>${s.label}</th>`);
-        html += "</tr>";
-        CLASSES.sort().forEach(c => {
-            html += `<tr><td><b>${c}</b></td>`;
-            SLOTS.forEach(s => {
-                if(s.type !== "period") html += `<td class="break">${s.label}</td>`;
-                else {
-                    let m = DATA.find(x => x.d===d && x.p===s.id && x.frm===c);
-                    html += `<td>${m ? `<div class="slot">${m.sub}${mode==="both"?"<br>"+m.tea:""}</div>` : ""}</td>`;
-                }
-            });
-            html += "</tr>";
-        });
-        html += "</table></div>";
-    });
-    document.getElementById('app').innerHTML = html;
+if(left>0){success=false;break;}
 }
 
-function renderSingle() {
-    let val = document.getElementById('filter').value;
-    let key = currentView === "STREAM" ? "frm" : "tea";
-    let html = `<div class="card"><h3>Timetable: ${val}</h3><table><tr><th>Day</th>`;
-    SLOTS.forEach(s => html += `<th>${s.label}</th>`);
-    html += "</tr>";
-    DAYS.forEach(d => {
-        html += `<tr><td><b>${d}</b></td>`;
-        SLOTS.forEach(s => {
-            if(s.type !== "period") html += `<td class="break">${s.label}</td>`;
-            else {
-                let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
-                html += `<td>${m ? `<div class="slot">${currentView==="STREAM"?m.sub+"<br>"+m.tea:m.sub+" ("+m.frm+")"}</div>` : ""}</td>`;
-            }
-        });
-        html += "</tr>";
-    });
-    document.getElementById('app').innerHTML = html + "</table></div>";
 }
 
-function exportPDF() {
-    const opt = { margin: 10, filename: 'Timetable.pdf', jsPDF: { orientation: 'landscape' } };
-    html2pdf().set(opt).from(document.getElementById('printableArea')).save();
+if(!success) alert("⚠️ Some subjects not fully allocated");
+
+render();
 }
+
+// ================= VIEWS =================
+function setView(v){
+currentView=v;
+
+if(v==="STREAM") filter.innerHTML=CLASSES.map(c=>`<option>${c}</option>`);
+else if(v==="TEACHER") filter.innerHTML=TEACHERS.map(t=>`<option>${t}</option>`);
+else filter.innerHTML="";
+
+render();
+}
+
+// ================= RENDER =================
+function render(){
+
+headerTitle.innerText=schName.value;
+headerYear.innerText="Academic Year: "+acadYear.value;
+
+stats.innerHTML=`<div class="card">
+Classes: ${CLASSES.length} | Teachers: ${TEACHERS.length} | Lessons: ${DATA.length}
+</div>`;
+
+if(currentView==="MASTER") renderMaster();
+if(currentView==="STREAM") renderSingle("frm");
+if(currentView==="TEACHER") renderSingle("tea");
+if(currentView==="LOAD") renderLoads();
+}
+
+function renderMaster(){
+let mode=displayMode.value;
+let html="";
+
+DAYS.forEach(d=>{
+html+=`<div class="card"><h4>${d}</h4><table><tr><th>Class</th>`;
+SLOTS.forEach(s=>html+=`<th>${s.label}</th>`);
+html+="</tr>";
+
+CLASSES.forEach(c=>{
+html+=`<tr><td>${c}</td>`;
+SLOTS.forEach(s=>{
+if(s.type!=="period") html+=`<td class="break">${s.label}</td>`;
+else{
+let m=DATA.find(x=>x.d===d && x.p===s.id && x.frm===c);
+html+=`<td>${m?`<div class="slot">${mode==="both"?m.sub+"<br>"+m.tea:m.sub}</div>`:""}</td>`;
+}
+});
+html+="</tr>";
+});
+
+html+="</table></div>";
+});
+
+app.innerHTML=html;
+}
+
+function renderSingle(key){
+let val=filter.value;
+let html=`<div class="card"><table><tr><th>Day</th>`;
+SLOTS.forEach(s=>html+=`<th>${s.label}</th>`);
+html+="</tr>";
+
+DAYS.forEach(d=>{
+html+=`<tr><td>${d}</td>`;
+SLOTS.forEach(s=>{
+if(s.type!=="period") html+=`<td class="break">${s.label}</td>`;
+else{
+let m=DATA.find(x=>x.d===d && x.p===s.id && x[key]===val);
+html+=`<td>${m?m.sub:""}</td>`;
+}
+});
+html+="</tr>";
+});
+
+app.innerHTML=html+"</table></div>";
+}
+
+function renderLoads(){
+let html="<div class='card'><table><tr><th>Teacher</th><th>Load</th></tr>";
+TEACHERS.forEach(t=>{
+html+=`<tr><td>${t}</td><td>${DATA.filter(x=>x.tea===t).length}</td></tr>`;
+});
+app.innerHTML=html+"</table></div>";
+}
+
+// ================= SAVE =================
+function saveProject(){
+let blob=new Blob([JSON.stringify({DATA,REGISTRY,CLASSES,TEACHERS})]);
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="tt_backup.json";
+a.click();
+}
+
+function loadProject(e){
+let r=new FileReader();
+r.onload=(ev)=>{
+let p=JSON.parse(ev.target.result);
+DATA=p.DATA;REGISTRY=p.REGISTRY;CLASSES=p.CLASSES;TEACHERS=p.TEACHERS;
+render();
+};
+r.readAsText(e.target.files[0]);
+}
+
+// ================= PDF =================
+function exportPDF(){
+html2pdf().from(document.body).save();
+}
+
 </script>
+
 </body>
 </html>

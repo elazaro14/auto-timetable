@@ -16,7 +16,6 @@
     --dark:#0f172a;
     --dark2:#1e293b;
     --bg:#f8fafc;
-    --card:#ffffff;
     --border:#cbd5e1;
 }
 
@@ -33,8 +32,6 @@ body{
     overflow:hidden;
 }
 
-/* SIDEBAR */
-
 .sidebar{
     width:340px;
     background:linear-gradient(180deg,var(--dark),var(--dark2));
@@ -44,7 +41,6 @@ body{
 }
 
 .sidebar h2{
-    margin-top:0;
     text-align:center;
     color:#38bdf8;
 }
@@ -56,8 +52,8 @@ body{
 .section-title{
     font-size:11px;
     color:#38bdf8;
-    margin-bottom:10px;
     font-weight:800;
+    margin-bottom:10px;
     text-transform:uppercase;
 }
 
@@ -71,8 +67,7 @@ label{
     text-transform:uppercase;
 }
 
-input,
-select{
+input,select{
     width:100%;
     padding:10px;
     border-radius:10px;
@@ -106,8 +101,6 @@ button{
     color:white;
 }
 
-/* MAIN */
-
 .main{
     flex:1;
     display:flex;
@@ -117,8 +110,8 @@ button{
 
 .topbar{
     background:white;
-    border-bottom:1px solid var(--border);
     padding:12px 20px;
+    border-bottom:1px solid var(--border);
     display:flex;
     gap:10px;
     flex-wrap:wrap;
@@ -130,8 +123,6 @@ button{
     padding:20px;
 }
 
-/* CARD */
-
 .card{
     background:white;
     border:1px solid var(--border);
@@ -141,16 +132,13 @@ button{
     page-break-inside:avoid;
 }
 
-/* TABLE */
-
 table{
     width:100%;
     border-collapse:collapse;
     table-layout:fixed;
 }
 
-th,
-td{
+th,td{
     border:1px solid #cbd5e1;
     text-align:center;
     padding:5px;
@@ -182,8 +170,6 @@ th{
     font-weight:800;
 }
 
-/* PRINT */
-
 @media print{
 
     .sidebar,
@@ -210,8 +196,6 @@ th{
 </head>
 
 <body>
-
-<!-- SIDEBAR -->
 
 <div class="sidebar">
 
@@ -347,8 +331,6 @@ onchange="loadCSV(event)">
 
 </div>
 
-<!-- MAIN -->
-
 <div class="main">
 
 <div class="topbar">
@@ -390,8 +372,6 @@ let TEACHERS=[];
 let SPECIALS=[];
 
 let currentView="MASTER";
-
-/* SPECIALS */
 
 function addSpecial(){
 
@@ -456,8 +436,6 @@ function removeSpecial(i){
     renderSpecials();
 }
 
-/* BUILD SLOTS */
-
 function buildSlots(day){
 
     let slots=[];
@@ -469,23 +447,73 @@ function buildSlots(day){
 
     for(let i=1;i<=total;i++){
 
-        let st=cur.toTimeString().slice(0,5);
+        let specialHere=SPECIALS.find(sp=>
 
-        cur.setMinutes(cur.getMinutes()+dur);
+            (sp.day==="ALL" || sp.day===day)
 
-        let et=cur.toTimeString().slice(0,5);
+            &&
 
-        slots.push({
-            id:"P"+i,
-            type:"period",
-            label:`P${i}<br>${st}-${et}`
-        });
+            (sp.after + 1 === i)
+
+        );
+
+        if(specialHere){
+
+            let st=cur.toTimeString().slice(0,5);
+
+            cur.setMinutes(
+                cur.getMinutes()+specialHere.dur
+            );
+
+            let et=cur.toTimeString().slice(0,5);
+
+            slots.push({
+
+                id:"SP"+i,
+
+                type:"special",
+
+                label:`
+                ${specialHere.name}
+                <br>
+                ${st}-${et}
+                `
+
+            });
+
+        }
+
+        else{
+
+            let st=cur.toTimeString().slice(0,5);
+
+            cur.setMinutes(cur.getMinutes()+dur);
+
+            let et=cur.toTimeString().slice(0,5);
+
+            slots.push({
+
+                id:"P"+i,
+
+                type:"period",
+
+                label:`
+                P${i}
+                <br>
+                ${st}-${et}
+                `
+
+            });
+        }
 
         if(i==breakAfter.value){
 
             slots.push({
+
                 type:"break",
+
                 label:"BREAK"
+
             });
 
             cur.setMinutes(
@@ -496,8 +524,11 @@ function buildSlots(day){
         if(i==lunchAfter.value){
 
             slots.push({
+
                 type:"lunch",
+
                 label:"LUNCH"
+
             });
 
             cur.setMinutes(
@@ -505,29 +536,10 @@ function buildSlots(day){
             );
         }
 
-        SPECIALS.forEach(sp=>{
-
-            if(
-                sp.after==i &&
-                (sp.day=="ALL" || sp.day==day)
-            ){
-
-                slots.push({
-                    type:"special",
-                    label:sp.name
-                });
-
-                cur.setMinutes(cur.getMinutes()+sp.dur);
-            }
-
-        });
-
     }
 
     return slots;
 }
-
-/* IMPORT CSV */
 
 function loadCSV(e){
 
@@ -574,12 +586,6 @@ function loadCSV(e){
     reader.readAsText(e.target.files[0]);
 }
 
-/* HELPERS */
-
-function shuffle(a){
-    return [...a].sort(()=>Math.random()-.5);
-}
-
 function canPlace(r,d,p){
 
     if(DATA.some(x=>
@@ -596,8 +602,6 @@ function canPlace(r,d,p){
 
     return true;
 }
-
-/* GENERATOR */
 
 function generate(){
 
@@ -630,8 +634,6 @@ function generate(){
 
                 if(left<=0) break;
 
-                /* ONCE A DAY */
-
                 let alreadyToday=DATA.some(x=>
                     x.d===d &&
                     x.frm===r.frm &&
@@ -648,8 +650,6 @@ function generate(){
 
                 let placed=false;
 
-                /* DOUBLE PRIORITY */
-
                 if(left>=2){
 
                     for(let i=0;i<periods.length-1;i++){
@@ -659,8 +659,6 @@ function generate(){
 
                         let idx1=daySlots.indexOf(p1);
                         let idx2=daySlots.indexOf(p2);
-
-                        /* NO BREAK/LUNCH/SPECIAL */
 
                         if(idx2!==idx1+1)
                             continue;
@@ -690,8 +688,6 @@ function generate(){
                         }
                     }
                 }
-
-                /* SINGLE FALLBACK */
 
                 if(!placed && left>0){
 
@@ -744,16 +740,12 @@ function generate(){
     render();
 }
 
-/* VIEW */
-
 function setView(v){
 
     currentView=v;
 
     render();
 }
-
-/* RENDER */
 
 function render(){
 
@@ -772,8 +764,6 @@ function render(){
     if(currentView=="LOADS")
         renderLoads();
 }
-
-/* MASTER */
 
 function renderMaster(){
 
@@ -871,8 +861,6 @@ function renderMaster(){
 
     app.innerHTML=html;
 }
-
-/* STREAMS */
 
 function renderStreams(){
 
@@ -973,8 +961,6 @@ function renderStreams(){
     app.innerHTML=html;
 }
 
-/* TEACHERS */
-
 function renderTeachers(){
 
     let html="";
@@ -1064,8 +1050,6 @@ function renderTeachers(){
     app.innerHTML=html;
 }
 
-/* LOADS */
-
 function renderLoads(){
 
     let html=`
@@ -1104,8 +1088,6 @@ function renderLoads(){
     app.innerHTML=html;
 }
 
-/* PDF */
-
 function exportPDF(){
 
     html2pdf()
@@ -1133,8 +1115,6 @@ function exportPDF(){
     .save();
 }
 
-/* SAVE */
-
 function saveBackup(){
 
     let blob=new Blob([JSON.stringify({
@@ -1157,8 +1137,6 @@ function saveBackup(){
 
     a.click();
 }
-
-/* LOAD */
 
 function loadBackup(e){
 

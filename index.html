@@ -17,8 +17,7 @@
     --dark2:#1e293b;
     --bg:#f8fafc;
     --card:#ffffff;
-    --border:#e2e8f0;
-    --text:#0f172a;
+    --border:#cbd5e1;
 }
 
 *{
@@ -27,7 +26,7 @@
 
 body{
     margin:0;
-    font-family:Inter,system-ui,sans-serif;
+    font-family:Inter,Arial,sans-serif;
     background:var(--bg);
     display:flex;
     height:100vh;
@@ -42,36 +41,34 @@ body{
     color:white;
     padding:20px;
     overflow-y:auto;
-    border-right:1px solid #334155;
 }
 
 .sidebar h2{
     margin-top:0;
     text-align:center;
     color:#38bdf8;
-    font-size:1.5rem;
 }
 
 .section{
-    margin-top:20px;
+    margin-top:18px;
 }
 
 .section-title{
     font-size:11px;
     color:#38bdf8;
-    text-transform:uppercase;
     margin-bottom:10px;
     font-weight:800;
+    text-transform:uppercase;
 }
 
 label{
     display:block;
-    font-size:11px;
-    margin-top:10px;
+    margin-top:8px;
     margin-bottom:4px;
+    font-size:11px;
     color:#94a3b8;
-    text-transform:uppercase;
     font-weight:700;
+    text-transform:uppercase;
 }
 
 input,
@@ -82,44 +79,31 @@ select{
     border:1px solid #334155;
     background:#1e293b;
     color:white;
-    outline:none;
 }
 
 button{
     width:100%;
     padding:12px;
+    margin-top:8px;
     border:none;
     border-radius:10px;
-    margin-top:8px;
     cursor:pointer;
     font-weight:700;
-    transition:.2s;
-}
-
-button:hover{
-    transform:translateY(-1px);
 }
 
 .btn-primary{
-    background:linear-gradient(135deg,#3b82f6,#2563eb);
+    background:#2563eb;
     color:white;
 }
 
 .btn-success{
-    background:linear-gradient(135deg,#22c55e,#16a34a);
+    background:#16a34a;
     color:white;
 }
 
 .btn-dark{
     background:#334155;
     color:white;
-}
-
-.special-box{
-    background:#1e293b;
-    padding:12px;
-    border-radius:12px;
-    border:1px dashed #475569;
 }
 
 /* MAIN */
@@ -133,11 +117,10 @@ button:hover{
 
 .topbar{
     background:white;
-    padding:12px 20px;
     border-bottom:1px solid var(--border);
+    padding:12px 20px;
     display:flex;
     gap:10px;
-    align-items:center;
     flex-wrap:wrap;
 }
 
@@ -145,36 +128,6 @@ button:hover{
     flex:1;
     overflow:auto;
     padding:20px;
-}
-
-/* STATS */
-
-.stats{
-    display:flex;
-    gap:15px;
-    margin-bottom:20px;
-    flex-wrap:wrap;
-}
-
-.stat{
-    background:white;
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:15px;
-    min-width:180px;
-}
-
-.stat-label{
-    font-size:11px;
-    color:#64748b;
-    text-transform:uppercase;
-    font-weight:700;
-}
-
-.stat-value{
-    font-size:26px;
-    font-weight:800;
-    margin-top:5px;
 }
 
 /* CARD */
@@ -199,14 +152,13 @@ table{
 th,
 td{
     border:1px solid #cbd5e1;
-    padding:5px;
     text-align:center;
+    padding:5px;
     font-size:10px;
 }
 
 th{
-    background:#f8fafc;
-    color:#475569;
+    background:#f1f5f9;
     font-weight:800;
 }
 
@@ -216,16 +168,11 @@ th{
     border-radius:8px;
     padding:5px;
     font-weight:700;
-    color:#14532d;
-    min-height:42px;
-    display:flex;
-    justify-content:center;
-    flex-direction:column;
+    min-height:40px;
 }
 
 .break-cell{
-    background:#f1f5f9;
-    color:#475569;
+    background:#e2e8f0;
     font-weight:700;
 }
 
@@ -256,7 +203,6 @@ th{
 
     .card{
         border:none;
-        margin-bottom:30px;
     }
 }
 
@@ -289,7 +235,7 @@ th{
 </div>
 
 <div style="flex:1">
-<label>Duration</label>
+<label>Period Minutes</label>
 <input type="number" id="periodDur" value="40">
 </div>
 
@@ -338,8 +284,6 @@ th{
 
 <div class="section-title">Special Blocks</div>
 
-<div class="special-box">
-
 <input id="spName" placeholder="ASSEMBLY">
 
 <select id="spDay">
@@ -363,14 +307,12 @@ th{
 
 </div>
 
-</div>
-
 <div class="section">
 
 <div class="section-title">Actions</div>
 
 <button class="btn-success" onclick="generate()">
-⚡ GENERATE TIMETABLE
+⚡ GENERATE
 </button>
 
 <button class="btn-dark" onclick="window.print()">
@@ -431,25 +373,6 @@ onchange="loadCSV(event)">
 <h1 id="title"></h1>
 <h3 id="year"></h3>
 
-<div class="stats">
-
-<div class="stat">
-<div class="stat-label">Classes</div>
-<div class="stat-value" id="statClasses">0</div>
-</div>
-
-<div class="stat">
-<div class="stat-label">Teachers</div>
-<div class="stat-value" id="statTeachers">0</div>
-</div>
-
-<div class="stat">
-<div class="stat-label">Allocated Lessons</div>
-<div class="stat-value" id="statLessons">0</div>
-</div>
-
-</div>
-
 <div id="app"></div>
 
 </div>
@@ -478,7 +401,7 @@ function addSpecial(){
     let dur=+spDur.value;
 
     if(!name || !after || !dur){
-        alert("Fill all special block fields");
+        alert("Fill all fields");
         return;
     }
 
@@ -496,18 +419,18 @@ function renderSpecials(){
     specialList.innerHTML=SPECIALS.map((s,i)=>`
 
     <div style="
-        margin-top:8px;
-        background:#334155;
-        padding:10px;
-        border-radius:8px;
-        font-size:12px;
+    margin-top:8px;
+    background:#334155;
+    padding:10px;
+    border-radius:8px;
+    font-size:12px;
     ">
 
     ${s.name} (${s.day}) AFTER P${s.after}
 
     <button
     style="
-    margin-top:8px;
+    margin-top:6px;
     background:#dc2626;
     color:white;
     border:none;
@@ -527,11 +450,13 @@ function renderSpecials(){
 }
 
 function removeSpecial(i){
+
     SPECIALS.splice(i,1);
+
     renderSpecials();
 }
 
-/* SLOT BUILDER */
+/* BUILD SLOTS */
 
 function buildSlots(day){
 
@@ -563,7 +488,9 @@ function buildSlots(day){
                 label:"BREAK"
             });
 
-            cur.setMinutes(cur.getMinutes()+ +breakDur.value);
+            cur.setMinutes(
+                cur.getMinutes()+ +breakDur.value
+            );
         }
 
         if(i==lunchAfter.value){
@@ -573,7 +500,9 @@ function buildSlots(day){
                 label:"LUNCH"
             });
 
-            cur.setMinutes(cur.getMinutes()+ +lunchDur.value);
+            cur.setMinutes(
+                cur.getMinutes()+ +lunchDur.value
+            );
         }
 
         SPECIALS.forEach(sp=>{
@@ -645,7 +574,7 @@ function loadCSV(e){
     reader.readAsText(e.target.files[0]);
 }
 
-/* GENERATOR */
+/* HELPERS */
 
 function shuffle(a){
     return [...a].sort(()=>Math.random()-.5);
@@ -668,18 +597,23 @@ function canPlace(r,d,p){
     return true;
 }
 
+/* GENERATOR */
+
 function generate(){
 
-    if(REGISTRY.length==0){
+    if(REGISTRY.length===0){
         alert("Import CSV First");
         return;
     }
 
+    DATA=[];
+
     let success=false;
 
-    for(let attempt=0;attempt<100;attempt++){
+    for(let attempt=0; attempt<200; attempt++){
 
         DATA=[];
+
         success=true;
 
         let pool=[...REGISTRY]
@@ -689,55 +623,95 @@ function generate(){
 
             let left=r.pwk;
 
-            for(let d of shuffle(DAYS)){
+            let days=[...DAYS]
+            .sort(()=>Math.random()-0.5);
+
+            for(let d of days){
 
                 if(left<=0) break;
 
-                if(DATA.some(x=>
-                    x.d==d &&
-                    x.frm==r.frm &&
-                    x.sub==r.sub
-                )) continue;
+                /* ONCE A DAY */
 
-                let periods=buildSlots(d)
-                .filter(x=>x.type=="period");
+                let alreadyToday=DATA.some(x=>
+                    x.d===d &&
+                    x.frm===r.frm &&
+                    x.sub===r.sub
+                );
 
-                /* DOUBLE PERIOD PRIORITY */
+                if(alreadyToday) continue;
+
+                let daySlots=buildSlots(d);
+
+                let periods=daySlots.filter(
+                    x=>x.type==="period"
+                );
+
+                let placed=false;
+
+                /* DOUBLE PRIORITY */
 
                 if(left>=2){
 
                     for(let i=0;i<periods.length-1;i++){
 
-                        let p1=periods[i].id;
-                        let p2=periods[i+1].id;
+                        let p1=periods[i];
+                        let p2=periods[i+1];
+
+                        let idx1=daySlots.indexOf(p1);
+                        let idx2=daySlots.indexOf(p2);
+
+                        /* NO BREAK/LUNCH/SPECIAL */
+
+                        if(idx2!==idx1+1)
+                            continue;
 
                         if(
-                            canPlace(r,d,p1) &&
-                            canPlace(r,d,p2)
+                            canPlace(r,d,p1.id) &&
+                            canPlace(r,d,p2.id)
                         ){
 
-                            DATA.push({...r,d,p:p1});
-                            DATA.push({...r,d,p:p2});
+                            DATA.push({
+                                ...r,
+                                d,
+                                p:p1.id
+                            });
+
+                            DATA.push({
+                                ...r,
+                                d,
+                                p:p2.id
+                            });
 
                             left-=2;
+
+                            placed=true;
+
                             break;
                         }
                     }
                 }
 
-                /* SINGLE */
+                /* SINGLE FALLBACK */
 
-                if(left>0){
+                if(!placed && left>0){
 
-                    let shuffled=shuffle(periods);
+                    let shuffled=[...periods]
+                    .sort(()=>Math.random()-0.5);
 
-                    for(let s of shuffled){
+                    for(let p of shuffled){
 
-                        if(canPlace(r,d,s.id)){
+                        if(canPlace(r,d,p.id)){
 
-                            DATA.push({...r,d,p:s.id});
+                            DATA.push({
+                                ...r,
+                                d,
+                                p:p.id
+                            });
 
                             left--;
+
+                            placed=true;
+
                             break;
                         }
                     }
@@ -746,17 +720,25 @@ function generate(){
             }
 
             if(left>0){
+
                 success=false;
+
                 break;
             }
-
         }
 
         if(success) break;
     }
 
     if(!success){
-        alert("Some lessons could not fit");
+
+        alert(
+            "Some subjects could not be allocated.\n\n"+
+            "Possible reasons:\n"+
+            "- Too many periods\n"+
+            "- Teacher conflicts\n"+
+            "- Not enough free slots"
+        );
     }
 
     render();
@@ -777,10 +759,6 @@ function render(){
 
     title.innerText=schName.value;
     year.innerText="ACADEMIC YEAR: "+acadYear.value;
-
-    statClasses.innerText=CLASSES.length;
-    statTeachers.innerText=TEACHERS.length;
-    statLessons.innerText=DATA.length;
 
     if(currentView=="MASTER")
         renderMaster();
@@ -815,7 +793,6 @@ function renderMaster(){
         <table>
 
         <tr>
-
         <th>CLASS</th>
         `;
 
@@ -915,7 +892,6 @@ function renderStreams(){
         <table>
 
         <tr>
-
         <th>DAY</th>
         `;
 
@@ -1015,7 +991,6 @@ function renderTeachers(){
         <table>
 
         <tr>
-
         <th>DAY</th>
         `;
 
@@ -1108,7 +1083,9 @@ function renderLoads(){
 
     TEACHERS.sort().forEach(t=>{
 
-        let total=DATA.filter(x=>x.tea==t).length;
+        let total=DATA.filter(
+            x=>x.tea==t
+        ).length;
 
         html+=`
         <tr>
@@ -1156,7 +1133,7 @@ function exportPDF(){
     .save();
 }
 
-/* SAVE BACKUP */
+/* SAVE */
 
 function saveBackup(){
 
@@ -1181,7 +1158,7 @@ function saveBackup(){
     a.click();
 }
 
-/* LOAD BACKUP */
+/* LOAD */
 
 function loadBackup(e){
 
@@ -1198,6 +1175,7 @@ function loadBackup(e){
         SPECIALS=p.SPECIALS || [];
 
         renderSpecials();
+
         render();
     };
 

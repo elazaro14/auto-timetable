@@ -2,192 +2,176 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
 <title>TT-PRO ULTIMATE 2026</title>
 
-<style>
-:root{
---primary:#2563eb;
---dark:#0f172a;
---dark2:#1e293b;
---bg:#f8fafc;
---border:#cbd5e1;
-}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-*{box-sizing:border-box}
+<style>
+
+:root{
+    --primary:#2563eb;
+    --dark:#0f172a;
+    --bg:#f1f5f9;
+    --card:#ffffff;
+    --border:#e2e8f0;
+}
 
 body{
-margin:0;
-font-family:Arial;
-display:flex;
-height:100vh;
-background:var(--bg);
-overflow:hidden;
+    margin:0;
+    font-family:Inter,system-ui,sans-serif;
+    display:flex;
+    height:100vh;
+    background:var(--bg);
 }
 
-/* SIDEBAR */
 .sidebar{
-width:340px;
-background:linear-gradient(180deg,var(--dark),var(--dark2));
-color:white;
-padding:15px;
-overflow-y:auto;
+    width:340px;
+    background:var(--dark);
+    color:white;
+    padding:18px;
+    overflow:auto;
 }
 
-h2{text-align:center;color:#38bdf8}
+.sidebar h2{
+    text-align:center;
+    color:#38bdf8;
+}
 
 label{
-font-size:11px;
-color:#94a3b8;
-display:block;
-margin-top:8px;
-font-weight:700;
+    font-size:11px;
+    color:#94a3b8;
+    display:block;
+    margin-top:10px;
 }
 
 input,select{
-width:100%;
-padding:8px;
-border-radius:6px;
-border:1px solid #334155;
-background:#1e293b;
-color:white;
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #334155;
+    background:#1e293b;
+    color:white;
 }
 
 button{
-width:100%;
-padding:10px;
-margin-top:8px;
-border:none;
-border-radius:6px;
-font-weight:700;
-cursor:pointer;
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-.btn{background:#2563eb;color:white}
-.btn2{background:#334155;color:white}
+.btn-blue{background:#2563eb;color:white}
+.btn-green{background:#16a34a;color:white}
+.btn-gray{background:#334155;color:white}
+.btn-red{background:#dc2626;color:white}
 
-/* MAIN */
-.main{
-flex:1;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
 .topbar{
-background:white;
-padding:10px;
-display:flex;
-gap:10px;
-border-bottom:1px solid var(--border);
+    background:white;
+    padding:10px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    gap:8px;
 }
 
-.content{
-flex:1;
-overflow:auto;
-padding:15px;
-}
+.content{padding:15px;overflow:auto}
 
-/* TABLE */
 .card{
-background:white;
-border:1px solid var(--border);
-margin-bottom:15px;
-padding:10px;
-border-radius:10px;
+    background:white;
+    border:1px solid var(--border);
+    margin-bottom:20px;
+    padding:10px;
+    border-radius:12px;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-table-layout:fixed;
+    width:100%;
+    border-collapse:collapse;
 }
 
 th,td{
-border:1px solid #cbd5e1;
-text-align:center;
-font-size:10px;
-padding:4px;
+    border:1px solid var(--border);
+    font-size:11px;
+    text-align:center;
+    padding:4px;
 }
 
-th{background:#f1f5f9;font-weight:800}
+th{background:#f8fafc}
 
 .slot{
-background:#dcfce7;
-padding:4px;
-border-radius:5px;
-font-weight:700;
+    background:#dcfce7;
+    padding:4px;
+    border-radius:6px;
 }
 
-.break{
-background:#e2e8f0;
-font-weight:700;
-}
-
-.special{
-background:#fef3c7;
-color:#92400e;
-font-weight:800;
-}
+.break{background:#e2e8f0;font-weight:bold}
+.special{background:#fde68a;font-weight:bold}
 
 </style>
 </head>
 
 <body>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
 
 <h2>TT-PRO</h2>
 
-<label>School Name</label>
+<label>School</label>
 <input id="schName" value="SECONDARY SCHOOL">
 
-<label>Academic Year</label>
-<input id="acadYear" value="2026">
+<label>Year</label>
+<input id="year" value="2026">
 
 <label>Total Periods</label>
-<input id="totalPeriods" type="number" value="8">
+<input type="number" id="total" value="8">
 
 <label>Period Duration</label>
-<input id="periodDur" type="number" value="40">
+<input type="number" id="dur" value="40">
 
 <label>Start Time</label>
-<input id="startTime" type="time" value="08:00">
-
-<label>Break After</label>
-<input id="breakAfter" type="number" value="2">
-
-<label>Lunch After</label>
-<input id="lunchAfter" type="number" value="4">
+<input type="time" id="start" value="08:00">
 
 <hr>
 
-<h3>Special Block</h3>
+<h3 style="color:#38bdf8">Special Blocks</h3>
 
 <input id="spName" placeholder="ASSEMBLY">
 
 <select id="spDay">
-<option value="ALL">ALL DAYS</option>
-<option>MON</option>
-<option>TUE</option>
-<option>WED</option>
-<option>THU</option>
-<option>FRI</option>
+<option value="ALL">EVERY DAY</option>
+<option value="MON">MONDAY</option>
+<option value="TUE">TUESDAY</option>
+<option value="WED">WEDNESDAY</option>
+<option value="THU">THURSDAY</option>
+<option value="FRI">FRIDAY</option>
 </select>
 
-<input id="spPeriods" placeholder="6,7,8">
+<input id="spAfter" type="number" placeholder="After Period">
+<input id="spDur" type="number" placeholder="Duration (Min)">
 
-<input id="spDur" type="number" placeholder="Duration per period">
+<button class="btn-blue" onclick="addSpecial()">+ ADD SPECIAL</button>
 
-<button class="btn" onclick="addSpecial()">ADD SPECIAL</button>
+<div id="specialList"></div>
 
 <hr>
 
-<button class="btn" onclick="generate()">GENERATE</button>
-<button class="btn2" onclick="window.print()">PRINT</button>
-<button class="btn2" onclick="exportPDF()">PDF</button>
+<button class="btn-green" onclick="generate()">GENERATE</button>
+<button class="btn-gray" onclick="window.print()">PRINT</button>
+<button class="btn-gray" onclick="exportPDF()">PDF</button>
+
+<label>CSV</label>
+<input type="file" onchange="loadCSV(event)">
 
 </div>
 
+<!-- MAIN -->
 <div class="main">
 
 <div class="topbar">
@@ -198,6 +182,7 @@ font-weight:800;
 </div>
 
 <div class="content">
+<h3 id="title"></h3>
 <div id="app"></div>
 </div>
 
@@ -205,155 +190,158 @@ font-weight:800;
 
 <script>
 
-let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[],SPECIALS=[];
-let view="MASTER";
+/* ================= DATA ================= */
 
 const DAYS=["MON","TUE","WED","THU","FRI"];
 
-/* SPECIAL BLOCK FIXED ✔ */
+let REGISTRY=[];
+let DATA=[];
+let CLASSES=[];
+let TEACHERS=[];
+let SPECIALS=[];
+
+let view="MASTER";
+
+/* ================= SPECIAL BLOCK ================= */
+
 function addSpecial(){
 
-SPECIALS.push({
-name:spName.value.trim().toUpperCase(),
-day:spDay.value,
-periods:spPeriods.value.split(',')
-.map(x=>+x.trim())
-.filter(x=>!isNaN(x)),
-dur:+spDur.value
-});
+    if(!spName.value || !spAfter.value || !spDur.value){
+        alert("Fill all fields");
+        return;
+    }
 
-spName.value="";
-spPeriods.value="";
-spDur.value="";
+    SPECIALS.push({
+        name:spName.value.toUpperCase(),
+        day:spDay.value,
+        after:+spAfter.value,
+        dur:+spDur.value
+    });
 
+    renderSpecialList();
+
+    spName.value="";
+    spAfter.value="";
+    spDur.value="";
 }
 
-/* BUILD SLOTS (FIXED SPECIAL LOGIC) */
+function renderSpecialList(){
+    specialList.innerHTML=SPECIALS.map((s,i)=>`
+        <div style="background:#1e293b;padding:6px;margin-top:5px;border-radius:6px;font-size:11px">
+            ${s.name} (${s.day}) after P${s.after}
+            <button class="btn-red" onclick="SPECIALS.splice(${i},1);renderSpecialList()">X</button>
+        </div>
+    `).join('');
+}
+
+/* ================= CSV ================= */
+
+function loadCSV(e){
+let r=new FileReader();
+r.onload=(ev)=>{
+REGISTRY=[];
+CLASSES=[];
+TEACHERS=[];
+
+ev.target.result.split("\n").slice(1).forEach(l=>{
+let p=l.split(/[;,]/).map(x=>x.trim().toUpperCase());
+if(p.length<4)return;
+let[sub,tea,pwk,frm]=p;
+REGISTRY.push({sub,tea,pwk:+pwk,frm});
+if(!CLASSES.includes(frm))CLASSES.push(frm);
+if(!TEACHERS.includes(tea))TEACHERS.push(tea);
+});
+alert("CSV loaded");
+render();
+};
+r.readAsText(e.target.files[0]);
+}
+
+/* ================= SLOT BUILDER (FIXED SPECIAL SHIFT) ================= */
+
 function buildSlots(day){
 
 let slots=[];
-let cur=new Date("2026-01-01T"+startTime.value);
-let total=+totalPeriods.value;
-let dur=+periodDur.value;
+let cur=new Date("2026-01-01T"+start.value);
 
-for(let i=1;i<=total;i++){
+for(let i=1;i<=+total.value;i++){
 
-// SPECIAL BLOCK FIX ✔
-let sp=SPECIALS.find(s =>
-(s.day==="ALL"||s.day===day)
-&& s.periods.includes(i)
-);
+let s=cur.toTimeString().slice(0,5);
+cur.setMinutes(cur.getMinutes()+ +dur.value);
 
-if(sp){
+slots.push({id:"P"+i,type:"period",label:"P"+i});
+
+SPECIALS.forEach(sp=>{
+if(sp.after===i && (sp.day==="ALL" || sp.day===day)){
+
 slots.push({
-id:"S"+i,
 type:"special",
 label:sp.name
 });
+
 cur.setMinutes(cur.getMinutes()+sp.dur);
-}else{
-
-let st=cur.toTimeString().slice(0,5);
-cur.setMinutes(cur.getMinutes()+dur);
-
-slots.push({
-id:"P"+i,
-type:"period",
-label:"P"+i
+}
 });
-}
-
-// BREAK
-if(i==breakAfter.value){
-slots.push({type:"break",label:"BREAK"});
-cur.setMinutes(cur.getMinutes()+20);
-}
-
-// LUNCH
-if(i==lunchAfter.value){
-slots.push({type:"break",label:"LUNCH"});
-cur.setMinutes(cur.getMinutes()+45);
-}
 
 }
 
 return slots;
 }
 
-/* GENERATE (DOUBLE PRIORITY FIXED) */
+/* ================= GENERATOR (DOUBLE PRIORITY SAFE) ================= */
+
 function generate(){
 
 DATA=[];
 
-for(let r of REGISTRY){
+let pool=[...REGISTRY].sort((a,b)=>b.pwk-a.pwk);
+
+for(let r of pool){
 
 let left=r.pwk;
 
 for(let d of DAYS){
 
-if(left<=0) break;
+if(left<=0)break;
 
-if(DATA.some(x=>x.sub==r.sub&&x.frm==r.frm&&x.d==d))
-continue;
+let slots=[];
+for(let i=1;i<=+total.value;i++)slots.push("P"+i);
 
-let slots=buildSlots(d);
-let periods=slots.filter(x=>x.type=="period");
+/* DOUBLE FIRST */
+for(let i=0;i<slots.length;i++){
 
-/* DOUBLE PERIOD FIRST */
-for(let i=0;i<periods.length-1;i++){
+if(left<=0)break;
 
-if(left<2) break;
-
-let p1=periods[i];
-let p2=periods[i+1];
-
-if(!DATA.find(x=>x.d==d&&x.p==p1.id)&&
-!DATA.find(x=>x.d==d&&x.p==p2.id)){
-
-DATA.push(
-{sub:r.sub,tea:r.tea,frm:r.frm,d,p:p1.id},
-{sub:r.sub,tea:r.tea,frm:r.frm,d,p:p2.id}
-);
-
+if(i<slots.length-1 && left>=2){
+DATA.push({d,sub:r.sub,tea:r.tea,frm:r.frm,p:slots[i]});
+DATA.push({d,sub:r.sub,tea:r.tea,frm:r.frm,p:slots[i+1]});
 left-=2;
 i++;
 }
-
-}
-
-/* SINGLE */
-for(let p of periods){
-
-if(left<=0) break;
-
-if(!DATA.find(x=>x.d==d&&x.p==p.id)){
-
-DATA.push({sub:r.sub,tea:r.tea,frm:r.frm,d,p:p.id});
+else{
+DATA.push({d,sub:r.sub,tea:r.tea,frm:r.frm,p:slots[i]});
 left--;
 }
-
 }
-
 }
-
 }
 
 render();
-
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
+
 function render(){
+
+title.innerText=schName.value+" ("+year.value+")";
 
 let html="";
 
 DAYS.forEach(d=>{
 
-html+=`<div class="card"><h3>${d}</h3><table><tr><th>Class</th>`;
+html+=`<div class="card"><h3>${d}</h3><table><tr><th>CLASS</th>`;
 
-let slots=buildSlots(d);
-
-slots.forEach(s=>html+=`<th>${s.label}</th>`);
+for(let i=1;i<=+total.value;i++)html+=`<th>P${i}</th>`;
 
 html+="</tr>";
 
@@ -361,32 +349,24 @@ CLASSES.forEach(c=>{
 
 html+=`<tr><td>${c}</td>`;
 
-slots.forEach(s=>{
+for(let i=1;i<=+total.value;i++){
 
-let m=DATA.find(x=>x.d==d&&x.p==s.id&&x.frm==c);
+let m=DATA.find(x=>x.d==d&&x.p=="P"+i&&x.frm==c);
 
-if(s.type=="special")
-html+=`<td class="special">${s.label}</td>`;
-else if(s.type=="break")
-html+=`<td class="break">${s.label}</td>`;
-else
-html+=`<td>${m?m.sub:""}</td>`;
-
-});
+html+=`<td>${m?`<div class="slot">${m.sub}<br>${m.tea}</div>`:""}</td>`;
+}
 
 html+="</tr>";
-
 });
 
 html+="</table></div>";
-
 });
 
 app.innerHTML=html;
-
 }
 
-/* PDF */
+/* ================= PDF ================= */
+
 function exportPDF(){
 html2pdf().from(document.body).save();
 }

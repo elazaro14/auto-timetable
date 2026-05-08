@@ -11,185 +11,142 @@
 <style>
 
 :root{
-    --primary:#2563eb;
-    --success:#16a34a;
-    --dark:#0f172a;
-    --dark2:#1e293b;
-    --bg:#f8fafc;
-    --border:#cbd5e1;
+--primary:#2563eb;
+--success:#16a34a;
+--dark:#0f172a;
+--dark2:#1e293b;
+--bg:#f8fafc;
+--border:#cbd5e1;
 }
 
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
-    margin:0;
-    font-family:Inter,Arial,sans-serif;
-    background:var(--bg);
-    display:flex;
-    height:100vh;
-    overflow:hidden;
+margin:0;
+font-family:Arial;
+background:var(--bg);
+display:flex;
+height:100vh;
+overflow:hidden;
 }
 
+/* SIDEBAR */
+
 .sidebar{
-    width:340px;
-    background:linear-gradient(180deg,var(--dark),var(--dark2));
-    color:white;
-    padding:20px;
-    overflow-y:auto;
+width:340px;
+background:linear-gradient(180deg,var(--dark),var(--dark2));
+color:white;
+padding:20px;
+overflow-y:auto;
 }
 
 .sidebar h2{
-    text-align:center;
-    color:#38bdf8;
-}
-
-.section{
-    margin-top:18px;
-}
-
-.section-title{
-    font-size:11px;
-    color:#38bdf8;
-    font-weight:800;
-    margin-bottom:10px;
-    text-transform:uppercase;
+text-align:center;
+color:#38bdf8;
 }
 
 label{
-    display:block;
-    margin-top:8px;
-    margin-bottom:4px;
-    font-size:11px;
-    color:#94a3b8;
-    font-weight:700;
-    text-transform:uppercase;
+font-size:11px;
+color:#94a3b8;
+display:block;
+margin-top:8px;
+font-weight:700;
 }
 
 input,select{
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    border:1px solid #334155;
-    background:#1e293b;
-    color:white;
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #334155;
+background:#1e293b;
+color:white;
 }
 
 button{
-    width:100%;
-    padding:12px;
-    margin-top:8px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:700;
+width:100%;
+padding:10px;
+margin-top:8px;
+border:none;
+border-radius:8px;
+font-weight:700;
+cursor:pointer;
 }
 
-.btn-primary{
-    background:#2563eb;
-    color:white;
-}
+.btn-primary{background:#2563eb;color:white;}
+.btn-success{background:#16a34a;color:white;}
+.btn-dark{background:#334155;color:white;}
 
-.btn-success{
-    background:#16a34a;
-    color:white;
-}
-
-.btn-dark{
-    background:#334155;
-    color:white;
-}
+/* MAIN */
 
 .main{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
+flex:1;
+display:flex;
+flex-direction:column;
+overflow:hidden;
 }
 
 .topbar{
-    background:white;
-    padding:12px 20px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
+background:white;
+padding:10px;
+display:flex;
+gap:10px;
+border-bottom:1px solid var(--border);
 }
 
 .content{
-    flex:1;
-    overflow:auto;
-    padding:20px;
+flex:1;
+overflow:auto;
+padding:20px;
 }
 
+/* TABLE */
+
 .card{
-    background:white;
-    border:1px solid var(--border);
-    border-radius:18px;
-    padding:18px;
-    margin-bottom:25px;
-    page-break-inside:avoid;
+background:white;
+border:1px solid var(--border);
+border-radius:15px;
+padding:15px;
+margin-bottom:20px;
 }
 
 table{
-    width:100%;
-    border-collapse:collapse;
-    table-layout:fixed;
+width:100%;
+border-collapse:collapse;
+table-layout:fixed;
 }
 
 th,td{
-    border:1px solid #cbd5e1;
-    text-align:center;
-    padding:5px;
-    font-size:10px;
+border:1px solid #cbd5e1;
+text-align:center;
+font-size:10px;
+padding:5px;
 }
 
-th{
-    background:#f1f5f9;
-    font-weight:800;
-}
+th{background:#f1f5f9;font-weight:800}
 
 .slot{
-    background:#dcfce7;
-    border:1px solid #86efac;
-    border-radius:8px;
-    padding:5px;
-    font-weight:700;
-    min-height:40px;
+background:#dcfce7;
+padding:5px;
+border-radius:6px;
+font-weight:700;
 }
 
-.break-cell{
-    background:#e2e8f0;
-    font-weight:700;
+.break{
+background:#e2e8f0;
+font-weight:700;
 }
 
-.special-cell{
-    background:#fef3c7;
-    color:#92400e;
-    font-weight:800;
+.special{
+background:#fef3c7;
+font-weight:800;
+color:#92400e;
 }
+
+/* PRINT */
 
 @media print{
-
-    .sidebar,
-    .topbar{
-        display:none!important;
-    }
-
-    body{
-        display:block;
-        background:white;
-    }
-
-    .content{
-        overflow:visible;
-        padding:0;
-    }
-
-    .card{
-        border:none;
-    }
+.sidebar,.topbar{display:none!important}
+body{background:white}
 }
 
 </style>
@@ -199,968 +156,274 @@ th{
 
 <div class="sidebar">
 
-<h2>TT-PRO ULTIMATE</h2>
+<h2>TT-PRO</h2>
 
-<div class="section">
-
-<div class="section-title">School Setup</div>
-
-<label>School Name</label>
+<label>School</label>
 <input id="schName" value="SECONDARY SCHOOL">
 
-<label>Academic Year</label>
+<label>Year</label>
 <input id="acadYear" value="2026">
 
-<div style="display:flex;gap:8px">
-
-<div style="flex:1">
 <label>Total Periods</label>
-<input type="number" id="totalPeriods" value="8">
-</div>
+<input id="totalPeriods" type="number" value="8">
 
-<div style="flex:1">
 <label>Period Minutes</label>
-<input type="number" id="periodDur" value="40">
-</div>
-
-</div>
+<input id="periodDur" type="number" value="40">
 
 <label>Start Time</label>
-<input type="time" id="startTime" value="08:00">
+<input id="startTime" type="time" value="08:00">
 
-</div>
-
-<div class="section">
-
-<div class="section-title">Breaks</div>
-
-<div style="display:flex;gap:8px">
-
-<div style="flex:1">
 <label>Break After</label>
-<input type="number" id="breakAfter" value="2">
-</div>
+<input id="breakAfter" type="number" value="2">
 
-<div style="flex:1">
-<label>Break Minutes</label>
-<input type="number" id="breakDur" value="20">
-</div>
-
-</div>
-
-<div style="display:flex;gap:8px">
-
-<div style="flex:1">
 <label>Lunch After</label>
-<input type="number" id="lunchAfter" value="4">
-</div>
+<input id="lunchAfter" type="number" value="4">
 
-<div style="flex:1">
-<label>Lunch Minutes</label>
-<input type="number" id="lunchDur" value="45">
-</div>
-
-</div>
-
-</div>
-
-<div class="section">
-
-<div class="section-title">Special Blocks</div>
+<!-- SPECIAL -->
+<hr>
+<h3>Special Block</h3>
 
 <input id="spName" placeholder="ASSEMBLY">
 
 <select id="spDay">
 <option value="ALL">EVERY DAY</option>
-<option value="MON">MONDAY</option>
-<option value="TUE">TUESDAY</option>
-<option value="WED">WEDNESDAY</option>
-<option value="THU">THURSDAY</option>
-<option value="FRI">FRIDAY</option>
+<option>MON</option>
+<option>TUE</option>
+<option>WED</option>
+<option>THU</option>
+<option>FRI</option>
 </select>
 
-<input type="number" id="spAfter" placeholder="After Period">
+<input id="spPeriods" placeholder="6,7,8">
 
-<input type="number" id="spDur" placeholder="Duration Minutes">
+<input id="spDur" type="number" placeholder="Minutes per period">
 
-<button class="btn-primary" onclick="addSpecial()">
-+ ADD SPECIAL
-</button>
+<button class="btn-primary" onclick="addSpecial()">ADD SPECIAL</button>
 
 <div id="specialList"></div>
 
-</div>
+<hr>
 
-<div class="section">
+<button class="btn-success" onclick="generate()">GENERATE</button>
+<button class="btn-dark" onclick="window.print()">PRINT</button>
+<button class="btn-dark" onclick="exportPDF()">PDF</button>
+<button class="btn-dark" onclick="saveBackup()">SAVE</button>
 
-<div class="section-title">Actions</div>
-
-<button class="btn-success" onclick="generate()">
-⚡ GENERATE
-</button>
-
-<button class="btn-dark" onclick="window.print()">
-🖨️ PRINT
-</button>
-
-<button class="btn-dark" onclick="exportPDF()">
-📄 EXPORT PDF
-</button>
-
-<button class="btn-dark" onclick="saveBackup()">
-💾 SAVE BACKUP
-</button>
-
-<input type="file" id="backupFile" hidden onchange="loadBackup(event)">
-
-<button class="btn-dark" onclick="backupFile.click()">
-📂 LOAD BACKUP
-</button>
-
-<input type="file"
-id="csvFile"
-hidden
-accept=".csv,.cvs,.txt"
-onchange="loadCSV(event)">
-
-<button class="btn-primary" onclick="csvFile.click()">
-📥 IMPORT CSV
-</button>
-
-</div>
+<input type="file" id="file" hidden onchange="loadCSV(event)">
+<button class="btn-primary" onclick="file.click()">IMPORT CSV</button>
 
 </div>
 
 <div class="main">
 
 <div class="topbar">
-
-<button onclick="setView('MASTER')">MASTER</button>
-
-<button onclick="setView('STREAM')">STREAMS</button>
-
-<button onclick="setView('TEACHER')">TEACHERS</button>
-
-<button onclick="setView('LOADS')">LOADS</button>
-
-<select id="displayMode" onchange="render()">
-<option value="both">SUBJECT + TEACHER</option>
-<option value="sub">SUBJECT ONLY</option>
-</select>
-
+<button onclick="view='MASTER';render()">MASTER</button>
+<button onclick="view='STREAM';render()">STREAM</button>
+<button onclick="view='TEACHER';render()">TEACHER</button>
+<button onclick="view='LOADS';render()">LOADS</button>
 </div>
 
 <div class="content">
-
-<h1 id="title"></h1>
-<h3 id="year"></h3>
-
 <div id="app"></div>
-
 </div>
 
 </div>
 
 <script>
 
+let REGISTRY=[],DATA=[],CLASSES=[],TEACHERS=[],SPECIALS=[];
+let view="MASTER";
+
 const DAYS=["MON","TUE","WED","THU","FRI"];
 
-let REGISTRY=[];
-let DATA=[];
-let CLASSES=[];
-let TEACHERS=[];
-let SPECIALS=[];
-
-let currentView="MASTER";
+/* SPECIAL */
 
 function addSpecial(){
 
-    let name=spName.value.trim().toUpperCase();
-    let day=spDay.value;
-    let after=+spAfter.value;
-    let dur=+spDur.value;
+SPECIALS.push({
+name:spName.value,
+day:spDay.value,
+periods:spPeriods.value.split(',').map(x=>+x),
+dur:+spDur.value
+});
 
-    if(!name || !after || !dur){
-        alert("Fill all fields");
-        return;
-    }
+renderSpecialList();
 
-    SPECIALS.push({name,day,after,dur});
-
-    renderSpecials();
-
-    spName.value="";
-    spAfter.value="";
-    spDur.value="";
 }
 
-function renderSpecials(){
-
-    specialList.innerHTML=SPECIALS.map((s,i)=>`
-
-    <div style="
-    margin-top:8px;
-    background:#334155;
-    padding:10px;
-    border-radius:8px;
-    font-size:12px;
-    ">
-
-    ${s.name} (${s.day}) AFTER P${s.after}
-
-    <button
-    style="
-    margin-top:6px;
-    background:#dc2626;
-    color:white;
-    border:none;
-    padding:6px;
-    border-radius:6px;
-    cursor:pointer;
-    "
-    onclick="removeSpecial(${i})">
-
-    REMOVE
-
-    </button>
-
-    </div>
-
-    `).join('');
-}
-
-function removeSpecial(i){
-
-    SPECIALS.splice(i,1);
-
-    renderSpecials();
-}
+/* SLOTS */
 
 function buildSlots(day){
 
-    let slots=[];
+let slots=[];
+let cur=new Date("2026-01-01T"+startTime.value);
+let total=+totalPeriods.value;
+let dur=+periodDur.value;
 
-    let cur=new Date("2026-01-01T"+startTime.value);
+for(let i=1;i<=total;i++){
 
-    let total=+totalPeriods.value;
-    let dur=+periodDur.value;
+let special=SPECIALS.find(s=>
+(s.day==="ALL"||s.day===day)
+&& s.periods.includes(i)
+);
 
-    for(let i=1;i<=total;i++){
+if(special){
 
-        let specialHere=SPECIALS.find(sp=>
+slots.push({
+id:"S"+i,
+type:"special",
+label:special.name
+});
 
-            (sp.day==="ALL" || sp.day===day)
+cur.setMinutes(cur.getMinutes()+special.dur);
 
-            &&
+}else{
 
-            (sp.after + 1 === i)
+let st=cur.toTimeString().slice(0,5);
+cur.setMinutes(cur.getMinutes()+dur);
 
-        );
-
-        if(specialHere){
-
-            let st=cur.toTimeString().slice(0,5);
-
-            cur.setMinutes(
-                cur.getMinutes()+specialHere.dur
-            );
-
-            let et=cur.toTimeString().slice(0,5);
-
-            slots.push({
-
-                id:"SP"+i,
-
-                type:"special",
-
-                label:`
-                ${specialHere.name}
-                <br>
-                ${st}-${et}
-                `
-
-            });
-
-        }
-
-        else{
-
-            let st=cur.toTimeString().slice(0,5);
-
-            cur.setMinutes(cur.getMinutes()+dur);
-
-            let et=cur.toTimeString().slice(0,5);
-
-            slots.push({
-
-                id:"P"+i,
-
-                type:"period",
-
-                label:`
-                P${i}
-                <br>
-                ${st}-${et}
-                `
-
-            });
-        }
-
-        if(i==breakAfter.value){
-
-            slots.push({
-
-                type:"break",
-
-                label:"BREAK"
-
-            });
-
-            cur.setMinutes(
-                cur.getMinutes()+ +breakDur.value
-            );
-        }
-
-        if(i==lunchAfter.value){
-
-            slots.push({
-
-                type:"lunch",
-
-                label:"LUNCH"
-
-            });
-
-            cur.setMinutes(
-                cur.getMinutes()+ +lunchDur.value
-            );
-        }
-
-    }
-
-    return slots;
+slots.push({
+id:"P"+i,
+type:"period",
+label:"P"+i
+});
 }
 
-function loadCSV(e){
-
-    const reader=new FileReader();
-
-    reader.onload=(ev)=>{
-
-        REGISTRY=[];
-        CLASSES=[];
-        TEACHERS=[];
-
-        let lines=ev.target.result.split('\n');
-
-        lines.slice(1).forEach(line=>{
-
-            let p=line
-            .split(/[;,]/)
-            .map(x=>x.trim().toUpperCase());
-
-            if(p.length<4) return;
-
-            let [sub,tea,pwk,frm]=p;
-
-            REGISTRY.push({
-                sub,
-                tea,
-                pwk:+pwk,
-                frm
-            });
-
-            if(!CLASSES.includes(frm))
-                CLASSES.push(frm);
-
-            if(!TEACHERS.includes(tea))
-                TEACHERS.push(tea);
-
-        });
-
-        alert("CSV Imported Successfully");
-
-        render();
-    };
-
-    reader.readAsText(e.target.files[0]);
+if(i==breakAfter.value){
+slots.push({type:"break",label:"BREAK"});
+cur.setMinutes(cur.getMinutes()+20);
 }
 
-function canPlace(r,d,p){
-
-    if(DATA.some(x=>
-        x.d==d &&
-        x.p==p &&
-        x.tea==r.tea
-    )) return false;
-
-    if(DATA.some(x=>
-        x.d==d &&
-        x.p==p &&
-        x.frm==r.frm
-    )) return false;
-
-    return true;
+if(i==lunchAfter.value){
+slots.push({type:"break",label:"LUNCH"});
+cur.setMinutes(cur.getMinutes()+45);
 }
+
+}
+
+return slots;
+}
+
+/* GENERATE */
 
 function generate(){
 
-    if(REGISTRY.length===0){
-        alert("Import CSV First");
-        return;
-    }
+DATA=[];
 
-    DATA=[];
+for(let r of REGISTRY){
 
-    let success=false;
+let left=r.pwk;
 
-    for(let attempt=0; attempt<200; attempt++){
+for(let d of DAYS){
 
-        DATA=[];
+if(left<=0) break;
 
-        success=true;
+if(DATA.some(x=>x.sub==r.sub&&x.frm==r.frm&&x.d==d))
+continue;
 
-        let pool=[...REGISTRY]
-        .sort((a,b)=>b.pwk-a.pwk);
+let slots=buildSlots(d);
 
-        for(let r of pool){
+let periods=slots.filter(x=>x.type=="period");
 
-            let left=r.pwk;
+for(let i=0;i<periods.length;i++){
 
-            let days=[...DAYS]
-            .sort(()=>Math.random()-0.5);
+if(left<=0) break;
 
-            for(let d of days){
+let p=periods[i];
 
-                if(left<=0) break;
+if(!DATA.find(x=>x.d==d&&x.p==p.id)){
 
-                let alreadyToday=DATA.some(x=>
-                    x.d===d &&
-                    x.frm===r.frm &&
-                    x.sub===r.sub
-                );
-
-                if(alreadyToday) continue;
-
-                let daySlots=buildSlots(d);
-
-                let periods=daySlots.filter(
-                    x=>x.type==="period"
-                );
-
-                let placed=false;
-
-                if(left>=2){
-
-                    for(let i=0;i<periods.length-1;i++){
-
-                        let p1=periods[i];
-                        let p2=periods[i+1];
-
-                        let idx1=daySlots.indexOf(p1);
-                        let idx2=daySlots.indexOf(p2);
-
-                        if(idx2!==idx1+1)
-                            continue;
-
-                        if(
-                            canPlace(r,d,p1.id) &&
-                            canPlace(r,d,p2.id)
-                        ){
-
-                            DATA.push({
-                                ...r,
-                                d,
-                                p:p1.id
-                            });
-
-                            DATA.push({
-                                ...r,
-                                d,
-                                p:p2.id
-                            });
-
-                            left-=2;
-
-                            placed=true;
-
-                            break;
-                        }
-                    }
-                }
-
-                if(!placed && left>0){
-
-                    let shuffled=[...periods]
-                    .sort(()=>Math.random()-0.5);
-
-                    for(let p of shuffled){
-
-                        if(canPlace(r,d,p.id)){
-
-                            DATA.push({
-                                ...r,
-                                d,
-                                p:p.id
-                            });
-
-                            left--;
-
-                            placed=true;
-
-                            break;
-                        }
-                    }
-                }
-
-            }
-
-            if(left>0){
-
-                success=false;
-
-                break;
-            }
-        }
-
-        if(success) break;
-    }
-
-    if(!success){
-
-        alert(
-            "Some subjects could not be allocated.\n\n"+
-            "Possible reasons:\n"+
-            "- Too many periods\n"+
-            "- Teacher conflicts\n"+
-            "- Not enough free slots"
-        );
-    }
-
-    render();
+DATA.push({sub:r.sub,tea:r.tea,frm:r.frm,d,p:p.id});
+left--;
+}
 }
 
-function setView(v){
-
-    currentView=v;
-
-    render();
 }
 
-function render(){
-
-    title.innerText=schName.value;
-    year.innerText="ACADEMIC YEAR: "+acadYear.value;
-
-    if(currentView=="MASTER")
-        renderMaster();
-
-    if(currentView=="STREAM")
-        renderStreams();
-
-    if(currentView=="TEACHER")
-        renderTeachers();
-
-    if(currentView=="LOADS")
-        renderLoads();
-}
-
-function renderMaster(){
-
-    let mode=displayMode.value;
-
-    let html="";
-
-    DAYS.forEach(d=>{
-
-        let slots=buildSlots(d);
-
-        html+=`
-        <div class="card">
-
-        <h2>MASTER TIMETABLE - ${d}</h2>
-
-        <table>
-
-        <tr>
-        <th>CLASS</th>
-        `;
-
-        slots.forEach(s=>{
-            html+=`<th>${s.label}</th>`;
-        });
-
-        html+=`</tr>`;
-
-        CLASSES.sort().forEach(c=>{
-
-            html+=`<tr><td><b>${c}</b></td>`;
-
-            slots.forEach(s=>{
-
-                if(
-                    s.type=="break" ||
-                    s.type=="lunch"
-                ){
-
-                    html+=`
-                    <td class="break-cell">
-                    ${s.label}
-                    </td>`;
-                }
-
-                else if(s.type=="special"){
-
-                    html+=`
-                    <td class="special-cell">
-                    ${s.label}
-                    </td>`;
-                }
-
-                else{
-
-                    let m=DATA.find(x=>
-                        x.d==d &&
-                        x.p==s.id &&
-                        x.frm==c
-                    );
-
-                    html+=`
-                    <td>
-
-                    ${
-                        m
-                        ?
-                        `<div class="slot">
-
-                        ${
-                            mode=="both"
-                            ?
-                            `${m.sub}<br>${m.tea}`
-                            :
-                            m.sub
-                        }
-
-                        </div>`
-                        :
-                        ""
-                    }
-
-                    </td>`;
-                }
-
-            });
-
-            html+=`</tr>`;
-        });
-
-        html+=`
-        </table>
-        </div>`;
-    });
-
-    app.innerHTML=html;
-}
-
-function renderStreams(){
-
-    let mode=displayMode.value;
-
-    let html="";
-
-    CLASSES.sort().forEach(c=>{
-
-        let slots=buildSlots("MON");
-
-        html+=`
-        <div class="card">
-
-        <h2>STREAM TIMETABLE - ${c}</h2>
-
-        <table>
-
-        <tr>
-        <th>DAY</th>
-        `;
-
-        slots.forEach(s=>{
-            html+=`<th>${s.label}</th>`;
-        });
-
-        html+=`</tr>`;
-
-        DAYS.forEach(d=>{
-
-            let slots2=buildSlots(d);
-
-            html+=`<tr><td><b>${d}</b></td>`;
-
-            slots2.forEach(s=>{
-
-                if(
-                    s.type=="break" ||
-                    s.type=="lunch"
-                ){
-
-                    html+=`
-                    <td class="break-cell">
-                    ${s.label}
-                    </td>`;
-                }
-
-                else if(s.type=="special"){
-
-                    html+=`
-                    <td class="special-cell">
-                    ${s.label}
-                    </td>`;
-                }
-
-                else{
-
-                    let m=DATA.find(x=>
-                        x.d==d &&
-                        x.p==s.id &&
-                        x.frm==c
-                    );
-
-                    html+=`
-                    <td>
-
-                    ${
-                        m
-                        ?
-                        `<div class="slot">
-
-                        ${
-                            mode=="both"
-                            ?
-                            `${m.sub}<br>${m.tea}`
-                            :
-                            m.sub
-                        }
-
-                        </div>`
-                        :
-                        ""
-                    }
-
-                    </td>`;
-                }
-
-            });
-
-            html+=`</tr>`;
-        });
-
-        html+=`
-        </table>
-        </div>`;
-    });
-
-    app.innerHTML=html;
-}
-
-function renderTeachers(){
-
-    let html="";
-
-    TEACHERS.sort().forEach(t=>{
-
-        let slots=buildSlots("MON");
-
-        html+=`
-        <div class="card">
-
-        <h2>TEACHER TIMETABLE - ${t}</h2>
-
-        <table>
-
-        <tr>
-        <th>DAY</th>
-        `;
-
-        slots.forEach(s=>{
-            html+=`<th>${s.label}</th>`;
-        });
-
-        html+=`</tr>`;
-
-        DAYS.forEach(d=>{
-
-            let slots2=buildSlots(d);
-
-            html+=`<tr><td><b>${d}</b></td>`;
-
-            slots2.forEach(s=>{
-
-                if(
-                    s.type=="break" ||
-                    s.type=="lunch"
-                ){
-
-                    html+=`
-                    <td class="break-cell">
-                    ${s.label}
-                    </td>`;
-                }
-
-                else if(s.type=="special"){
-
-                    html+=`
-                    <td class="special-cell">
-                    ${s.label}
-                    </td>`;
-                }
-
-                else{
-
-                    let m=DATA.find(x=>
-                        x.d==d &&
-                        x.p==s.id &&
-                        x.tea==t
-                    );
-
-                    html+=`
-                    <td>
-
-                    ${
-                        m
-                        ?
-                        `<div class="slot">
-                        ${m.sub}<br>${m.frm}
-                        </div>`
-                        :
-                        ""
-                    }
-
-                    </td>`;
-                }
-
-            });
-
-            html+=`</tr>`;
-        });
-
-        html+=`
-        </table>
-        </div>`;
-    });
-
-    app.innerHTML=html;
-}
-
-function renderLoads(){
-
-    let html=`
-    <div class="card">
-
-    <h2>TEACHER LOAD SUMMARY</h2>
-
-    <table>
-
-    <tr>
-    <th>Teacher</th>
-    <th>Total Lessons</th>
-    </tr>
-    `;
-
-    TEACHERS.sort().forEach(t=>{
-
-        let total=DATA.filter(
-            x=>x.tea==t
-        ).length;
-
-        html+=`
-        <tr>
-
-        <td>${t}</td>
-
-        <td>${total}</td>
-
-        </tr>`;
-    });
-
-    html+=`
-    </table>
-    </div>`;
-
-    app.innerHTML=html;
-}
-
-function exportPDF(){
-
-    html2pdf()
-    .set({
-
-        margin:5,
-
-        filename:
-        schName.value.replace(/\s+/g,'_')
-        +"_TIMETABLE.pdf",
-
-        html2canvas:{
-            scale:2
-        },
-
-        jsPDF:{
-            orientation:'landscape',
-            unit:'mm',
-            format:'a4'
-        }
-
-    })
-
-    .from(app)
-    .save();
-}
-
-function saveBackup(){
-
-    let blob=new Blob([JSON.stringify({
-
-        REGISTRY,
-        DATA,
-        CLASSES,
-        TEACHERS,
-        SPECIALS
-
-    })],{
-        type:"application/json"
-    });
-
-    let a=document.createElement("a");
-
-    a.href=URL.createObjectURL(blob);
-
-    a.download="TT_PRO_BACKUP.json";
-
-    a.click();
-}
-
-function loadBackup(e){
-
-    const reader=new FileReader();
-
-    reader.onload=(ev)=>{
-
-        let p=JSON.parse(ev.target.result);
-
-        REGISTRY=p.REGISTRY || [];
-        DATA=p.DATA || [];
-        CLASSES=p.CLASSES || [];
-        TEACHERS=p.TEACHERS || [];
-        SPECIALS=p.SPECIALS || [];
-
-        renderSpecials();
-
-        render();
-    };
-
-    reader.readAsText(e.target.files[0]);
 }
 
 render();
+
+}
+
+/* RENDER */
+
+function render(){
+
+let html="";
+
+DAYS.forEach(d=>{
+
+html+=`<div class="card"><h3>${d}</h3><table><tr><th>Class</th>`;
+
+let slots=buildSlots(d);
+
+slots.forEach(s=>html+=`<th>${s.label}</th>`);
+
+html+=`</tr>`;
+
+CLASSES.forEach(c=>{
+
+html+=`<tr><td>${c}</td>`;
+
+slots.forEach(s=>{
+
+let m=DATA.find(x=>x.d==d&&x.p==s.id&&x.frm==c);
+
+if(s.type=="special")
+html+=`<td class="special">${s.label}</td>`;
+else if(s.type=="break")
+html+=`<td class="break">${s.label}</td>`;
+else
+html+=`<td>${m?m.sub:""}</td>`;
+
+});
+
+html+=`</tr>`;
+});
+
+html+=`</table></div>`;
+
+});
+
+app.innerHTML=html;
+
+}
+
+/* CSV */
+
+function loadCSV(e){
+
+let reader=new FileReader();
+
+reader.onload=function(ev){
+
+let lines=ev.target.result.split("\n");
+
+REGISTRY=[];
+
+for(let l of lines.slice(1)){
+
+let p=l.split(",");
+
+if(p.length<4) continue;
+
+REGISTRY.push({
+sub:p[0],
+tea:p[1],
+pwk:+p[2],
+frm:p[3]
+});
+
+}
+
+alert("Loaded");
+
+};
+
+reader.readAsText(e.target.files[0]);
+
+}
 
 </script>
 

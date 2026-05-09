@@ -1,321 +1,416 @@
-<!-- =========================================================
-     UPDATED SPECIAL BLOCK SECTION (DROP-IN REPLACEMENT)
-     REPLACE YOUR CURRENT SPECIAL BLOCK HTML + FUNCTIONS
-========================================================= -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TT-PRO Enterprise - Special Blocks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root {
+  --primary:#0f172a; --secondary:#1e293b; --accent:#22c55e;
+  --sidebar-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --bg:#f8fafc; --border:#e2e8f0; --text:#334155; --danger:#ef4444; --warning:#f59e0b; --whatsapp:#25d366; --pdf:#e11d48;
+}
+body { margin:0; font-family:'Inter', system-ui, sans-serif; display:flex; height: 100vh; background:var(--bg); overflow:hidden; }
 
-<!-- ================= SPECIAL BLOCK HTML ================= -->
+#expiryBanner { display:none; background: var(--warning); color: #000; text-align: center; padding: 8px; font-weight: bold; font-size: 13px; z-index: 100; }
+#lockScreen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.98); color:white; z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 
-<div class="section-title">Special Blocks</div>
+.sidebar { 
+    width:340px; background: var(--sidebar-gradient); color:white; padding:20px; 
+    display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.3); z-index:10;
+    border-right: 1px solid #334155;
+}
+.sidebar h2 { color: var(--accent); font-size: 1.1rem; text-align: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin:0; letter-spacing: 1px; }
 
-<div class="special-box">
+.setting-card { background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 5px; }
+.setting-card label { display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; font-weight: 700; }
+.setting-card input, .setting-card select { 
+    width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 13px; box-sizing: border-box; margin-bottom: 5px;
+}
 
-<input id="spName" placeholder="ASSEMBLY">
+.nav-label { font-size: 11px; color: #38bdf8; font-weight: 800; margin-top: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-<select id="spDay">
+.btn { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; }
+.btn-gen { background: var(--accent); color: #064e3b; box-shadow: 0 4px 0 #15803d; }
+.btn-gen:active { transform: translateY(2px); box-shadow: 0 2px 0 #15803d; }
+.btn-sec { background: #475569; color: white; }
+.btn-wa { background: var(--whatsapp); color: white; margin-left: 10px; padding: 5px 12px; font-size: 11px; }
+.btn-pdf { background: var(--pdf); color: white; }
 
-<option value="ALL">EVERY DAY</option>
-<option value="MON">MONDAY</option>
-<option value="TUE">TUESDAY</option>
-<option value="WED">WEDNESDAY</option>
-<option value="THU">THURSDAY</option>
-<option value="FRI">FRIDAY</option>
+.main { flex:1; display: flex; flex-direction: column; overflow: hidden; }
+.top-bar { background: white; padding: 10px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.tab-group { display: flex; gap: 5px; }
+.tab-group button { padding: 8px 15px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: 600; }
+.tab-group button.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-</select>
+.content { flex:1; padding: 20px; overflow-y: auto; }
+#printableArea { background: white; }
+.table-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); page-break-after: always; break-after: page; }
 
-<!-- UPDATED -->
-<input
-id="spAfter"
-placeholder="After Periods e.g 6,7,8">
+table { width: 100%; border-collapse: collapse; border: 2px solid #000; table-layout: fixed; }
+th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; height: 45px; }
+th { background: #f1f5f9; }
 
-<input
-id="spDur"
-type="number"
-placeholder="Duration (Min)">
+.slot { padding: 2px; border-radius: 4px; font-weight: 700; background: #dcfce7; border: 1px solid #22c55e; line-height: 1.1; }
+.break-cell { background: #cbd5e1; font-weight: bold; width: 30px; writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; border: 2px solid #000 !important; }
 
-<button
-class="btn-blue"
-onclick="addSpecial()">
+#header { display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
+#logoImg { height: 80px; width: auto; object-fit: contain; display: none; }
 
-+ ADD SPECIAL BLOCK
+@media print { 
+    .sidebar, .top-bar, #expiryBanner, .btn-wa { display: none !important; } 
+    body { height: auto; overflow: visible; background: white; }
+    .main { height: auto; overflow: visible; padding: 0; margin: 0; }
+    .content { overflow: visible; padding: 0; }
+    #printableArea { width: 100%; }
+    .table-card { border: none; box-shadow: none; margin: 0; padding: 0; border-radius: 0; }
+    #logoImg { display: block !important; }
+}
+</style>
+</head>
+<body>
 
-</button>
-
-<div
-id="specialList"
-style="margin-top:10px">
+<div id="lockScreen">
+    <h1 style="color:var(--danger); font-size: 3rem;">LICENSE EXPIRED</h1>
 </div>
 
+<div class="sidebar no-print">
+    <h2>TT-PRO COMMAND</h2>
+    
+    <div class="setting-card">
+        <label>School Name</label>
+        <input type="text" id="schName" value="TANZANIA SECONDARY SCHOOL" oninput="renderActiveView()">
+        <label>Academic Year</label>
+        <input type="text" id="acadYear" value="2026" oninput="renderActiveView()">
+        <label>School Logo</label>
+        <input type="file" id="logoUpload" accept="image/*" onchange="handleLogo(event)">
+    </div>
+
+    <div class="nav-label">Special Blocks</div>
+    <div class="setting-card" style="font-size: 9px;">
+        <div style="display:flex; gap:5px; margin-bottom:5px;">
+            <div style="flex:1"><label>Religion Day</label>
+                <select id="relDay"><option>WEDNESDAY</option><option>MONDAY</option><option>TUESDAY</option><option>THURSDAY</option><option>FRIDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="relPeriods" value="8,9"></div>
+        </div>
+        <div style="display:flex; gap:5px; margin-bottom:5px;">
+            <div style="flex:1"><label>Debate Day</label>
+                <select id="debDay"><option>THURSDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>FRIDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 8,9)</label><input type="text" id="debPeriods" value="8,9"></div>
+        </div>
+        <div style="display:flex; gap:5px;">
+            <div style="flex:1"><label>Mosque Day</label>
+                <select id="mosDay"><option>FRIDAY</option><option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option><option>THURSDAY</option></select>
+            </div>
+            <div style="flex:1"><label>P# (e.g. 7,8,9)</label><input type="text" id="mosPeriods" value="7,8,9"></div>
+        </div>
+    </div>
+
+    <div class="nav-label">Intervals & Breaks</div>
+    <div class="setting-card">
+        <div style="display:flex; gap:5px; margin-bottom:8px;">
+            <div style="flex:1">
+                <label>Break After P#</label>
+                <input type="number" id="brkAfter" value="2">
+            </div>
+            <div style="flex:1">
+                <label>Time (min)</label>
+                <input type="number" id="brkDur" value="20">
+            </div>
+        </div>
+        <div style="display:flex; gap:5px;">
+            <div style="flex:1">
+                <label>Lunch After P#</label>
+                <input type="number" id="lchAfter" value="4">
+            </div>
+            <div style="flex:1">
+                <label>Time (min)</label>
+                <input type="number" id="lchDur" value="45">
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-label">Time & Interval Config</div>
+    <div class="setting-card">
+        <div style="display:flex; gap:5px;">
+            <div style="flex:1.2"><label>Total Periods</label>
+                <select id="totalPeriods"><option value="6">6 Periods</option><option value="7">7 Periods</option><option value="8">8 Periods</option><option value="9" selected>9 Periods</option><option value="10">10 Periods</option></select>
+            </div>
+            <div style="flex:1"><label>Period (min)</label><input type="number" id="dur" value="40"></div>
+        </div>
+        <div style="margin-top:5px;"><label>Start Time</label><input type="time" id="startTime" value="08:00"></div>
+    </div>
+
+    <div class="nav-label">Actions</div>
+    <button class="btn btn-gen" id="genBtn" onclick="generate()">⚡ RE-SHUFFLE & GENERATE</button>
+    <button class="btn btn-pdf" onclick="exportPDF()">📄 SAVE AS PDF</button>
+    <button class="btn btn-sec" onclick="document.getElementById('csvIn').click()">📥 IMPORT CSV</button>
+    <input type="file" id="csvIn" style="display:none" accept=".csv" onchange="handleCSV(event)">
+    <button class="btn btn-sec" onclick="saveProject()">💾 EXPORT BACKUP</button>
+    <button class="btn btn-sec" onclick="document.getElementById('loadProj').click()">📂 LOAD SAVED</button>
+    <input type="file" id="loadProj" style="display:none" accept=".json" onchange="loadProject(event)">
+</div>
+
+<div class="main">
+    <div id="expiryBanner">⚠️ ALERT: License expires soon.</div>
+    <div class="top-bar">
+        <div class="tab-group">
+            <button id="tab-GENERAL" class="active" onclick="setView('GENERAL')">Master</button>
+            <button id="tab-STREAM" onclick="setView('STREAM')">Stream</button>
+            <button id="tab-TEACHER" onclick="setView('TEACHER')">Teacher</button>
+            <button id="tab-LOADS" onclick="setView('LOADS')">Loads</button>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="displayMode" onchange="renderActiveView()" style="padding: 5px; font-size: 11px;">
+                <option value="both">Subject + Teacher</option>
+                <option value="sub">Subject Only</option>
+            </select>
+            <select id="viewFilter" onchange="renderActiveView()" style="padding: 5px; font-size: 11px; display:none; min-width: 120px;"></select>
+            <button id="waBtn" class="btn btn-wa" style="display:none" onclick="shareTeacherWA_PDF()">📲 SHARE WA (PDF)</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="printableArea">
+            <div id="header" style="text-align:center; margin-bottom:15px;">
+                <img id="logoImg" src="" alt="School Logo">
+                <div>
+                    <h1 id="headerTitle" style="margin:0;">TANZANIA SECONDARY SCHOOL</h1>
+                    <h4 id="headerYear" style="margin:5px 0 0 0; color:#64748b;">ACADEMIC YEAR: 2026</h4>
+                </div>
+            </div>
+            <div id="app"></div>
+        </div>
+    </div>
 </div>
 
 <script>
+const EXPIRY_DATE = new Date("2026-12-31");
+let logoBase64 = "";
+let DATA = [], REGISTRY = [], CLASSES = [], TEACHERS = [], SLOTS = [], currentView = 'GENERAL';
+const DAYS = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
 
-/* =========================================================
-   UPDATED SPECIAL BLOCK SYSTEM
-========================================================= */
+function checkSecurity() {
+    const today = new Date();
+    if (EXPIRY_DATE - today <= 0) document.getElementById('lockScreen').style.display = 'flex';
+}
 
-function addSpecial(){
-
-    const name=spName.value
-    .trim()
-    .toUpperCase();
-
-    const day=spDay.value;
-
-    const afterRaw=spAfter.value.trim();
-
-    const dur=parseInt(spDur.value);
-
-    if(
-        !name
-        ||
-        !afterRaw
-        ||
-        !dur
-    ){
-
-        alert("Fill all fields");
-
-        return;
+window.onload = () => {
+    checkSecurity();
+    const saved = localStorage.getItem('TT_PERSIST');
+    if(saved) {
+        const p = JSON.parse(saved);
+        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        if(p.schName) document.getElementById('schName').value = p.schName;
+        if(p.acadYear) document.getElementById('acadYear').value = p.acadYear;
+        if(p.logo) { logoBase64 = p.logo; document.getElementById('logoImg').src = logoBase64; document.getElementById('logoImg').style.display = 'block'; }
+        renderActiveView();
     }
+};
 
-    /* =========================================
-       MULTIPLE PERIOD SUPPORT
-       EXAMPLE:
-       6,7,8
-    ========================================= */
+function handleLogo(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        logoBase64 = reader.result;
+        document.getElementById('logoImg').src = logoBase64;
+        document.getElementById('logoImg').style.display = 'block';
+        saveToLocal();
+    };
+    if (file) reader.readAsDataURL(file);
+}
 
-    const afterList=afterRaw
+function saveToLocal() {
+    localStorage.setItem('TT_PERSIST', JSON.stringify({
+        DATA, REGISTRY, CLASSES, TEACHERS, 
+        schName: document.getElementById('schName').value,
+        acadYear: document.getElementById('acadYear').value,
+        logo: logoBase64
+    }));
+}
 
-    .split(',')
+function buildSlots() {
+    SLOTS = [];
+    let start = document.getElementById('startTime').value;
+    let dur = parseInt(document.getElementById('dur').value);
+    let cur = new Date("2026-01-01T" + start);
+    let totalP = parseInt(document.getElementById('totalPeriods').value);
+    
+    let brkPos = parseInt(document.getElementById('brkAfter').value);
+    let brkLen = parseInt(document.getElementById('brkDur').value);
+    let lchPos = parseInt(document.getElementById('lchAfter').value);
+    let lchLen = parseInt(document.getElementById('lchDur').value);
 
-    .map(x=>parseInt(x.trim()))
-
-    .filter(x=>!isNaN(x));
-
-    if(afterList.length===0){
-
-        alert("Invalid period list");
-
-        return;
+    for(let i=1; i<=totalP; i++) {
+        let sTime = cur.toTimeString().slice(0,5);
+        cur.setMinutes(cur.getMinutes() + dur);
+        SLOTS.push({ id: 'P'+i, time: `${sTime}-${cur.toTimeString().slice(0,5)}`, type: 'period' });
+        
+        if(i === brkPos) { 
+            cur.setMinutes(cur.getMinutes() + brkLen); 
+            SLOTS.push({ id: 'BRK', time: 'Break', type: 'break' }); 
+        }
+        if(i === lchPos) { 
+            cur.setMinutes(cur.getMinutes() + lchLen); 
+            SLOTS.push({ id: 'LCH', time: 'Lunch', type: 'lunch' }); 
+        }
     }
-
-    SPECIALS.push({
-
-        name,
-        day,
-        afterList,
-        dur
-
-    });
-
-    renderSpecials();
-
-    spName.value="";
-    spAfter.value="";
-    spDur.value="";
 }
 
-/* =========================================================
-   RENDER SPECIALS
-========================================================= */
+function isSpecial(day, pId) {
+    const pNum = pId.replace('P','');
+    const relD = document.getElementById('relDay').value;
+    const relP = document.getElementById('relPeriods').value.split(',');
+    if(day === relD && relP.includes(pNum)) return {bool: true, name: "RELIGION"};
 
-function renderSpecials(){
+    const debD = document.getElementById('debDay').value;
+    const debP = document.getElementById('debPeriods').value.split(',');
+    if(day === debD && debP.includes(pNum)) return {bool: true, name: "DEBATE"};
 
-    specialList.innerHTML=
+    const mosD = document.getElementById('mosDay').value;
+    const mosP = document.getElementById('mosPeriods').value.split(',');
+    if(day === mosD && mosP.includes(pNum)) return {bool: true, name: "MOSQUE"};
 
-    SPECIALS.map((s,i)=>`
-
-    <div style="
-        background:#334155;
-        padding:10px;
-        border-radius:10px;
-        margin-top:8px;
-        color:white;
-        font-size:12px;
-    ">
-
-        <b>${s.name}</b><br>
-
-        Day:
-        ${s.day}<br>
-
-        After Period(s):
-        ${s.afterList.join(', ')}<br>
-
-        Duration:
-        ${s.dur} Min
-
-        <button
-        class="btn-red"
-        style="
-            padding:5px;
-            margin-top:8px;
-        "
-        onclick="removeSpecial(${i})">
-
-        REMOVE
-
-        </button>
-
-    </div>
-
-    `).join('');
+    return {bool: false};
 }
 
-/* =========================================================
-   REMOVE SPECIAL
-========================================================= */
-
-function removeSpecial(i){
-
-    SPECIALS.splice(i,1);
-
-    renderSpecials();
-}
-
-/* =========================================================
-   UPDATED SLOT BUILDER
-   KEEP ALL OTHER SETTINGS UNCHANGED
-========================================================= */
-
-function buildSlots(day){
-
-    let slots=[];
-
-    let cur=new Date(
-        "2026-01-01T"+startTime.value
-    );
-
-    const total=+totalPeriods.value;
-
-    const dur=+periodDur.value;
-
-    for(let i=1;i<=total;i++){
-
-        let s=cur.toTimeString()
-        .slice(0,5);
-
-        cur.setMinutes(
-            cur.getMinutes()+dur
-        );
-
-        let e=cur.toTimeString()
-        .slice(0,5);
-
-        /* =====================================
-           PERIOD
-        ===================================== */
-
-        slots.push({
-
-            id:"P"+i,
-
-            type:"period",
-
-            label:`P${i}<br>${s}-${e}`
-
-        });
-
-        /* =====================================
-           BREAK
-        ===================================== */
-
-        if(i==breakAfter.value){
-
-            slots.push({
-
-                type:"break",
-
-                label:"BREAK"
-
-            });
-
-            cur.setMinutes(
-
-                cur.getMinutes()
-
-                +
-
-                +breakDur.value
-
-            );
-        }
-
-        /* =====================================
-           LUNCH
-        ===================================== */
-
-        if(i==lunchAfter.value){
-
-            slots.push({
-
-                type:"lunch",
-
-                label:"LUNCH"
-
-            });
-
-            cur.setMinutes(
-
-                cur.getMinutes()
-
-                +
-
-                +lunchDur.value
-
-            );
-        }
-
-        /* =================================================
-           UPDATED SPECIAL BLOCKS
-           SUPPORTS:
-           6,7,8
-
-           INSERTS SPECIAL BLOCK
-           AFTER THOSE PERIODS
-        ================================================= */
-
-        SPECIALS.forEach(sp=>{
-
-            if(
-
-                sp.afterList.includes(i)
-
-                &&
-
-                (
-                    sp.day=="ALL"
-                    ||
-
-                    sp.day==day
-                )
-
-            ){
-
-                slots.push({
-
-                    type:"special",
-
-                    label:sp.name
-
-                });
-
-                cur.setMinutes(
-
-                    cur.getMinutes()
-
-                    +
-
-                    sp.dur
-
-                );
+function generate() {
+    DATA = []; buildSlots();
+    let pool = [...REGISTRY].sort(() => Math.random() - 0.5);
+    pool.forEach(r => {
+        let left = r.pwk;
+        DAYS.forEach(d => {
+            if(left <= 0) return;
+            let pPool = SLOTS.filter(s => s.type === 'period').sort(() => Math.random() - 0.5);
+            for(let s of pPool) {
+                if(!isSpecial(d, s.id).bool && !DATA.some(x => x.d===d && x.p===s.id && (x.tea===r.tea || x.frm===r.frm))) {
+                    DATA.push({...r, d, p: s.id});
+                    left--; break;
+                }
             }
-
         });
-
-    }
-
-    return slots;
+    });
+    saveToLocal();
+    renderActiveView();
 }
 
+function handleCSV(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const lines = ev.target.result.split('\n').filter(l => l.trim() !== "");
+        REGISTRY = []; CLASSES = []; TEACHERS = [];
+        lines.slice(1).forEach(line => {
+            const [sub, tea, pwk, frm] = line.split(',').map(c => c.trim().toUpperCase());
+            REGISTRY.push({ sub, tea, pwk: parseInt(pwk), frm });
+            if(!CLASSES.includes(frm)) CLASSES.push(frm);
+            if(!TEACHERS.includes(tea)) TEACHERS.push(tea);
+        });
+        alert("CSV Loaded.");
+    };
+    reader.readAsText(e.target.files[0]);
+}
+
+function setView(v) {
+    currentView = v;
+    document.querySelectorAll('.tab-group button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+v).classList.add('active');
+    let fil = document.getElementById('viewFilter');
+    fil.style.display = (v==='STREAM'||v==='TEACHER') ? 'inline-block' : 'none';
+    if(v==='STREAM') { fil.innerHTML = ''; CLASSES.sort().forEach(c => fil.innerHTML += `<option value="${c}">${c}</option>`); } 
+    else if(v==='TEACHER') { fil.innerHTML = ''; TEACHERS.sort().forEach(t => fil.innerHTML += `<option value="${t}">${t}</option>`); }
+    renderActiveView();
+}
+
+function renderActiveView() {
+    document.getElementById('headerTitle').innerText = document.getElementById('schName').value;
+    document.getElementById('headerYear').innerText = "ACADEMIC YEAR: " + document.getElementById('acadYear').value;
+    if(currentView==='GENERAL') renderMaster();
+    else if(currentView==='STREAM') renderSingle('frm');
+    else if(currentView==='TEACHER') renderSingle('tea');
+    else if(currentView==='LOADS') renderLoads();
+}
+
+function renderMaster() {
+    let mode = document.getElementById('displayMode').value;
+    let h = ""; buildSlots();
+    DAYS.forEach(day => {
+        h += `<div class="table-card"><h3>${day}</h3><table><tr><th>Class</th>`;
+        SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+        h += `</tr>`;
+        CLASSES.sort().forEach(f => {
+            h += `<tr><td><b>${f}</b></td>`;
+            SLOTS.forEach(s => {
+                let spec = isSpecial(day, s.id);
+                if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
+                else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
+                else {
+                    let m = DATA.find(x => x.d===day && x.p===s.id && x.frm===f);
+                    h += `<td>${m ? `<div class="slot">${mode==='both'?m.sub+'<br>'+m.tea:m.sub}</div>` : ''}</td>`;
+                }
+            });
+            h += `</tr>`;
+        });
+        h += `</table></div>`;
+    });
+    document.getElementById('app').innerHTML = h;
+}
+
+function renderSingle(key) {
+    const val = document.getElementById('viewFilter').value;
+    buildSlots();
+    let h = `<div class="table-card"><h3>${val} Timetable</h3><table><tr><th>Day</th>`;
+    SLOTS.forEach(s => h += `<th>${s.id}</th>`);
+    h += `</tr>`;
+    DAYS.forEach(d => {
+        h += `<tr><td><b>${d}</b></td>`;
+        SLOTS.forEach(s => {
+            let spec = isSpecial(d, s.id);
+            if(s.type!=='period') h += `<td class="break-cell">${s.id}</td>`;
+            else if(spec.bool) h += `<td style="background:#fef3c7;font-weight:bold">${spec.name}</td>`;
+            else {
+                let m = DATA.find(x => x.d===d && x.p===s.id && x[key]===val);
+                h += `<td>${m ? `<div class="slot">${key==='tea'?m.frm:m.sub}</div>` : ''}</td>`;
+            }
+        });
+        h += `</tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
+}
+
+function renderLoads() {
+    let h = `<div class="table-card"><h3>Workload</h3><table><tr><th>Teacher</th><th>Periods</th></tr>`;
+    TEACHERS.sort().forEach(t => {
+        let count = DATA.filter(x => x.tea === t).length;
+        h += `<tr><td>${t}</td><td>${count}</td></tr>`;
+    });
+    document.getElementById('app').innerHTML = h + `</table></div>`;
+}
+
+function exportPDF() {
+    const opt = { margin: 5, filename: 'Timetable.pdf', jsPDF: { orientation: 'landscape' } };
+    html2pdf().set(opt).from(document.getElementById('printableArea')).save();
+}
+
+function saveProject() {
+    const blob = new Blob([JSON.stringify({DATA, REGISTRY, CLASSES, TEACHERS, schName:document.getElementById('schName').value, acadYear:document.getElementById('acadYear').value, logo:logoBase64})], {type:"application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "TT_Backup.json"; a.click();
+}
+
+function loadProject(e) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const p = JSON.parse(ev.target.result);
+        DATA = p.DATA; REGISTRY = p.REGISTRY; CLASSES = p.CLASSES; TEACHERS = p.TEACHERS;
+        document.getElementById('schName').value = p.schName || "";
+        document.getElementById('acadYear').value = p.acadYear || "";
+        logoBase64 = p.logo || "";
+        renderActiveView();
+    };
+    reader.readAsText(e.target.files[0]);
+}
 </script>
+</body>
+</html>
